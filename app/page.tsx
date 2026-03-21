@@ -264,8 +264,6 @@ export default function Home() {
         {/* Left — nav links */}
         <nav className="desktop-nav" style={{ display: "flex", gap: 20 }}>
           <a href="#" style={navLinkStyle}>Dashboard</a>
-          <a href="#portfolio" style={navLinkStyle}>Portfolio</a>
-          <a href="#debt" style={navLinkStyle}>Debt</a>
         </nav>
         {/* Right — fund name */}
         <span style={{
@@ -299,8 +297,6 @@ export default function Home() {
           display: "flex", flexDirection: "column", gap: 2,
         }}>
           <a href="#" onClick={() => setMenuOpen(false)} style={mobileNavLinkStyle}>Dashboard</a>
-          <a href="#portfolio" onClick={() => setMenuOpen(false)} style={mobileNavLinkStyle}>Portfolio</a>
-          <a href="#debt" onClick={() => setMenuOpen(false)} style={mobileNavLinkStyle}>Debt</a>
         </div>
       )}
       {/* Main */}
@@ -346,46 +342,6 @@ export default function Home() {
             </div>
           )}
         </section>
-        <div style={{ margin: "0 24px", borderTop: "1px solid rgba(0,0,0,0.06)" }} />
-        {/* Portfolio */}
-        <section id="portfolio" style={{ padding: "64px 24px", maxWidth: 900, margin: "0 auto" }}>
-          <p style={eyebrowStyle}>Investments</p>
-          <h2 style={sectionTitleStyle}>Our Portfolio</h2>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-            gap: 12,
-          }}>
-            {[1, 2, 3].map((i) => (
-              <div key={i} style={{
-                background: "rgba(0,0,0,0.02)",
-                border: "1px solid rgba(0,0,0,0.07)",
-                borderRadius: 12, minHeight: 180,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <p style={{
-                  fontSize: 11, fontWeight: 700, letterSpacing: ".08em",
-                  textTransform: "uppercase", color: "#cbd5e1",
-                }}>
-                  Portfolio Company
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-        <div style={{ margin: "0 24px", borderTop: "1px solid rgba(0,0,0,0.06)" }} />
-        {/* Debt */}
-        <section id="debt" style={{ padding: "64px 24px", maxWidth: 900, margin: "0 auto" }}>
-          <p style={eyebrowStyle}>Credit</p>
-          <h2 style={sectionTitleStyle}>Debt</h2>
-          <div style={{
-            background: "rgba(0,0,0,0.02)",
-            border: "1px solid rgba(0,0,0,0.07)",
-            borderRadius: 12, padding: "48px 24px", textAlign: "center",
-          }}>
-            <p style={{ fontSize: 13, color: "#94a3b8" }}>Coming soon.</p>
-          </div>
-        </section>
       </main>
     </div>
   );
@@ -399,14 +355,6 @@ const mobileNavLinkStyle: React.CSSProperties = {
   fontSize: 13, fontWeight: 700, letterSpacing: ".06em",
   textTransform: "uppercase", color: "#0f172a", textDecoration: "none",
   padding: "10px 0", borderBottom: "1px solid rgba(0,0,0,0.05)",
-};
-const eyebrowStyle: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, textTransform: "uppercase",
-  letterSpacing: ".12em", color: "#38bdf8", marginBottom: 8,
-};
-const sectionTitleStyle: React.CSSProperties = {
-  fontSize: 26, fontWeight: 800, color: "#0f172a",
-  marginBottom: 32, letterSpacing: "-.01em",
 };
 const cellStyle: React.CSSProperties = {
   fontSize: 12, fontWeight: 500, color: "#0f172a",
