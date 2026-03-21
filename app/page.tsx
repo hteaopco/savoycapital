@@ -67,6 +67,9 @@ function buildSchedule() {
 // --- Components ---
 function ReturnProfile() {
   const [open, setOpen] = useState(false);
+  const [redeployScenario, setRedeployScenario] = useState<"none" | "moneymarket">("none");
+  const [mmRate, setMmRate] = useState("3.50");
+  const [scenarioOpen, setScenarioOpen] = useState(false);
   const schedule = buildSchedule();
   const totals = schedule.slice(1).reduce((acc, r) => ({
     dealFee: acc.dealFee + r.dealFee,
@@ -170,6 +173,109 @@ function ReturnProfile() {
             <span style={{ fontSize: 15, fontWeight: 800, color: "#16a34a", fontVariantNumeric: "tabular-nums" }}>
               {(annualIRR * 100).toFixed(2)}%
             </span>
+          </div>
+          {/* Redeploy Capital Scenario */}
+          <div style={{
+            padding: "10px 14px",
+            borderTop: "1px solid rgba(0,0,0,0.06)",
+          }}>
+            {/* Dropdown button */}
+            <button
+              onClick={() => setScenarioOpen(!scenarioOpen)}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "8px 12px",
+                background: "rgba(139,92,246,0.05)",
+                border: "1px solid rgba(139,92,246,0.15)",
+                borderRadius: scenarioOpen ? "8px 8px 0 0" : 8,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#7c3aed" }}>
+                Redeploy Capital Scenario
+              </span>
+              <span style={{ fontSize: 12, color: "#94a3b8" }}>{scenarioOpen ? "▲" : "▼"}</span>
+            </button>
+            {scenarioOpen && (
+              <div style={{
+                border: "1px solid rgba(139,92,246,0.15)", borderTop: "none",
+                borderRadius: "0 0 8px 8px", padding: "12px",
+                background: "rgba(139,92,246,0.02)",
+              }}>
+                {/* Scenario options */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "6px 8px", borderRadius: 6, background: redeployScenario === "none" ? "rgba(139,92,246,0.08)" : "transparent" }}>
+                    <input
+                      type="radio" name="redeploy" checked={redeployScenario === "none"}
+                      onChange={() => setRedeployScenario("none")}
+                      style={{ accentColor: "#7c3aed" }}
+                    />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#0f172a" }}>No redeployment</span>
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "6px 8px", borderRadius: 6, background: redeployScenario === "moneymarket" ? "rgba(139,92,246,0.08)" : "transparent" }}>
+                    <input
+                      type="radio" name="redeploy" checked={redeployScenario === "moneymarket"}
+                      onChange={() => setRedeployScenario("moneymarket")}
+                      style={{ accentColor: "#7c3aed" }}
+                    />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#0f172a" }}>Into Money Market</span>
+                  </label>
+                </div>
+                {/* Money market rate input */}
+                {redeployScenario === "moneymarket" && (() => {
+                  const mmAnnual = parseFloat(mmRate) / 100 || 0;
+                  const mmMonthly = mmAnnual / 12;
+                  // Build modified cashflows: each positive global return earns money market interest for remaining months
+                  const modifiedCashflows = schedule.map((r, idx) => {
+                    if (idx === 0) return r.globalReturn; // initial investment unchanged
+                    const monthsRemaining = MONTHS - r.month;
+                    // The original cash flow plus accumulated MM interest on it
+                    const fv = r.globalReturn * Math.pow(1 + mmMonthly, monthsRemaining);
+                    return fv;
+                  });
+                  // All reinvested proceeds arrive at month 12, so build IRR cashflows:
+                  // Month 0: initial investment, Months 1-11: 0, Month 12: sum of all future values
+                  const potentialCashflows: number[] = [schedule[0].globalReturn];
+                  for (let m = 1; m < MONTHS; m++) potentialCashflows.push(0);
+                  potentialCashflows.push(modifiedCashflows.slice(1).reduce((a, b) => a + b, 0));
+                  const potentialMonthlyIRR = computeIRR(potentialCashflows);
+                  const potentialAnnualIRR = Math.pow(1 + potentialMonthlyIRR, 12) - 1;
+                  return (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "#64748b" }}>Rate:</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <input
+                            type="number" step="0.01" value={mmRate}
+                            onChange={e => setMmRate(e.target.value)}
+                            style={{
+                              width: 72, padding: "5px 8px", fontSize: 13, fontWeight: 700,
+                              border: "1px solid rgba(0,0,0,0.12)", borderRadius: 6,
+                              background: "#fff", color: "#0f172a", fontFamily: "inherit",
+                              fontVariantNumeric: "tabular-nums", textAlign: "right",
+                            }}
+                          />
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#64748b" }}>%</span>
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: "10px 12px", borderRadius: 8,
+                        background: "rgba(139,92,246,0.06)",
+                        border: "1px solid rgba(139,92,246,0.12)",
+                        display: "flex", alignItems: "center", gap: 8,
+                      }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#7c3aed" }}>
+                          Potential IRR
+                        </span>
+                        <span style={{ fontSize: 15, fontWeight: 800, color: "#7c3aed", fontVariantNumeric: "tabular-nums" }}>
+                          {(potentialAnnualIRR * 100).toFixed(2)}%
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         </div>
       )}
