@@ -33,8 +33,6 @@ QUICK START:
 
 ## Section 2: Rules for Claude (Strict)
 
-- **ALWAYS** create a new branch and open a pull request for changes.
-- **NEVER** push directly to `main`.
 - Make small, focused changes — one thing at a time.
 - Explain every change in plain language in the PR description.
 - Summarize: what changed, why, any risks, and any follow-ups needed.
