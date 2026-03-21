@@ -16,6 +16,12 @@ export default function Home() {
           >
             Portfolio
           </a>
+          <a
+            href="#debt"
+            className="text-sm font-medium text-gray-700 hover:text-black transition-colors mt-4 block"
+          >
+            Debt
+          </a>
         </nav>
       </aside>
 
