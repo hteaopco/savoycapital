@@ -100,29 +100,30 @@ function ReturnProfile() {
           border: "1px solid rgba(0,0,0,0.07)", borderTop: "none",
           borderRadius: "0 0 8px 8px", overflow: "hidden",
         }}>
-          {/* Header */}
-          <div style={{
-            display: "grid", gridTemplateColumns: colWidths,
-            padding: "6px 14px",
-            background: "rgba(56,189,248,0.05)",
-            borderBottom: "1px solid rgba(0,0,0,0.06)",
-            overflowX: "auto",
-          }}>
-            {cols.map(c => (
-              <span key={c} style={{
-                fontSize: 8, fontWeight: 700, textTransform: "uppercase",
-                letterSpacing: ".08em", color: "#94a3b8", whiteSpace: "nowrap",
-              }}>{c}</span>
-            ))}
-          </div>
-          {/* Rows */}
           <div style={{ overflowX: "auto" }}>
+            {/* Header */}
+            <div style={{
+              display: "grid", gridTemplateColumns: colWidths,
+              padding: "6px 14px",
+              background: "rgba(56,189,248,0.05)",
+              borderBottom: "1px solid rgba(0,0,0,0.06)",
+              minWidth: "fit-content",
+            }}>
+              {cols.map(c => (
+                <span key={c} style={{
+                  fontSize: 8, fontWeight: 700, textTransform: "uppercase",
+                  letterSpacing: ".08em", color: "#94a3b8", whiteSpace: "nowrap",
+                }}>{c}</span>
+              ))}
+            </div>
+            {/* Rows */}
             {schedule.map((r, idx) => (
               <div key={r.month} style={{
                 display: "grid", gridTemplateColumns: colWidths,
                 padding: "8px 14px", alignItems: "center",
                 borderBottom: "1px solid rgba(0,0,0,0.04)",
                 background: idx % 2 === 0 ? "transparent" : "rgba(0,0,0,0.015)",
+                minWidth: "fit-content",
               }}>
                 <span style={cellStyle}>{r.month === 0 ? "0" : r.month}</span>
                 <span style={{ ...cellStyle, color: r.investment < 0 ? "#f87171" : "#0f172a" }}>
@@ -139,21 +140,22 @@ function ReturnProfile() {
                 </span>
               </div>
             ))}
-          </div>
-          {/* Totals */}
-          <div style={{
-            display: "grid", gridTemplateColumns: colWidths,
-            padding: "8px 14px",
-            background: "rgba(56,189,248,0.04)",
-            borderTop: "2px solid rgba(56,189,248,0.2)",
-          }}>
-            <span style={{ ...cellStyle, color: "#38bdf8", fontWeight: 800 }}>Total</span>
-            <span style={cellStyle}>—</span>
-            <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.dealFee)}</span>
-            <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.interest)}</span>
-            <span style={{ ...cellStyle, fontWeight: 700, color: "#16a34a" }}>{fmt(totals.totalReturn)}</span>
-            <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.prinReturned)}</span>
-            <span style={{ ...cellStyle, fontWeight: 800, color: "#16a34a" }}>{fmt(totals.globalReturn)}</span>
+            {/* Totals */}
+            <div style={{
+              display: "grid", gridTemplateColumns: colWidths,
+              padding: "8px 14px",
+              background: "rgba(56,189,248,0.04)",
+              borderTop: "2px solid rgba(56,189,248,0.2)",
+              minWidth: "fit-content",
+            }}>
+              <span style={{ ...cellStyle, color: "#38bdf8", fontWeight: 800 }}>Total</span>
+              <span style={cellStyle}>—</span>
+              <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.dealFee)}</span>
+              <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.interest)}</span>
+              <span style={{ ...cellStyle, fontWeight: 700, color: "#16a34a" }}>{fmt(totals.totalReturn)}</span>
+              <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.prinReturned)}</span>
+              <span style={{ ...cellStyle, fontWeight: 800, color: "#16a34a" }}>{fmt(totals.globalReturn)}</span>
+            </div>
           </div>
           {/* IRR */}
           <div style={{
