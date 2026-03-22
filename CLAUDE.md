@@ -1,10 +1,5 @@
 ```
-QUICK START:
-1. Claude Code → pick repo → describe change
-2. Say "branch + PR, don't push to main"
-3. Click PR link → Review → Merge
-4. Wait 1 min → refresh live site
-5. Bug? Copy Railway logs → paste in Claude Code → "fix via PR"
+
 ```
 
 ---
@@ -36,25 +31,14 @@ QUICK START:
 - Make small, focused changes — one thing at a time.
 - Explain every change in plain language in the PR description.
 - Summarize: what changed, why, any risks, and any follow-ups needed.
-- Do not force-push. Do not delete config files. Do not change Railway settings.
+
 - Ask before doing big refactors or restructuring.
 
 ---
 
 ## Section 3: Step-by-Step Workflow (for Jett)
 
-Every time you want to make a change, follow these steps:
 
-1. **Open Claude Code** in your browser and select the `savoy-capital-fund` repo.
-2. **Describe what you want** in plain English. Be specific — examples:
-   - "Change the subheading to 'Investing in Early-Stage B2B SaaS'"
-   - "Add a fourth portfolio card with the name 'Acme Corp'"
-   - "Change the navy accent color to a darker blue"
-3. **Always add this sentence** to your request:
-   > "Create a new branch from main, make the change, then open a GitHub pull request. Do not push directly to main."
-4. **Wait for Claude** to finish and give you a PR link.
-5. **Open GitHub**, review the pull request, and click **Merge pull request**.
-6. **Wait about 1 minute**, then refresh your Railway URL to see the new version live.
 
 ---
 
@@ -86,18 +70,7 @@ If something looks broken on the live site:
 
 ---
 
-## Section 6: Do NOT
 
-### For Jett (Human):
-- Do **not** edit files directly in GitHub unless you're comfortable with code.
-- Do **not** connect other deploy tools or hosting services.
-- Do **not** merge PRs without at least glancing at what changed.
-
-### For Claude (AI):
-- Do **not** force-push to any branch.
-- Do **not** delete configuration files (`next.config.ts`, `package.json`, `tsconfig.json`).
-- Do **not** change Railway settings or environment variables.
-- **Ask before** doing big refactors, adding new dependencies, or restructuring folders.
 
 ---
 
