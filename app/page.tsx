@@ -36,7 +36,7 @@ function buildSchedule() {
   rows.push({
     month: 0, investment: -PRINCIPAL, dealFee: 0, interest: 0,
     totalReturn: 0, prinReturned: 0, globalReturn: -PRINCIPAL,
-    mmDeposit: 0, mmBalance: 0, globalReturnMM: -PRINCIPAL,
+    mmDeposit: 0, mmInterest: 0, mmBalance: 0, globalReturnMM: -PRINCIPAL,
   });
   const dealFeeMonth1 = PRINCIPAL * FEE_RATE;
   for (let m = 1; m <= MONTHS; m++) {
@@ -46,16 +46,17 @@ function buildSchedule() {
     const totalReturn = interest + dealFee;
     const globalReturn = totalReturn + principal;
     balance -= principal;
-    mmBalance = mmBalance * (1 + mmMonthlyRate) + totalReturn;
+    const mmInterest = mmBalance * mmMonthlyRate;
+    mmBalance = mmBalance + mmInterest + totalReturn;
     rows.push({
       month: m, investment: 0, dealFee, interest, totalReturn,
       prinReturned: principal, globalReturn,
-      mmDeposit: totalReturn, mmBalance, globalReturnMM: globalReturn + mmBalance,
+      mmDeposit: totalReturn, mmInterest, mmBalance, globalReturnMM: globalReturn + mmInterest,
     });
   }
   rows[MONTHS].prinReturned += balance;
   rows[MONTHS].globalReturn += balance;
-  rows[MONTHS].globalReturnMM = rows[MONTHS].globalReturn + mmBalance;
+  rows[MONTHS].globalReturnMM = rows[MONTHS].globalReturn + rows[MONTHS].mmInterest;
   return rows;
 }
 // --- Components ---
@@ -68,17 +69,17 @@ function ReturnProfile() {
     totalReturn: acc.totalReturn + r.totalReturn,
     prinReturned: acc.prinReturned + r.prinReturned,
     globalReturn: acc.globalReturn + r.globalReturn,
-    mmBalance: r.mmBalance,
-  }), { dealFee: 0, interest: 0, totalReturn: 0, prinReturned: 0, globalReturn: 0, mmBalance: 0 });
+    mmInterest: acc.mmInterest + r.mmInterest,
+  }), { dealFee: 0, interest: 0, totalReturn: 0, prinReturned: 0, globalReturn: 0, mmInterest: 0 });
   const finalMM = schedule[schedule.length - 1].mmBalance;
   const irrCashflows = schedule.map(r => r.globalReturn);
   const monthlyIRR = computeIRR(irrCashflows);
   const annualIRR = Math.pow(1 + monthlyIRR, 12) - 1;
   // MM-enhanced IRR: at month 12, investor also receives full MM balance
-  const irrMMCashflows = schedule.map((r, i) => i === schedule.length - 1 ? r.globalReturn + r.mmBalance : r.globalReturn);
+  const irrMMCashflows = schedule.map(r => r.globalReturn + r.mmInterest);
   const monthlyIRRMM = computeIRR(irrMMCashflows);
   const annualIRRMM = Math.pow(1 + monthlyIRRMM, 12) - 1;
-  const cols = ["Month", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit (3.5%)", "MM Balance", "Global Return w/ MM"];
+  const cols = ["Month", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit (3.5%)", "MM Interest", "Global Return w/ MM"];
   const colWidths = "60px 110px 90px 90px 110px 110px 120px 130px 110px 140px";
   return (
     <div style={{ marginTop: 12 }}>
@@ -138,9 +139,9 @@ function ReturnProfile() {
                 <span style={{ ...cellStyle, fontWeight: 700, color: r.globalReturn < 0 ? "#f87171" : r.globalReturn > 0 ? "#16a34a" : "#0f172a" }}>
                   {fmt(r.globalReturn)}
                 </span>
-                <span style={{ ...cellStyle, color: "#7c3aed" }}>{r.mmDeposit > 0 ? fmt(r.mmDeposit) : "—"}</span>
-                <span style={{ ...cellStyle, color: "#7c3aed", fontWeight: 600 }}>{r.mmBalance > 0 ? fmt(r.mmBalance) : "—"}</span>
-                <span style={{ ...cellStyle, fontWeight: 800, color: r.globalReturnMM < 0 ? "#f87171" : "#7c3aed" }}>
+                <span style={{ ...cellStyle, color: "#0f172a" }}>{r.mmDeposit > 0 ? fmt(r.mmDeposit) : "—"}</span>
+                <span style={{ ...cellStyle, color: "#16a34a", fontWeight: 600 }}>{r.mmInterest > 0 ? fmt(r.mmInterest) : "—"}</span>
+                <span style={{ ...cellStyle, fontWeight: 800, color: r.globalReturnMM < 0 ? "#f87171" : r.globalReturnMM > 0 ? "#16a34a" : "#0f172a" }}>
                   {fmt(r.globalReturnMM)}
                 </span>
               </div>
@@ -160,9 +161,9 @@ function ReturnProfile() {
               <span style={{ ...cellStyle, fontWeight: 700, color: "#16a34a" }}>{fmt(totals.totalReturn)}</span>
               <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.prinReturned)}</span>
               <span style={{ ...cellStyle, fontWeight: 800, color: "#16a34a" }}>{fmt(totals.globalReturn)}</span>
-              <span style={{ ...cellStyle, fontWeight: 700, color: "#7c3aed" }}>{fmt(totals.totalReturn)}</span>
-              <span style={{ ...cellStyle, fontWeight: 800, color: "#7c3aed" }}>{fmt(finalMM)}</span>
-              <span style={{ ...cellStyle, fontWeight: 800, color: "#7c3aed" }}>{fmt(totals.globalReturn + finalMM)}</span>
+              <span style={{ ...cellStyle, fontWeight: 700, color: "#0f172a" }}>{fmt(totals.totalReturn)}</span>
+              <span style={{ ...cellStyle, fontWeight: 800, color: "#16a34a" }}>{fmt(totals.mmInterest)}</span>
+              <span style={{ ...cellStyle, fontWeight: 800, color: "#16a34a" }}>{fmt(totals.globalReturn + totals.mmInterest)}</span>
             </div>
           </div>
           {/* IRR */}
@@ -184,7 +185,7 @@ function ReturnProfile() {
               <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#7c3aed" }}>
                 IRR w/ MM Reinvest
               </span>
-              <span style={{ fontSize: 15, fontWeight: 800, color: "#7c3aed", fontVariantNumeric: "tabular-nums" }}>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "#16a34a", fontVariantNumeric: "tabular-nums" }}>
                 {(annualIRRMM * 100).toFixed(2)}%
               </span>
             </div>
@@ -279,7 +280,7 @@ function InvestmentHistoryTable() {
       monthlyPI: "$13,347",
       totalReturn: "$1,118,560",
       irr: "11.66%",
-      irrMM: "23.50%",
+      irrMM: "11.88%",
       status: "Active",
     },
   ];
