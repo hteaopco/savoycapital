@@ -446,6 +446,86 @@ function ReturnProfile() {
     </div>
   );
 }
+function DataRoom() {
+  const [open, setOpen] = useState(false);
+  const checkmark = <span style={{ color: "#16a34a", fontSize: 13, marginRight: 6 }}>✓</span>;
+  const pending = <span style={{ color: "#cbd5e1", fontSize: 11, marginRight: 6 }}>○</span>;
+  const exportBtn = (path: string) => (
+    <button
+      onClick={() => window.open(path, "_blank")}
+      style={{
+        padding: "2px 10px", borderRadius: 5, fontSize: 9, fontWeight: 700,
+        cursor: "pointer", fontFamily: "inherit",
+        background: "rgba(15,23,42,0.05)", border: "1px solid rgba(15,23,42,0.12)",
+        color: "#0f172a", transition: "all .15s", whiteSpace: "nowrap",
+      }}
+    >
+      Export ↗
+    </button>
+  );
+  const sectionLabel = (label: string) => (
+    <div style={{ fontSize: 8, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#94a3b8", marginTop: 16, marginBottom: 6 }}>
+      {label}
+    </div>
+  );
+  const docRow = (name: string, received: boolean, exportPath?: string, unavailable?: boolean) => (
+    <div key={name} style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "7px 12px", borderRadius: 7,
+      background: "rgba(0,0,0,0.015)", border: "1px solid rgba(0,0,0,0.05)",
+      marginBottom: 4,
+    }}>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        {received ? checkmark : pending}
+        <span style={{ fontSize: 11, fontWeight: 600, color: unavailable ? "#94a3b8" : "#0f172a" }}>{name}</span>
+        {unavailable && <span style={{ fontSize: 10, fontStyle: "italic", color: "#94a3b8", marginLeft: 6 }}>Unavailable</span>}
+      </div>
+      {received && exportPath && exportBtn(exportPath)}
+    </div>
+  );
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <button onClick={() => setOpen(!open)} style={{
+        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "11px 16px",
+        background: open ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
+        border: "1px solid rgba(0,0,0,0.07)",
+        borderRadius: open ? "8px 8px 0 0" : 8,
+        cursor: "pointer", fontFamily: "inherit",
+      }}>
+        <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#38bdf8" }}>
+          Data Room
+        </span>
+        <span style={{ fontSize: 11, color: "#94a3b8" }}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div style={{
+          padding: "12px 16px 16px",
+          border: "1px solid rgba(0,0,0,0.07)", borderTop: "none",
+          borderRadius: "0 0 8px 8px",
+          background: "#fafafa",
+        }}>
+          {/* Investment Docs */}
+          {sectionLabel("Investment Documents")}
+          {docRow("Investment Memo", true, "/docs/hteao-investment-memo.pdf")}
+          {docRow("Investment Summary", false, undefined, true)}
+          {/* Corporate Financials */}
+          {sectionLabel("Corporate Financials")}
+          {docRow("LTM Set", true, "/docs/hteao-ltm.pdf")}
+          {docRow("NTM Set", true, "/docs/hteao-ntm.pdf")}
+          {/* Legal */}
+          {sectionLabel("Legal")}
+          {docRow("Promissory Note", false)}
+          {docRow("Security Agreement", false)}
+          {docRow("UCC-1 Filing", false)}
+          {docRow("Personal Guarantees", false)}
+          {docRow("Closing / Disbursement Instructions", false)}
+          {docRow("Title / Lien Search", false)}
+        </div>
+      )}
+    </div>
+  );
+}
 function InvestmentCard() {
   const [dealOpen, setDealOpen] = useState(false);
   return (
@@ -455,43 +535,70 @@ function InvestmentCard() {
       borderRadius: 12, overflow: "hidden",
       marginBottom: 8,
     }}>
-      <button onClick={() => setDealOpen(!dealOpen)} style={{
-        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "14px 20px",
-        background: "none", border: "none", cursor: "pointer",
-        fontFamily: "inherit",
-        borderBottom: dealOpen ? "1px solid rgba(0,0,0,0.07)" : "none",
+      {/* Card Header — always visible */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "18px 20px",
+        borderBottom: "1px solid rgba(0,0,0,0.07)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "#94a3b8" }}>#001</span>
           <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>HTeaO Bridge Loan</span>
           <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", color: "#38bdf8" }}>Active</span>
         </div>
-        <span style={{ fontSize: 12, color: "#94a3b8" }}>{dealOpen ? "▲" : "▼"}</span>
-      </button>
-      {dealOpen && (
-        <div style={{ padding: "16px 20px" }}>
-          <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#38bdf8", marginBottom: 12 }}>Deal Terms</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-            {[
-              ["Investment", "$1,010,000"],
-              ["Structure", "12 Month Balloon"],
-              ["Rate / Fee", "10% Rate · 1% Fee"],
-              ["Extension", "+1% Fee if extended to 24 Months"],
-              ["Amortization", "10 Year Schedule"],
-            ].map(([label, value]) => (
-              <div key={label} style={{
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-                padding: "8px 12px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 8,
-              }}>
-                <span style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>{label}</span>
-                <span style={{ fontSize: 12, color: "#0f172a", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{value}</span>
-              </div>
-            ))}
-          </div>
-          <ReturnProfile />
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span style={{ fontSize: 10, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>$1,010,000</span>
+          <span style={{ fontSize: 10, color: "#94a3b8" }}>·</span>
+          <span style={{ fontSize: 10, color: "#94a3b8" }}>10% · 12mo</span>
         </div>
-      )}
+      </div>
+      {/* Card Body */}
+      <div style={{ padding: "16px 20px" }}>
+        {/* Data Room */}
+        <DataRoom />
+        {/* Deal Terms */}
+        <div style={{ marginBottom: 8 }}>
+          <button onClick={() => setDealOpen(!dealOpen)} style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "11px 16px",
+            background: dealOpen ? "rgba(251,191,36,0.07)" : "rgba(0,0,0,0.02)",
+            border: "1px solid rgba(0,0,0,0.07)",
+            borderRadius: dealOpen ? "8px 8px 0 0" : 8,
+            cursor: "pointer", fontFamily: "inherit",
+          }}>
+            <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#b45309" }}>
+              Deal Terms
+            </span>
+            <span style={{ fontSize: 11, color: "#94a3b8" }}>{dealOpen ? "▲" : "▼"}</span>
+          </button>
+          {dealOpen && (
+            <div style={{
+              padding: "14px 16px",
+              border: "1px solid rgba(0,0,0,0.07)", borderTop: "none",
+              borderRadius: "0 0 8px 8px", background: "#fafafa",
+            }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+                {[
+                  ["Investment", "$1,010,000"],
+                  ["Structure", "12 Month Balloon"],
+                  ["Rate / Fee", "10% Rate · 1% Fee"],
+                  ["Extension", "+1% Fee if extended to 24 Months"],
+                  ["Amortization", "10 Year Schedule"],
+                ].map(([label, value]) => (
+                  <div key={label} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "8px 12px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 8,
+                  }}>
+                    <span style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>{label}</span>
+                    <span style={{ fontSize: 12, color: "#0f172a", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+              <ReturnProfile />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
