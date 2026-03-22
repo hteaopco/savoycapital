@@ -29,9 +29,8 @@
 ## Section 2: Rules for Claude (Strict)
 
 - Make small, focused changes — one thing at a time.
-- Explain every change in plain language in the PR description.
+- Commit and push directly to `main` — do NOT create branches or pull requests.
 - Summarize: what changed, why, any risks, and any follow-ups needed.
-
 - Ask before doing big refactors or restructuring.
 
 ---
@@ -64,9 +63,9 @@ If something looks broken on the live site:
 1. Go to **Railway** dashboard → click your project → click **Deployments** → click the latest deploy → view **Logs**.
 2. Copy the error message or relevant log lines.
 3. Paste them into Claude Code and say:
-   > "Here is a production error from Railway. Diagnose the issue, propose a fix, and implement it via a new branch and pull request."
-4. Claude will create a fix and open a PR.
-5. Review the PR on GitHub → Merge → Railway auto-redeploys.
+   > "Here is a production error from Railway. Diagnose the issue, propose a fix, and push it to main."
+4. Claude will fix the issue, commit, and push to `main`.
+5. Railway auto-redeploys from the push.
 
 ---
 
@@ -78,8 +77,8 @@ If something looks broken on the live site:
 
 | Task | What to tell Claude |
 |------|-------------------|
-| Change text | "Change [text] to [new text], branch + PR" |
-| Add section | "Add a new [section name] section below [existing section], branch + PR" |
-| Change color | "Change the [element] color to [color], branch + PR" |
-| Fix a bug | Paste Railway error + "fix via branch + PR" |
+| Change text | "Change [text] to [new text]" |
+| Add section | "Add a new [section name] section below [existing section]" |
+| Change color | "Change the [element] color to [color]" |
+| Fix a bug | Paste Railway error + "fix this" |
 | Ask a question | "Where is the code for [thing]?" |
