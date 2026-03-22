@@ -231,7 +231,7 @@ ${cols.map(c => `<div class="col-def"><div class="col-name">${c.label}</div><div
 }
 
 function ReturnProfile() {
-  const [mmOn, setMmOn] = useState(true);
+  const [mmOn, setMmOn] = useState(false);
   const schedule = buildSchedule();
   const regularRows = schedule.filter(r => !r.isBalloon);
   const balloonRow = schedule.find(r => r.isBalloon);
@@ -602,6 +602,7 @@ function InvestmentCard() {
             }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
                 {[
+                  ["Date", "05/01/2026"],
                   ["Investment", "$1,010,000"],
                   ["Structure", "12 Month Balloon"],
                   ["Rate / Fee", "10% Rate · 1% Fee"],
