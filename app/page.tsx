@@ -261,6 +261,7 @@ function ReturnProfile() {
   return (
     <div style={{ marginTop: 12 }}>
       {/* Header bar with MM toggle cards */}
+      {/* Header bar with MM toggle cards */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "10px 14px",
@@ -301,6 +302,46 @@ function ReturnProfile() {
         border: "1px solid rgba(0,0,0,0.07)", borderTop: "none",
         borderRadius: "0 0 8px 8px", overflow: "hidden",
       }}>
+        {/* IRR Footer */}
+        <div style={{
+          padding: "10px 14px",
+          borderTop: "none",
+          background: "rgba(74,222,128,0.03)",
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#64748b" }}>
+            {mmOn ? "IRR w/ MM Reinvest" : "Annual IRR"}
+          </span>
+          <span style={{ fontSize: 15, fontWeight: 800, color: "#16a34a", fontVariantNumeric: "tabular-nums" }}>
+            {(displayIRR * 100).toFixed(2)}%
+          </span>
+        </div>
+        {/* Investment Highlights */}
+        <div style={{
+          padding: "12px 14px",
+          borderTop: "1px solid rgba(0,0,0,0.06)",
+          background: "#fafafa",
+        }}>
+          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#64748b", marginBottom: 10 }}>
+            Investment Highlights
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {[
+              ["Investment", fmt(-schedule[0].investment)],
+              ["Interest", fmt(totals.interest)],
+              ["Deal Fee", fmt(totals.dealFee)],
+              ["MM Interest", mmOn ? fmt(totals.mmInterest) : "—"],
+              ["Scheduled Prin Returned", fmt(totals.prinReturned)],
+              ["Balloon Payment", fmt(balloonRow?.prinReturned ?? 0)],
+              ["Total Returned", fmt(totals.globalReturn + (balloonRow?.globalReturn ?? 0) + (mmOn ? totals.mmInterest : 0))],
+            ].map(([label, value]) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
+                <span style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>{label}</span>
+                <span style={{ fontSize: 11, color: label === "Total Returned" ? "#16a34a" : "#0f172a", fontWeight: label === "Total Returned" ? 800 : 600, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
         <div style={{ overflowX: "auto" }}>
           {/* Header */}
           <div style={{
@@ -327,7 +368,7 @@ function ReturnProfile() {
             <div key={String(r.month)} style={{
               display: "grid", gridTemplateColumns: colWidths,
               padding: "3.5px 14px", alignItems: "center",
-              borderBottom: "1px solid rgba(0,0,0,0.04)",
+              borderBottom: r.month === 0 ? "1px solid rgba(0,0,0,0.15)" : "1px solid rgba(0,0,0,0.04)",
               background: r.isBalloon ? "rgba(251,191,36,0.05)" : idx % 2 === 0 ? "transparent" : "rgba(0,0,0,0.015)",
               minWidth: "fit-content",
             }}>
@@ -335,8 +376,8 @@ function ReturnProfile() {
               <span style={{ ...cellStyle, color: r.investment < 0 ? "#f87171" : "#0f172a" }}>
                 {r.investment !== 0 ? fmt(r.investment) : (r.isBalloon ? "" : "—")}
               </span>
-              <span style={cellStyle}>{r.dealFee > 0 ? fmt(r.dealFee) : (r.isBalloon ? "" : "—")}</span>
-              <span style={cellStyle}>{r.interest > 0 ? fmt(r.interest) : (r.isBalloon ? "" : "—")}</span>
+              <span style={cellStyle}>{r.dealFee > 0 ? fmt(r.dealFee) : (r.isBalloon || r.month === 0 ? "" : "—")}</span>
+              <span style={cellStyle}>{r.interest > 0 ? fmt(r.interest) : (r.isBalloon || r.month === 0 ? "" : "—")}</span>
               {/* Total Return — bold, light green bg */}
               <span style={{
                 ...cellStyle, fontWeight: 800,
@@ -344,27 +385,27 @@ function ReturnProfile() {
                 background: r.totalReturn > 0 ? "rgba(22,163,74,0.08)" : "transparent",
                 padding: "2px 4px", borderRadius: 3,
               }}>
-                {r.totalReturn > 0 ? fmt(r.totalReturn) : (r.isBalloon ? "" : "—")}
+                {r.totalReturn > 0 ? fmt(r.totalReturn) : (r.isBalloon || r.month === 0 ? "" : "—")}
               </span>
-              <span style={cellStyle}>{r.prinReturned > 0 ? fmt(r.prinReturned) : (r.isBalloon ? "" : "—")}</span>
-              <span style={{ ...cellStyle, fontWeight: 700, color: r.globalReturn < 0 ? "#f87171" : r.globalReturn > 0 ? "#16a34a" : "#0f172a" }}>
-                {fmt(r.globalReturn)}
+              <span style={cellStyle}>{r.prinReturned > 0 ? fmt(r.prinReturned) : (r.isBalloon || r.month === 0 ? "" : "—")}</span>
+              <span style={{ ...cellStyle, fontWeight: 500, color: r.globalReturn < 0 ? "#f87171" : "#0f172a" }}>
+                {r.month === 0 ? fmt(r.globalReturn) : fmt(r.globalReturn)}
               </span>
               {/* MM Deposit */}
               <span style={{ ...cellStyle, color: mmOn ? "#0f172a" : "#cbd5e1" }}>
-                {r.mmDeposit > 0 ? fmt(r.mmDeposit) : (r.isBalloon ? "" : "—")}
+                {r.mmDeposit > 0 ? fmt(r.mmDeposit) : (r.isBalloon || r.month === 0 ? "" : "—")}
               </span>
               {/* MM Interest */}
               <span style={{ ...cellStyle, color: mmOn ? "#16a34a" : "#cbd5e1", fontWeight: mmOn ? 600 : 400 }}>
-                {r.mmInterest > 0 ? fmt(r.mmInterest) : "—"}
+                {r.mmInterest > 0 ? fmt(r.mmInterest) : (r.month === 0 ? "" : "—")}
               </span>
               {/* Global Return w/ MM */}
               <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? (r.globalReturnMM < 0 ? "#f87171" : r.globalReturnMM > 0 ? "#16a34a" : "#0f172a") : "#cbd5e1" }}>
-                {mmOn ? (r.globalReturnMM !== 0 ? fmt(r.globalReturnMM) : "") : "—"}
+                {r.month === 0 ? "" : mmOn ? (r.globalReturnMM !== 0 ? fmt(r.globalReturnMM) : "") : "—"}
               </span>
               {/* Running IRR */}
-              <span style={{ ...cellStyle, fontWeight: 700, color: "#0f172a" }}>
-                {r.month === 0 ? "—" : r.isBalloon ? "" : `${((mmOn ? r.runningIRRMM : r.runningIRR) * 100).toFixed(2)}%`}
+              <span style={{ ...cellStyle, fontWeight: 400, color: "#0f172a" }}>
+                {r.month === 0 || r.isBalloon ? "" : `${((mmOn ? r.runningIRRMM : r.runningIRR) * 100).toFixed(2)}%`}
               </span>
             </div>
           ))}
@@ -377,56 +418,16 @@ function ReturnProfile() {
             minWidth: "fit-content",
           }}>
             <span style={{ ...cellStyle, color: "#38bdf8", fontWeight: 800 }}>Total</span>
-            <span style={cellStyle}>—</span>
+            <span style={cellStyle}></span>
             <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.dealFee)}</span>
             <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.interest)}</span>
             <span style={{ ...cellStyle, fontWeight: 800, color: "#15803d", background: "rgba(22,163,74,0.08)", padding: "2px 4px", borderRadius: 3 }}>{fmt(totals.totalReturn)}</span>
             <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.prinReturned + (balloonRow?.prinReturned ?? 0))}</span>
-            <span style={{ ...cellStyle, fontWeight: 800, color: "#16a34a" }}>{fmt(totals.globalReturn + (balloonRow?.globalReturn ?? 0))}</span>
-            <span style={{ ...cellStyle, fontWeight: 700, color: mmOn ? "#0f172a" : "#cbd5e1" }}>{mmOn ? fmt(mmCumTotal) : "—"}</span>
+            <span style={{ ...cellStyle, fontWeight: 500, color: "#0f172a" }}>{fmt(totals.globalReturn + (balloonRow?.globalReturn ?? 0))}</span>
+            <span style={{ ...cellStyle, fontWeight: 700, color: mmOn ? "#0f172a" : "#cbd5e1" }}></span>
             <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt((balloonRow?.mmInterest ?? 0) + totals.mmInterest) : "—"}</span>
-            <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt(schedule[schedule.length - 1].mmBalance) : "—"}</span>
+            <span style={{ ...cellStyle, fontWeight: 500, color: mmOn ? "#0f172a" : "#cbd5e1" }}>{mmOn ? fmt(schedule[schedule.length - 1].mmBalance) : "—"}</span>
             <span style={cellStyle}>—</span>
-          </div>
-        </div>
-        {/* IRR Footer */}
-        <div style={{
-          padding: "10px 14px",
-          borderTop: "1px solid rgba(0,0,0,0.06)",
-          background: "rgba(74,222,128,0.03)",
-          display: "flex", alignItems: "center", gap: 8,
-        }}>
-          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#64748b" }}>
-            {mmOn ? "IRR w/ MM Reinvest" : "Annual IRR"}
-          </span>
-          <span style={{ fontSize: 15, fontWeight: 800, color: "#16a34a", fontVariantNumeric: "tabular-nums" }}>
-            {(displayIRR * 100).toFixed(2)}%
-          </span>
-        </div>
-        {/* Investment Highlights */}
-        <div style={{
-          padding: "12px 14px",
-          borderTop: "1px solid rgba(0,0,0,0.06)",
-          background: "#fafafa",
-        }}>
-          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#64748b", marginBottom: 10 }}>
-            Investment Highlights
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 24px" }}>
-            {[
-              ["Investment", fmt(-schedule[0].investment)],
-              ["Interest", fmt(totals.interest)],
-              ["Deal Fee", fmt(totals.dealFee)],
-              ["MM Interest", mmOn ? fmt(totals.mmInterest) : "—"],
-              ["Scheduled Prin Returned", fmt(totals.prinReturned)],
-              ["Balloon Payment", fmt(balloonRow?.prinReturned ?? 0)],
-              ["Total Returned", fmt(totals.globalReturn + (balloonRow?.globalReturn ?? 0) + (mmOn ? totals.mmInterest : 0))],
-            ].map(([label, value]) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
-                <span style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>{label}</span>
-                <span style={{ fontSize: 11, color: label === "Total Returned" ? "#16a34a" : "#0f172a", fontWeight: label === "Total Returned" ? 800 : 600, fontVariantNumeric: "tabular-nums" }}>{value}</span>
-              </div>
-            ))}
           </div>
         </div>
         {/* Export Footer */}
@@ -472,8 +473,8 @@ function ReturnProfile() {
 }
 function DataRoom() {
   const [open, setOpen] = useState(false);
-  const checkmark = <span style={{ color: "#16a34a", fontSize: 13, marginRight: 6 }}>✓</span>;
-  const pending = <span style={{ color: "#cbd5e1", fontSize: 11, marginRight: 6 }}>○</span>;
+  const checkmark = () => (<span style={{ color: "#16a34a", fontSize: 13, marginRight: 6 }}>✓</span>);
+  const pending = () => (<span style={{ color: "#cbd5e1", fontSize: 11, marginRight: 6 }}>○</span>);
   const exportBtn = (path: string) => (
     <button
       onClick={() => window.open(path, "_blank")}
@@ -500,7 +501,7 @@ function DataRoom() {
       marginBottom: 4,
     }}>
       <div style={{ display: "flex", alignItems: "center" }}>
-        {received ? checkmark : pending}
+        {received ? checkmark() : pending()}
         <span style={{ fontSize: 11, fontWeight: 600, color: unavailable ? "#94a3b8" : "#0f172a" }}>{name}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -531,15 +532,12 @@ function DataRoom() {
           borderRadius: "0 0 8px 8px",
           background: "#fafafa",
         }}>
-          {/* Investment Docs */}
           {sectionLabel("Investment Documents")}
           {docRow("Investment Memo", true, "/docs/hteao-investment-memo.pdf")}
           {docRow("Investment Summary", false, undefined, true)}
-          {/* Corporate Financials */}
           {sectionLabel("Corporate Financials")}
           {docRow("LTM Set", true, "/docs/hteao-ltm.pdf")}
           {docRow("NTM Set", true, "/docs/hteao-ntm.pdf")}
-          {/* Legal */}
           {sectionLabel("Legal")}
           {docRow("Promissory Note", false)}
           {docRow("Security Agreement", false)}
