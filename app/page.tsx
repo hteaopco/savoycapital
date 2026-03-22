@@ -201,9 +201,10 @@ function ReturnProfile() {
     mmInterest: acc.mmInterest + r.mmInterest,
   }), { dealFee: 0, interest: 0, totalReturn: 0, prinReturned: 0, globalReturn: 0, mmInterest: 0 });
   const mmCumTotal = regularRows[regularRows.length - 1].mmDeposit;
-  const irrCashflows = schedule.map(r => r.globalReturn);
+  // IRR: use regular rows only (balloon principal already in M12 globalReturn)
+  const irrCashflows = regularRows.map(r => r.globalReturn);
   const annualIRR = Math.pow(1 + computeIRR(irrCashflows), 12) - 1;
-  const irrMMCashflows = schedule.map(r => r.globalReturn + r.mmInterest);
+  const irrMMCashflows = regularRows.map(r => r.globalReturn + r.mmInterest);
   const annualIRRMM = Math.pow(1 + computeIRR(irrMMCashflows), 12) - 1;
   const displayIRR = mmOn ? annualIRRMM : annualIRR;
 
