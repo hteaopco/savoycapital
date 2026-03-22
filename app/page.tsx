@@ -232,6 +232,7 @@ ${cols.map(c => `<div class="col-def"><div class="col-name">${c.label}</div><div
 
 function ReturnProfile() {
   const [mmOn, setMmOn] = useState(false);
+  const [tableOpen, setTableOpen] = useState(false);
   const schedule = buildSchedule();
   const regularRows = schedule.filter(r => !r.isBalloon);
   const balloonRow = schedule.find(r => r.isBalloon);
@@ -342,6 +343,21 @@ function ReturnProfile() {
             ))}
           </div>
         </div>
+        {/* Expand Investment Table toggle */}
+        <button onClick={() => setTableOpen(!tableOpen)} style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "9px 14px",
+          background: tableOpen ? "rgba(56,189,248,0.04)" : "rgba(0,0,0,0.02)",
+          border: "none",
+          borderTop: "1px solid rgba(0,0,0,0.06)",
+          cursor: "pointer", fontFamily: "inherit",
+        }}>
+          <span style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#64748b" }}>
+            {tableOpen ? "Collapse Investment Table" : "Expand Investment Table"}
+          </span>
+          <span style={{ fontSize: 11, color: "#94a3b8" }}>{tableOpen ? "▲" : "▼"}</span>
+        </button>
+        {tableOpen && (<>
         <div style={{ overflowX: "auto" }}>
           {/* Header */}
           <div style={{
@@ -468,6 +484,7 @@ function ReturnProfile() {
             </button>
           </div>
         </div>
+        </>)}
       </div>
     </div>
   );
@@ -476,6 +493,7 @@ function DataRoom() {
   const [open, setOpen] = useState(false);
   const checkmark = () => (<span style={{ color: "#16a34a", fontSize: 13, marginRight: 6 }}>✓</span>);
   const pending = () => (<span style={{ color: "#cbd5e1", fontSize: 11, marginRight: 6 }}>○</span>);
+  const pendingRed = () => (<span style={{ color: "#f87171", fontSize: 11, marginRight: 6 }}>●</span>);
   const exportBtn = (path: string) => (
     <button
       onClick={() => window.open(path, "_blank")}
@@ -494,7 +512,7 @@ function DataRoom() {
       {label}
     </div>
   );
-  const docRow = (name: string, received: boolean, exportPath?: string, unavailable?: boolean) => (
+  const docRow = (name: string, received: boolean, exportPath?: string, unavailable?: boolean, redPending?: boolean) => (
     <div key={name} style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "7px 12px", borderRadius: 7,
@@ -502,7 +520,7 @@ function DataRoom() {
       marginBottom: 4,
     }}>
       <div style={{ display: "flex", alignItems: "center" }}>
-        {received ? checkmark() : pending()}
+        {received ? checkmark() : redPending ? pendingRed() : pending()}
         <span style={{ fontSize: 11, fontWeight: 600, color: unavailable ? "#94a3b8" : "#0f172a" }}>{name}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -540,12 +558,12 @@ function DataRoom() {
           {docRow("LTM Set", true, "/docs/hteao-ltm.pdf")}
           {docRow("NTM Set", true, "/docs/hteao-ntm.pdf")}
           {sectionLabel("Legal")}
-          {docRow("Promissory Note", false)}
-          {docRow("Security Agreement", false)}
-          {docRow("UCC-1 Filing", false)}
-          {docRow("Personal Guarantees", false)}
-          {docRow("Closing / Disbursement Instructions", false)}
-          {docRow("Title / Lien Search", false)}
+          {docRow("Promissory Note", false, undefined, false, true)}
+          {docRow("Security Agreement", false, undefined, false, true)}
+          {docRow("UCC-1 Filing", false, undefined, false, true)}
+          {docRow("Personal Guarantees", false, undefined, false, true)}
+          {docRow("Closing / Disbursement Instructions", false, undefined, false, true)}
+          {docRow("Title / Lien Search", false, undefined, false, true)}
         </div>
       )}
     </div>
@@ -602,7 +620,7 @@ function InvestmentCard() {
             }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
                 {[
-                  ["Date", "05/01/2026"],
+                  ["Date", "05/01/26"],
                   ["Investment", "$1,010,000"],
                   ["Structure", "12 Month Balloon"],
                   ["Rate / Fee", "10% Rate · 1% Fee"],
