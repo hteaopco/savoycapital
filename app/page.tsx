@@ -326,7 +326,7 @@ function ReturnProfile() {
           {schedule.map((r, idx) => (
             <div key={String(r.month)} style={{
               display: "grid", gridTemplateColumns: colWidths,
-              padding: "5px 14px", alignItems: "center",
+              padding: "3.5px 14px", alignItems: "center",
               borderBottom: "1px solid rgba(0,0,0,0.04)",
               background: r.isBalloon ? "rgba(251,191,36,0.05)" : idx % 2 === 0 ? "transparent" : "rgba(0,0,0,0.015)",
               minWidth: "fit-content",
@@ -363,8 +363,8 @@ function ReturnProfile() {
                 {mmOn ? (r.globalReturnMM !== 0 ? fmt(r.globalReturnMM) : "") : "—"}
               </span>
               {/* Running IRR */}
-              <span style={{ ...cellStyle, fontWeight: 700, color: r.month === 0 || r.isBalloon ? "#0f172a" : "#0ea5e9" }}>
-                {r.month === 0 || r.isBalloon ? "—" : `${((mmOn ? r.runningIRRMM : r.runningIRR) * 100).toFixed(2)}%`}
+              <span style={{ ...cellStyle, fontWeight: 700, color: "#0f172a" }}>
+                {r.month === 0 ? "—" : r.isBalloon ? "" : `${((mmOn ? r.runningIRRMM : r.runningIRR) * 100).toFixed(2)}%`}
               </span>
             </div>
           ))}
@@ -488,15 +488,15 @@ function DataRoom() {
       <button onClick={() => setOpen(!open)} style={{
         width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "11px 16px",
-        background: open ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
-        border: "1px solid rgba(0,0,0,0.07)",
+        background: "#2d3748",
+        border: "1px solid #2d3748",
         borderRadius: open ? "8px 8px 0 0" : 8,
         cursor: "pointer", fontFamily: "inherit",
       }}>
-        <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#38bdf8" }}>
+        <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#ffffff" }}>
           Data Room
         </span>
-        <span style={{ fontSize: 11, color: "#94a3b8" }}>{open ? "▲" : "▼"}</span>
+        <span style={{ fontSize: 11, color: "#ffffff" }}>{open ? "▲" : "▼"}</span>
       </button>
       {open && (
         <div style={{
@@ -547,7 +547,7 @@ function InvestmentCard() {
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <span style={{ fontSize: 13, color: "#0f172a", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>$1,010,000</span>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", color: "#38bdf8" }}>Active</span>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(22,163,74,0.1)", border: "1px solid rgba(22,163,74,0.3)", color: "#16a34a" }}>Active</span>
         </div>
       </div>
       {/* Card Body */}
@@ -559,15 +559,15 @@ function InvestmentCard() {
           <button onClick={() => setDealOpen(!dealOpen)} style={{
             width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "11px 16px",
-            background: dealOpen ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
-            border: "1px solid rgba(0,0,0,0.07)",
+            background: "#2d3748",
+            border: "1px solid #2d3748",
             borderRadius: dealOpen ? "8px 8px 0 0" : 8,
             cursor: "pointer", fontFamily: "inherit",
           }}>
-            <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#38bdf8" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#ffffff" }}>
               Deal Terms
             </span>
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>{dealOpen ? "▲" : "▼"}</span>
+            <span style={{ fontSize: 11, color: "#ffffff" }}>{dealOpen ? "▲" : "▼"}</span>
           </button>
           {dealOpen && (
             <div style={{
