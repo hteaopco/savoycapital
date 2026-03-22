@@ -38,6 +38,7 @@ function buildSchedule() {
   }[] = [];
   let balance = PRINCIPAL;
   let mmBalance = 0;
+  let mmCumDeposit = 0;
   const dealFeeMonth1 = PRINCIPAL * FEE_RATE;
   // Base cashflows built incrementally for running IRR
   const baseCFs = [-PRINCIPAL];
@@ -92,7 +93,7 @@ function exportTablePDF(schedule: ReturnType<typeof buildSchedule>, mmOn: boolea
     { label: "Total Return", desc: "Total cash income per month — Interest + Deal Fee. The yield component of the investment, excluding principal repayment." },
     { label: "Principal Returned", desc: "Portion of each payment reducing the loan balance, based on a 10-year amortization schedule. At Month 12 the full remaining balloon balance is returned." },
     { label: "Global Return", desc: "Total cash received each month: Total Return + Principal Returned. Complete cashflow back to the fund. Month 0 is negative (capital out), Months 1–12 are positive." },
-    { label: "MM Deposit (3.5%)", desc: "When MM Reinvestment is ON: each month's Total Return is deposited into a Money Market account earning 3.5% annually, reinvesting yield rather than distributing it." },
+    { label: "MM Deposit Cum. (3.5%)", desc: "When MM Reinvestment is ON: the cumulative total of all Total Return deposits made into the Money Market account through that month, earning 3.5% annually." },
     { label: "MM Interest", desc: "Monthly interest earned on the accumulated MM balance at 3.5% per annum. Compounds each month as new deposits are added to the growing balance." },
     { label: "Global Return w/ MM", desc: "Global Return enhanced by MM interest earned that month — total economic value when income is reinvested." },
     { label: "Running IRR", desc: "Annualized IRR assuming the deal exits (balloon) at the end of that month. Higher in early months due to the deal fee. Converges to the terminal rate at Month 12." },
@@ -101,8 +102,8 @@ function exportTablePDF(schedule: ReturnType<typeof buildSchedule>, mmOn: boolea
   const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
   const tableHeaders = mmOn
-    ? ["Mo.", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit", "MM Interest", "Global w/ MM", "Running IRR"]
-    : ["Mo.", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit", "MM Interest", "Global w/ MM", "Running IRR"];
+    ? ["Mo.", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Dep. Cum.", "MM Interest", "Global w/ MM", "Running IRR"]
+    : ["Mo.", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Dep. Cum.", "MM Interest", "Global w/ MM", "Running IRR"];
 
   const tableRowsHTML = schedule.map((r, idx) => {
     const bg = idx % 2 === 0 ? "#ffffff" : "#f8fafc";
@@ -199,8 +200,8 @@ function ReturnProfile() {
   const displayIRR = mmOn ? annualIRRMM : annualIRR;
 
   const cols = mmOn
-    ? ["Month", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit (3.5%)", "MM Interest", "Global Return w/ MM", "Running IRR"]
-    : ["Month", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit (3.5%)", "MM Interest", "Global Return w/ MM", "Running IRR"];
+    ? ["Month", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit Cum. (3.5%)", "MM Interest", "Global Return w/ MM", "Running IRR"]
+    : ["Month", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit Cum. (3.5%)", "MM Interest", "Global Return w/ MM", "Running IRR"];
   const colWidths = "50px 110px 90px 90px 110px 110px 120px 130px 100px 140px 90px";
 
   return (
@@ -328,7 +329,7 @@ function ReturnProfile() {
             <span style={{ ...cellStyle, fontWeight: 800, color: "#15803d", background: "rgba(22,163,74,0.08)", padding: "2px 4px", borderRadius: 3 }}>{fmt(totals.totalReturn)}</span>
             <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.prinReturned)}</span>
             <span style={{ ...cellStyle, fontWeight: 800, color: "#16a34a" }}>{fmt(totals.globalReturn)}</span>
-            <span style={{ ...cellStyle, fontWeight: 700, color: mmOn ? "#0f172a" : "#cbd5e1" }}>{mmOn ? fmt(totals.totalReturn) : "—"}</span>
+            <span style={{ ...cellStyle, fontWeight: 700, color: mmOn ? "#0f172a" : "#cbd5e1" }}>{mmOn ? fmt(schedule[schedule.length - 1].mmDeposit) : "—"}</span>
             <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt(totals.mmInterest) : "—"}</span>
             <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt(totals.globalReturn + totals.mmInterest) : "—"}</span>
             <span style={cellStyle}>—</span>
