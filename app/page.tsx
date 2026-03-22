@@ -381,8 +381,8 @@ function ReturnProfile() {
             <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.dealFee)}</span>
             <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.interest)}</span>
             <span style={{ ...cellStyle, fontWeight: 800, color: "#15803d", background: "rgba(22,163,74,0.08)", padding: "2px 4px", borderRadius: 3 }}>{fmt(totals.totalReturn)}</span>
-            <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.prinReturned)}</span>
-            <span style={{ ...cellStyle, fontWeight: 800, color: "#16a34a" }}>{fmt(totals.globalReturn)}</span>
+            <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.prinReturned + (balloonRow?.prinReturned ?? 0))}</span>
+            <span style={{ ...cellStyle, fontWeight: 800, color: "#16a34a" }}>{fmt(totals.globalReturn + (balloonRow?.globalReturn ?? 0))}</span>
             <span style={{ ...cellStyle, fontWeight: 700, color: mmOn ? "#0f172a" : "#cbd5e1" }}>{mmOn ? fmt(mmCumTotal) : "—"}</span>
             <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt((balloonRow?.mmInterest ?? 0) + totals.mmInterest) : "—"}</span>
             <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt(schedule[schedule.length - 1].mmBalance) : "—"}</span>
@@ -402,6 +402,32 @@ function ReturnProfile() {
           <span style={{ fontSize: 15, fontWeight: 800, color: "#16a34a", fontVariantNumeric: "tabular-nums" }}>
             {(displayIRR * 100).toFixed(2)}%
           </span>
+        </div>
+        {/* Investment Highlights */}
+        <div style={{
+          padding: "12px 14px",
+          borderTop: "1px solid rgba(0,0,0,0.06)",
+          background: "#fafafa",
+        }}>
+          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#64748b", marginBottom: 10 }}>
+            Investment Highlights
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 24px" }}>
+            {[
+              ["Investment", fmt(-schedule[0].investment)],
+              ["Interest", fmt(totals.interest)],
+              ["Deal Fee", fmt(totals.dealFee)],
+              ["MM Interest", mmOn ? fmt(totals.mmInterest) : "—"],
+              ["Scheduled Prin Returned", fmt(totals.prinReturned)],
+              ["Balloon Payment", fmt(balloonRow?.prinReturned ?? 0)],
+              ["Total Returned", fmt(totals.globalReturn + (balloonRow?.globalReturn ?? 0) + (mmOn ? totals.mmInterest : 0))],
+            ].map(([label, value]) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
+                <span style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>{label}</span>
+                <span style={{ fontSize: 11, color: label === "Total Returned" ? "#16a34a" : "#0f172a", fontWeight: label === "Total Returned" ? 800 : 600, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+              </div>
+            ))}
+          </div>
         </div>
         {/* Export Footer */}
         <div style={{
