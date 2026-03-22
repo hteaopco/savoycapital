@@ -31,16 +31,15 @@ function buildSchedule() {
   const totalMonths = AMORT_YEARS * 12;
   const monthlyPayment = PRINCIPAL * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
   const rows: {
-    month: number; investment: number; dealFee: number; interest: number;
+    month: number | string; investment: number; dealFee: number; interest: number;
     totalReturn: number; prinReturned: number; globalReturn: number;
     mmDeposit: number; mmInterest: number; mmBalance: number; globalReturnMM: number;
-    runningIRR: number; runningIRRMM: number;
+    runningIRR: number; runningIRRMM: number; isBalloon?: boolean;
   }[] = [];
   let balance = PRINCIPAL;
   let mmBalance = 0;
   let mmCumDeposit = 0;
   const dealFeeMonth1 = PRINCIPAL * FEE_RATE;
-  // Base cashflows built incrementally for running IRR
   const baseCFs = [-PRINCIPAL];
   const baseCFsMM = [-PRINCIPAL];
   rows.push({
@@ -57,8 +56,9 @@ function buildSchedule() {
     const globalReturn = totalReturn + principal;
     balance -= principal;
     const mmInterest = mmBalance * mmMonthlyRate;
-    mmBalance = mmBalance + mmInterest + totalReturn;
-    // Running IRR: hypothetical exit this month returning remaining balance
+    // Deposit globalReturn into MM each month 1-12
+    mmBalance = mmBalance + mmInterest + globalReturn;
+    mmCumDeposit += globalReturn;
     const exitCF = globalReturn + balance;
     const exitCFMM = exitCF + mmInterest;
     const monthlyIRR = computeIRR([...baseCFs, exitCF]);
@@ -68,16 +68,21 @@ function buildSchedule() {
     rows.push({
       month: m, investment: 0, dealFee, interest, totalReturn,
       prinReturned: principal, globalReturn,
-      mmDeposit: totalReturn, mmInterest, mmBalance, globalReturnMM: globalReturn + mmInterest,
+      mmDeposit: mmCumDeposit, mmInterest, mmBalance, globalReturnMM: globalReturn + mmInterest,
       runningIRR, runningIRRMM,
     });
     baseCFs.push(globalReturn);
     baseCFsMM.push(globalReturn + mmInterest);
   }
-  // Actual balloon at month 12
-  rows[MONTHS].prinReturned += balance;
-  rows[MONTHS].globalReturn += balance;
-  rows[MONTHS].globalReturnMM = rows[MONTHS].globalReturn + rows[MONTHS].mmInterest;
+  // Balloon row — remaining principal returned, no new MM deposit, MM earns final interest
+  const mmInterestBalloon = mmBalance * mmMonthlyRate;
+  mmBalance = mmBalance + mmInterestBalloon;
+  rows.push({
+    month: "Balloon", investment: 0, dealFee: 0, interest: 0,
+    totalReturn: 0, prinReturned: balance, globalReturn: balance,
+    mmDeposit: 0, mmInterest: mmInterestBalloon, mmBalance, globalReturnMM: balance + mmInterestBalloon,
+    runningIRR: 0, runningIRRMM: 0, isBalloon: true,
+  });
   return rows;
 }
 // --- Components ---
@@ -185,7 +190,9 @@ ${cols.map(c => `<div class="col-def"><div class="col-name">${c.label}</div><div
 function ReturnProfile() {
   const [mmOn, setMmOn] = useState(true);
   const schedule = buildSchedule();
-  const totals = schedule.slice(1).reduce((acc, r) => ({
+  const regularRows = schedule.filter(r => !r.isBalloon);
+  const balloonRow = schedule.find(r => r.isBalloon);
+  const totals = regularRows.slice(1).reduce((acc, r) => ({
     dealFee: acc.dealFee + r.dealFee,
     interest: acc.interest + r.interest,
     totalReturn: acc.totalReturn + r.totalReturn,
@@ -193,6 +200,7 @@ function ReturnProfile() {
     globalReturn: acc.globalReturn + r.globalReturn,
     mmInterest: acc.mmInterest + r.mmInterest,
   }), { dealFee: 0, interest: 0, totalReturn: 0, prinReturned: 0, globalReturn: 0, mmInterest: 0 });
+  const mmCumTotal = regularRows[regularRows.length - 1].mmDeposit;
   const irrCashflows = schedule.map(r => r.globalReturn);
   const annualIRR = Math.pow(1 + computeIRR(irrCashflows), 12) - 1;
   const irrMMCashflows = schedule.map(r => r.globalReturn + r.mmInterest);
@@ -270,14 +278,14 @@ function ReturnProfile() {
           </div>
           {/* Rows */}
           {schedule.map((r, idx) => (
-            <div key={r.month} style={{
+            <div key={String(r.month)} style={{
               display: "grid", gridTemplateColumns: colWidths,
               padding: "8px 14px", alignItems: "center",
               borderBottom: "1px solid rgba(0,0,0,0.04)",
-              background: idx % 2 === 0 ? "transparent" : "rgba(0,0,0,0.015)",
+              background: r.isBalloon ? "rgba(251,191,36,0.05)" : idx % 2 === 0 ? "transparent" : "rgba(0,0,0,0.015)",
               minWidth: "fit-content",
             }}>
-              <span style={cellStyle}>{r.month}</span>
+              <span style={{ ...cellStyle, fontWeight: r.isBalloon ? 800 : 500, color: r.isBalloon ? "#b45309" : "#0f172a" }}>{r.month}</span>
               <span style={{ ...cellStyle, color: r.investment < 0 ? "#f87171" : "#0f172a" }}>
                 {r.investment !== 0 ? fmt(r.investment) : "—"}
               </span>
@@ -309,8 +317,8 @@ function ReturnProfile() {
                 {mmOn ? fmt(r.globalReturnMM) : "—"}
               </span>
               {/* Running IRR */}
-              <span style={{ ...cellStyle, fontWeight: 700, color: r.month === 0 ? "#0f172a" : "#0ea5e9" }}>
-                {r.month === 0 ? "—" : `${((mmOn ? r.runningIRRMM : r.runningIRR) * 100).toFixed(2)}%`}
+              <span style={{ ...cellStyle, fontWeight: 700, color: r.month === 0 || r.isBalloon ? "#0f172a" : "#0ea5e9" }}>
+                {r.month === 0 || r.isBalloon ? "—" : `${((mmOn ? r.runningIRRMM : r.runningIRR) * 100).toFixed(2)}%`}
               </span>
             </div>
           ))}
@@ -329,9 +337,9 @@ function ReturnProfile() {
             <span style={{ ...cellStyle, fontWeight: 800, color: "#15803d", background: "rgba(22,163,74,0.08)", padding: "2px 4px", borderRadius: 3 }}>{fmt(totals.totalReturn)}</span>
             <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.prinReturned)}</span>
             <span style={{ ...cellStyle, fontWeight: 800, color: "#16a34a" }}>{fmt(totals.globalReturn)}</span>
-            <span style={{ ...cellStyle, fontWeight: 700, color: mmOn ? "#0f172a" : "#cbd5e1" }}>{mmOn ? fmt(schedule[schedule.length - 1].mmDeposit) : "—"}</span>
-            <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt(totals.mmInterest) : "—"}</span>
-            <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt(totals.globalReturn + totals.mmInterest) : "—"}</span>
+            <span style={{ ...cellStyle, fontWeight: 700, color: mmOn ? "#0f172a" : "#cbd5e1" }}>{mmOn ? fmt(mmCumTotal) : "—"}</span>
+            <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt((balloonRow?.mmInterest ?? 0) + totals.mmInterest) : "—"}</span>
+            <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt(finalMM) : "—"}</span>
             <span style={cellStyle}>—</span>
           </div>
         </div>
