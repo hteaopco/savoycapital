@@ -384,9 +384,6 @@ export default function Home() {
           {/* Investments dropdown */}
           {investOpen && (
             <div>
-              <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em", color: "#94a3b8", marginBottom: 12 }}>
-                Deal Level Breakdown
-              </p>
               <InvestmentHistoryTable />
               <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em", color: "#94a3b8", marginBottom: 12 }}>
                 Active Positions
