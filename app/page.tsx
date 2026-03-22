@@ -248,6 +248,56 @@ function InvestmentCard() {
     </div>
   );
 }
+function InvestmentHistoryTable() {
+  const deals = [
+    {
+      id: "#001",
+      name: "HTeaO Bridge Loan",
+      deployed: "05/01/26",
+      amount: "$1,010,000",
+      rate: "10%",
+      amort: "10yr",
+      balloon: "05/01/27",
+      monthlyPI: "$13,347",
+      totalReturn: "$1,121,162",
+      irr: "11.01%",
+      status: "Active",
+    },
+  ];
+  const headers = ["#", "Deal", "Deployed", "Amount", "Rate", "Amort", "Balloon", "Mo. P&I", "Total Return", "IRR", "Status"];
+  return (
+    <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid rgba(0,0,0,0.08)", background: "#ffffff", marginBottom: 20 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
+        <thead>
+          <tr style={{ background: "rgba(56,189,248,0.05)", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+            {headers.map(h => (
+              <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", whiteSpace: "nowrap" }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {deals.map((d, i) => (
+            <tr key={d.id} style={{ borderBottom: "1px solid rgba(0,0,0,0.05)", background: i % 2 === 0 ? "transparent" : "rgba(0,0,0,0.01)" }}>
+              <td style={tdStyle}>{d.id}</td>
+              <td style={{ ...tdStyle, fontWeight: 700, color: "#0f172a" }}>{d.name}</td>
+              <td style={tdStyle}>{d.deployed}</td>
+              <td style={{ ...tdStyle, fontWeight: 700 }}>{d.amount}</td>
+              <td style={tdStyle}>{d.rate}</td>
+              <td style={tdStyle}>{d.amort}</td>
+              <td style={tdStyle}>{d.balloon}</td>
+              <td style={tdStyle}>{d.monthlyPI}</td>
+              <td style={{ ...tdStyle, fontWeight: 700, color: "#16a34a" }}>{d.totalReturn}</td>
+              <td style={{ ...tdStyle, fontWeight: 800, color: "#16a34a" }}>{d.irr}</td>
+              <td style={tdStyle}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", color: "#38bdf8" }}>{d.status}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [investOpen, setInvestOpen] = useState(false);
@@ -329,15 +379,16 @@ export default function Home() {
               marginBottom: investOpen ? 20 : 0,
             }}
           >
-            Current Investments {investOpen ? "▲" : "▼"}
+            Investment History {investOpen ? "▲" : "▼"}
           </button>
           {/* Investments dropdown */}
           {investOpen && (
             <div>
-              <p style={{
-                fontSize: 10, fontWeight: 700, textTransform: "uppercase",
-                letterSpacing: ".12em", color: "#94a3b8", marginBottom: 12,
-              }}>
+              <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em", color: "#94a3b8", marginBottom: 12 }}>
+                Deal Level Breakdown
+              </p>
+              <InvestmentHistoryTable />
+              <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em", color: "#94a3b8", marginBottom: 12 }}>
                 Active Positions
               </p>
               <InvestmentCard />
@@ -360,6 +411,10 @@ const mobileNavLinkStyle: React.CSSProperties = {
 };
 const cellStyle: React.CSSProperties = {
   fontSize: 12, fontWeight: 500, color: "#0f172a",
+  fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap",
+};
+const tdStyle: React.CSSProperties = {
+  padding: "10px 14px", fontSize: 12, color: "#334155",
   fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap",
 };
 function barStyle(open: boolean, pos: "top" | "mid" | "bot"): React.CSSProperties {
