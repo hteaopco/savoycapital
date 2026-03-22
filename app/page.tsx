@@ -554,6 +554,7 @@ function DataRoom() {
           {sectionLabel("Investment Documents")}
           {docRow("Investment Memo", true, "/docs/hteao-investment-memo.pdf")}
           {docRow("Investment Summary", false, undefined, true)}
+          {docRow("Term Sheet", false, undefined, false, true)}
           {sectionLabel("Corporate Financials")}
           {docRow("LTM Set", true, "/docs/hteao-ltm.pdf")}
           {docRow("NTM Set", true, "/docs/hteao-ntm.pdf")}
