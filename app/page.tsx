@@ -74,13 +74,11 @@ function buildSchedule() {
     baseCFs.push(globalReturn);
     baseCFsMM.push(globalReturn + mmInterest);
   }
-  // Balloon row — remaining principal returned, no new MM deposit, MM earns final interest
-  const mmInterestBalloon = mmBalance * mmMonthlyRate;
-  mmBalance = mmBalance + mmInterestBalloon;
+  // Balloon row — remaining principal returned, MM closes out, no new interest
   rows.push({
     month: "Balloon", investment: 0, dealFee: 0, interest: 0,
     totalReturn: 0, prinReturned: balance, globalReturn: balance,
-    mmDeposit: 0, mmInterest: mmInterestBalloon, mmBalance, globalReturnMM: balance + mmInterestBalloon,
+    mmDeposit: 0, mmInterest: 0, mmBalance, globalReturnMM: balance,
     runningIRR: 0, runningIRRMM: 0, isBalloon: true,
   });
   return rows;
@@ -328,7 +326,7 @@ function ReturnProfile() {
           {schedule.map((r, idx) => (
             <div key={String(r.month)} style={{
               display: "grid", gridTemplateColumns: colWidths,
-              padding: "8px 14px", alignItems: "center",
+              padding: "5px 14px", alignItems: "center",
               borderBottom: "1px solid rgba(0,0,0,0.04)",
               background: r.isBalloon ? "rgba(251,191,36,0.05)" : idx % 2 === 0 ? "transparent" : "rgba(0,0,0,0.015)",
               minWidth: "fit-content",
@@ -547,11 +545,9 @@ function InvestmentCard() {
           <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>HTeaO Loan</span>
 
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "#0f172a", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>$1,010,000</span>
-          <span style={{ fontSize: 10, color: "#94a3b8" }}>·</span>
-          <span style={{ fontSize: 10, color: "#94a3b8" }}>10% · 12mo</span>
-
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <span style={{ fontSize: 13, color: "#0f172a", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>$1,010,000</span>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", color: "#38bdf8" }}>Active</span>
         </div>
       </div>
       {/* Card Body */}
@@ -563,12 +559,12 @@ function InvestmentCard() {
           <button onClick={() => setDealOpen(!dealOpen)} style={{
             width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "11px 16px",
-            background: dealOpen ? "rgba(251,191,36,0.07)" : "rgba(0,0,0,0.02)",
+            background: dealOpen ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
             border: "1px solid rgba(0,0,0,0.07)",
             borderRadius: dealOpen ? "8px 8px 0 0" : 8,
             cursor: "pointer", fontFamily: "inherit",
           }}>
-            <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#b45309" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#38bdf8" }}>
               Deal Terms
             </span>
             <span style={{ fontSize: 11, color: "#94a3b8" }}>{dealOpen ? "▲" : "▼"}</span>
@@ -697,9 +693,7 @@ export default function Home() {
           </button>
           {investOpen && (
             <div>
-              <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em", color: "#94a3b8", marginBottom: 12 }}>
-                Active Positions
-              </p>
+
               <InvestmentCard />
             </div>
           )}
