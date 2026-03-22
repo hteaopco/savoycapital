@@ -258,7 +258,7 @@ function ReturnProfile() {
   const cols = mmOn
     ? ["Month", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit Cum. (3.5%)", "MM Interest", "Global Return w/ MM", "Running IRR"]
     : ["Month", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit Cum. (3.5%)", "MM Interest", "Global Return w/ MM", "Running IRR"];
-  const colWidths = "50px 110px 90px 90px 110px 110px 120px 130px 100px 140px 90px";
+  const colWidths = "50px 120px 95px 95px 115px 120px 125px 140px 105px 150px 95px";
 
   return (
     <div style={{ marginTop: 12 }}>
@@ -335,10 +335,10 @@ function ReturnProfile() {
             }}>
               <span style={{ ...cellStyle, fontWeight: r.isBalloon ? 800 : 500, color: r.isBalloon ? "#b45309" : "#0f172a" }}>{r.month}</span>
               <span style={{ ...cellStyle, color: r.investment < 0 ? "#f87171" : "#0f172a" }}>
-                {r.investment !== 0 ? fmt(r.investment) : "—"}
+                {r.investment !== 0 ? fmt(r.investment) : (r.isBalloon ? "" : "—")}
               </span>
-              <span style={cellStyle}>{r.dealFee > 0 ? fmt(r.dealFee) : "—"}</span>
-              <span style={cellStyle}>{r.interest > 0 ? fmt(r.interest) : "—"}</span>
+              <span style={cellStyle}>{r.dealFee > 0 ? fmt(r.dealFee) : (r.isBalloon ? "" : "—")}</span>
+              <span style={cellStyle}>{r.interest > 0 ? fmt(r.interest) : (r.isBalloon ? "" : "—")}</span>
               {/* Total Return — bold, light green bg */}
               <span style={{
                 ...cellStyle, fontWeight: 800,
@@ -346,15 +346,15 @@ function ReturnProfile() {
                 background: r.totalReturn > 0 ? "rgba(22,163,74,0.08)" : "transparent",
                 padding: "2px 4px", borderRadius: 3,
               }}>
-                {r.totalReturn > 0 ? fmt(r.totalReturn) : "—"}
+                {r.totalReturn > 0 ? fmt(r.totalReturn) : (r.isBalloon ? "" : "—")}
               </span>
-              <span style={cellStyle}>{r.prinReturned > 0 ? fmt(r.prinReturned) : "—"}</span>
+              <span style={cellStyle}>{r.prinReturned > 0 ? fmt(r.prinReturned) : (r.isBalloon ? "" : "—")}</span>
               <span style={{ ...cellStyle, fontWeight: 700, color: r.globalReturn < 0 ? "#f87171" : r.globalReturn > 0 ? "#16a34a" : "#0f172a" }}>
                 {fmt(r.globalReturn)}
               </span>
               {/* MM Deposit */}
               <span style={{ ...cellStyle, color: mmOn ? "#0f172a" : "#cbd5e1" }}>
-                {r.mmDeposit > 0 ? fmt(r.mmDeposit) : "—"}
+                {r.mmDeposit > 0 ? fmt(r.mmDeposit) : (r.isBalloon ? "" : "—")}
               </span>
               {/* MM Interest */}
               <span style={{ ...cellStyle, color: mmOn ? "#16a34a" : "#cbd5e1", fontWeight: mmOn ? 600 : 400 }}>
@@ -362,7 +362,7 @@ function ReturnProfile() {
               </span>
               {/* Global Return w/ MM */}
               <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? (r.globalReturnMM < 0 ? "#f87171" : r.globalReturnMM > 0 ? "#16a34a" : "#0f172a") : "#cbd5e1" }}>
-                {mmOn ? fmt(r.globalReturnMM) : "—"}
+                {mmOn ? (r.globalReturnMM !== 0 ? fmt(r.globalReturnMM) : "") : "—"}
               </span>
               {/* Running IRR */}
               <span style={{ ...cellStyle, fontWeight: 700, color: r.month === 0 || r.isBalloon ? "#0f172a" : "#0ea5e9" }}>
@@ -478,9 +478,11 @@ function DataRoom() {
       <div style={{ display: "flex", alignItems: "center" }}>
         {received ? checkmark : pending}
         <span style={{ fontSize: 11, fontWeight: 600, color: unavailable ? "#94a3b8" : "#0f172a" }}>{name}</span>
-        {unavailable && <span style={{ fontSize: 10, fontStyle: "italic", color: "#94a3b8", marginLeft: 6 }}>Unavailable</span>}
       </div>
-      {received && exportPath && exportBtn(exportPath)}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {unavailable && <span style={{ fontSize: 10, fontStyle: "italic", color: "#94a3b8" }}>Unavailable</span>}
+        {received && exportPath && exportBtn(exportPath)}
+      </div>
     </div>
   );
   return (
@@ -542,14 +544,14 @@ function InvestmentCard() {
         borderBottom: "1px solid rgba(0,0,0,0.07)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "#94a3b8" }}>#001</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>HTeaO Bridge Loan</span>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", color: "#38bdf8" }}>Active</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>HTeaO Loan</span>
+
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>$1,010,000</span>
+          <span style={{ fontSize: 11, color: "#0f172a", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>$1,010,000</span>
           <span style={{ fontSize: 10, color: "#94a3b8" }}>·</span>
           <span style={{ fontSize: 10, color: "#94a3b8" }}>10% · 12mo</span>
+
         </div>
       </div>
       {/* Card Body */}
@@ -582,7 +584,7 @@ function InvestmentCard() {
                   ["Investment", "$1,010,000"],
                   ["Structure", "12 Month Balloon"],
                   ["Rate / Fee", "10% Rate · 1% Fee"],
-                  ["Extension", "+1% Fee if extended to 24 Months"],
+                  ["Extension", "1% Fee if extended"],
                   ["Amortization", "10 Year Schedule"],
                 ].map(([label, value]) => (
                   <div key={label} style={{
