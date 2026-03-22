@@ -488,15 +488,15 @@ function DataRoom() {
       <button onClick={() => setOpen(!open)} style={{
         width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "11px 16px",
-        background: "#2d3748",
-        border: "1px solid #2d3748",
+        background: open ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
+        border: "1px solid rgba(0,0,0,0.07)",
         borderRadius: open ? "8px 8px 0 0" : 8,
         cursor: "pointer", fontFamily: "inherit",
       }}>
-        <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#ffffff" }}>
+        <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#0f172a" }}>
           Data Room
         </span>
-        <span style={{ fontSize: 11, color: "#ffffff" }}>{open ? "▲" : "▼"}</span>
+        <span style={{ fontSize: 11, color: "#0f172a" }}>{open ? "▲" : "▼"}</span>
       </button>
       {open && (
         <div style={{
@@ -559,15 +559,15 @@ function InvestmentCard() {
           <button onClick={() => setDealOpen(!dealOpen)} style={{
             width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "11px 16px",
-            background: "#2d3748",
-            border: "1px solid #2d3748",
+            background: dealOpen ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
+            border: "1px solid rgba(0,0,0,0.07)",
             borderRadius: dealOpen ? "8px 8px 0 0" : 8,
             cursor: "pointer", fontFamily: "inherit",
           }}>
-            <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#ffffff" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#0f172a" }}>
               Deal Terms
             </span>
-            <span style={{ fontSize: 11, color: "#ffffff" }}>{dealOpen ? "▲" : "▼"}</span>
+            <span style={{ fontSize: 11, color: "#0f172a" }}>{dealOpen ? "▲" : "▼"}</span>
           </button>
           {dealOpen && (
             <div style={{
