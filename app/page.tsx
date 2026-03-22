@@ -80,6 +80,107 @@ function buildSchedule() {
   return rows;
 }
 // --- Components ---
+
+// --- Export PDF ---
+function exportTablePDF(schedule: ReturnType<typeof buildSchedule>, mmOn: boolean, irr: number) {
+  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const cols = [
+    { label: "Month", desc: "The month number of the deal. Month 0 is the initial investment date. Months 1–12 represent each calendar month of the 12-month balloon term." },
+    { label: "Investment", desc: "Capital deployed. Month 0 shows the full principal as a negative (outflow). All subsequent months show no additional investment." },
+    { label: "Deal Fee", desc: "A one-time 1% origination fee ($10,100) collected in Month 1. Income to the fund on top of interest." },
+    { label: "Interest", desc: "Monthly interest at 10% per annum on the outstanding balance. Calculated as: Balance × (10% ÷ 12). Decreases slightly each month as principal amortizes." },
+    { label: "Total Return", desc: "Total cash income per month — Interest + Deal Fee. The yield component of the investment, excluding principal repayment." },
+    { label: "Principal Returned", desc: "Portion of each payment reducing the loan balance, based on a 10-year amortization schedule. At Month 12 the full remaining balloon balance is returned." },
+    { label: "Global Return", desc: "Total cash received each month: Total Return + Principal Returned. Complete cashflow back to the fund. Month 0 is negative (capital out), Months 1–12 are positive." },
+    { label: "MM Deposit (3.5%)", desc: "When MM Reinvestment is ON: each month's Total Return is deposited into a Money Market account earning 3.5% annually, reinvesting yield rather than distributing it." },
+    { label: "MM Interest", desc: "Monthly interest earned on the accumulated MM balance at 3.5% per annum. Compounds each month as new deposits are added to the growing balance." },
+    { label: "Global Return w/ MM", desc: "Global Return enhanced by MM interest earned that month — total economic value when income is reinvested." },
+    { label: "Running IRR", desc: "Annualized IRR assuming the deal exits (balloon) at the end of that month. Higher in early months due to the deal fee. Converges to the terminal rate at Month 12." },
+  ];
+
+  const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+
+  const tableHeaders = mmOn
+    ? ["Mo.", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit", "MM Interest", "Global w/ MM", "Running IRR"]
+    : ["Mo.", "Investment", "Deal Fee", "Interest", "Total Return", "Prin Returned", "Global Return", "MM Deposit", "MM Interest", "Global w/ MM", "Running IRR"];
+
+  const tableRowsHTML = schedule.map((r, idx) => {
+    const bg = idx % 2 === 0 ? "#ffffff" : "#f8fafc";
+    const cells = [
+      r.month,
+      r.investment !== 0 ? fmt(r.investment) : "—",
+      r.dealFee > 0 ? fmt(r.dealFee) : "—",
+      r.interest > 0 ? fmt(r.interest) : "—",
+      r.totalReturn > 0 ? fmt(r.totalReturn) : "—",
+      r.prinReturned > 0 ? fmt(r.prinReturned) : "—",
+      fmt(r.globalReturn),
+      mmOn && r.mmDeposit > 0 ? fmt(r.mmDeposit) : "—",
+      mmOn && r.mmInterest > 0 ? fmt(r.mmInterest) : "—",
+      mmOn ? fmt(r.globalReturnMM) : "—",
+      r.month === 0 ? "—" : `${((mmOn ? r.runningIRRMM : r.runningIRR) * 100).toFixed(2)}%`,
+    ];
+    return `<tr style="background:${bg}">${cells.map((c, i) => {
+      const isRed = i === 1 && r.investment < 0;
+      const isGreen = (i === 4 && r.totalReturn > 0) || (i === 6 && r.globalReturn > 0) || i === 8 || i === 9 || i === 10;
+      const color = isRed ? "#dc2626" : isGreen ? "#16a34a" : "#1e293b";
+      const bold = i === 4 || i === 6 || i === 9 || i === 10 ? "700" : "400";
+      const bgCell = i === 4 && r.totalReturn > 0 ? "background:#f0fdf4;" : "";
+      return `<td style="padding:5px 8px;font-size:10px;color:${color};font-weight:${bold};${bgCell}white-space:nowrap;border-bottom:1px solid #f1f5f9">${c}</td>`;
+    }).join("")}</tr>`;
+  }).join("");
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Savoy Capital Fund — Return Profile Export</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1e293b; background: #fff; padding: 40px; }
+  @media print { body { padding: 20px; } .no-print { display: none; } }
+  h1 { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+  .meta { font-size: 11px; color: #94a3b8; margin-bottom: 32px; }
+  h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 16px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+  .irr-badge { display: inline-flex; align-items: center; gap: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 16px; margin-bottom: 32px; }
+  .irr-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #64748b; }
+  .irr-val { font-size: 20px; font-weight: 800; color: #16a34a; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 40px; font-size: 10px; }
+  thead tr { background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
+  th { padding: 7px 8px; text-align: left; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #94a3b8; white-space: nowrap; }
+  .col-def { margin-bottom: 12px; }
+  .col-name { font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+  .col-desc { font-size: 11px; color: #64748b; line-height: 1.5; }
+  .print-btn { margin-bottom: 24px; padding: 8px 20px; background: #0f172a; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+<button class="no-print print-btn" onclick="window.print()">Print / Save as PDF</button>
+<h1>Savoy Capital Fund</h1>
+<div class="meta">Return Profile Export &nbsp;·&nbsp; Generated ${today} &nbsp;·&nbsp; MM Reinvestment: ${mmOn ? "ON (3.5%)" : "OFF"}</div>
+
+<div class="irr-badge">
+  <span class="irr-label">${mmOn ? "IRR w/ MM Reinvest" : "Annual IRR"}</span>
+  <span class="irr-val">${(irr * 100).toFixed(2)}%</span>
+</div>
+
+<h2>Return Profile Table</h2>
+<table>
+  <thead><tr>${tableHeaders.map(h => `<th>${h}</th>`).join("")}</tr></thead>
+  <tbody>${tableRowsHTML}</tbody>
+</table>
+
+<h2>Column Definitions</h2>
+${cols.map(c => `<div class="col-def"><div class="col-name">${c.label}</div><div class="col-desc">${c.desc}</div></div>`).join("")}
+</body>
+</html>`;
+
+  const win = window.open("", "_blank");
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
+}
+
 function ReturnProfile() {
   const [mmOn, setMmOn] = useState(true);
   const schedule = buildSchedule();
@@ -246,6 +347,29 @@ function ReturnProfile() {
           <span style={{ fontSize: 15, fontWeight: 800, color: "#16a34a", fontVariantNumeric: "tabular-nums" }}>
             {(displayIRR * 100).toFixed(2)}%
           </span>
+        </div>
+        {/* Export Footer */}
+        <div style={{
+          padding: "10px 14px",
+          borderTop: "1px solid rgba(0,0,0,0.06)",
+          background: "rgba(0,0,0,0.01)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#94a3b8" }}>
+            Export Table Logic
+          </span>
+          <button
+            onClick={() => exportTablePDF(schedule, mmOn, displayIRR)}
+            style={{
+              padding: "4px 14px", borderRadius: 6, fontSize: 10, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+              background: "rgba(15,23,42,0.05)",
+              border: "1px solid rgba(15,23,42,0.12)",
+              color: "#0f172a", transition: "all .15s",
+            }}
+          >
+            Export PDF ↗
+          </button>
         </div>
       </div>
     </div>
