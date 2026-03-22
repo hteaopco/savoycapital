@@ -307,12 +307,12 @@ function ReturnProfile() {
           padding: "10px 14px",
           borderTop: "none",
           background: "rgba(74,222,128,0.03)",
-          display: "flex", alignItems: "center", gap: 8,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#64748b" }}>
             {mmOn ? "IRR w/ MM Reinvest" : "Annual IRR"}
           </span>
-          <span style={{ fontSize: 15, fontWeight: 800, color: "#16a34a", fontVariantNumeric: "tabular-nums" }}>
+          <span style={{ fontSize: 15, fontWeight: 800, color: "#16a34a", fontVariantNumeric: "tabular-nums", textAlign: "right", minWidth: 80 }}>
             {(displayIRR * 100).toFixed(2)}%
           </span>
         </div>
@@ -353,9 +353,9 @@ function ReturnProfile() {
           }}>
             {cols.map(c => (
               <span key={c} style={{
-                fontSize: 8, fontWeight: 700, textTransform: "uppercase",
+                fontSize: 8, fontWeight: 800, textTransform: "uppercase",
                 letterSpacing: ".08em",
-                color: c === "Total Return" ? "#16a34a" : "#94a3b8",
+                color: c === "Total Return" ? "#16a34a" : "#0f172a",
                 whiteSpace: "nowrap",
                 background: c === "Total Return" ? "rgba(22,163,74,0.08)" : "transparent",
                 padding: c === "Total Return" ? "2px 4px" : undefined,
@@ -371,8 +371,9 @@ function ReturnProfile() {
               borderBottom: r.month === 0 ? "1px solid rgba(0,0,0,0.15)" : "1px solid rgba(0,0,0,0.04)",
               background: r.isBalloon ? "rgba(251,191,36,0.05)" : idx % 2 === 0 ? "transparent" : "rgba(0,0,0,0.015)",
               minWidth: "fit-content",
+              fontWeight: (r.month === 0 || r.isBalloon) ? 700 : undefined,
             }}>
-              <span style={{ ...cellStyle, fontWeight: r.isBalloon ? 800 : 500, color: r.isBalloon ? "#b45309" : "#0f172a" }}>{r.month}</span>
+              <span style={{ ...cellStyle, fontWeight: r.isBalloon ? 800 : r.month === 0 ? 700 : 500, color: r.isBalloon ? "#b45309" : "#0f172a" }}>{r.month}</span>
               <span style={{ ...cellStyle, color: r.investment < 0 ? "#f87171" : "#0f172a" }}>
                 {r.investment !== 0 ? fmt(r.investment) : (r.isBalloon ? "" : "—")}
               </span>
@@ -397,10 +398,10 @@ function ReturnProfile() {
               </span>
               {/* MM Interest */}
               <span style={{ ...cellStyle, color: mmOn ? "#16a34a" : "#cbd5e1", fontWeight: mmOn ? 600 : 400 }}>
-                {r.mmInterest > 0 ? fmt(r.mmInterest) : (r.month === 0 ? "" : "—")}
+                {r.mmInterest > 0 ? fmt(r.mmInterest) : (r.month === 0 || r.isBalloon ? "" : "—")}
               </span>
               {/* Global Return w/ MM */}
-              <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? (r.globalReturnMM < 0 ? "#f87171" : r.globalReturnMM > 0 ? "#16a34a" : "#0f172a") : "#cbd5e1" }}>
+              <span style={{ ...cellStyle, fontWeight: 500, color: mmOn ? (r.globalReturnMM < 0 ? "#f87171" : "#0f172a") : "#cbd5e1" }}>
                 {r.month === 0 ? "" : mmOn ? (r.globalReturnMM !== 0 ? fmt(r.globalReturnMM) : "") : "—"}
               </span>
               {/* Running IRR */}
@@ -419,15 +420,15 @@ function ReturnProfile() {
           }}>
             <span style={{ ...cellStyle, color: "#38bdf8", fontWeight: 800 }}>Total</span>
             <span style={cellStyle}></span>
-            <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.dealFee)}</span>
-            <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.interest)}</span>
+            <span style={{ ...cellStyle, fontWeight: 800 }}>{fmt(totals.dealFee)}</span>
+            <span style={{ ...cellStyle, fontWeight: 800 }}>{fmt(totals.interest)}</span>
             <span style={{ ...cellStyle, fontWeight: 800, color: "#15803d", background: "rgba(22,163,74,0.08)", padding: "2px 4px", borderRadius: 3 }}>{fmt(totals.totalReturn)}</span>
-            <span style={{ ...cellStyle, fontWeight: 700 }}>{fmt(totals.prinReturned + (balloonRow?.prinReturned ?? 0))}</span>
-            <span style={{ ...cellStyle, fontWeight: 500, color: "#0f172a" }}>{fmt(totals.globalReturn + (balloonRow?.globalReturn ?? 0))}</span>
-            <span style={{ ...cellStyle, fontWeight: 700, color: mmOn ? "#0f172a" : "#cbd5e1" }}></span>
+            <span style={{ ...cellStyle, fontWeight: 800 }}>{fmt(totals.prinReturned + (balloonRow?.prinReturned ?? 0))}</span>
+            <span style={{ ...cellStyle, fontWeight: 800, color: "#0f172a" }}>{fmt(totals.globalReturn + (balloonRow?.globalReturn ?? 0))}</span>
+            <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#0f172a" : "#cbd5e1" }}></span>
             <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#16a34a" : "#cbd5e1" }}>{mmOn ? fmt((balloonRow?.mmInterest ?? 0) + totals.mmInterest) : "—"}</span>
-            <span style={{ ...cellStyle, fontWeight: 500, color: mmOn ? "#0f172a" : "#cbd5e1" }}>{mmOn ? fmt(schedule[schedule.length - 1].mmBalance) : "—"}</span>
-            <span style={cellStyle}>—</span>
+            <span style={{ ...cellStyle, fontWeight: 800, color: mmOn ? "#0f172a" : "#cbd5e1" }}>{mmOn ? fmt((balloonRow?.globalReturn ?? 0) + totals.globalReturn + totals.mmInterest) : "—"}</span>
+            <span style={cellStyle}></span>
           </div>
         </div>
         {/* Export Footer */}
