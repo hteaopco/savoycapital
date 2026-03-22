@@ -87,6 +87,52 @@ function buildSchedule() {
 }
 // --- Components ---
 
+// --- Export Excel ---
+function exportTableExcel(schedule: ReturnType<typeof buildSchedule>, mmOn: boolean, irr: number) {
+  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const headers = ["Month","Investment","Deal Fee","Interest","Total Return","Prin Returned","Global Return","MM Deposit Cum.","MM Interest","Global Return w/ MM","Running IRR"];
+  const fmt = (n: number) => n;
+  const rows = schedule.map(r => [
+    r.month,
+    r.investment !== 0 ? fmt(r.investment) : "",
+    r.dealFee > 0 ? fmt(r.dealFee) : "",
+    r.interest > 0 ? fmt(r.interest) : "",
+    r.totalReturn > 0 ? fmt(r.totalReturn) : "",
+    r.prinReturned > 0 ? fmt(r.prinReturned) : "",
+    fmt(r.globalReturn),
+    mmOn && r.mmDeposit > 0 ? fmt(r.mmDeposit) : "",
+    mmOn && r.mmInterest > 0 ? fmt(r.mmInterest) : "",
+    mmOn ? fmt(r.globalReturnMM) : "",
+    r.month === 0 || r.isBalloon ? "" : `${((mmOn ? r.runningIRRMM : r.runningIRR) * 100).toFixed(2)}%`,
+  ]);
+
+  // Build CSV
+  const escape = (v: unknown) => {
+    const s = String(v ?? "");
+    return s.includes(",") || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csvLines = [
+    `Savoy Capital Fund — Return Profile Export`,
+    `Generated: ${today}`,
+    `MM Reinvestment: ${mmOn ? "ON (3.5%)" : "OFF"}`,
+    `${mmOn ? "IRR w/ MM Reinvest" : "Annual IRR"}: ${(irr * 100).toFixed(2)}%`,
+    ``,
+    headers.map(escape).join(","),
+    ...rows.map(r => r.map(escape).join(",")),
+  ];
+
+  const csv = csvLines.join("
+");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `savoy-return-profile-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+
 // --- Export PDF ---
 function exportTablePDF(schedule: ReturnType<typeof buildSchedule>, mmOn: boolean, irr: number) {
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -201,10 +247,12 @@ function ReturnProfile() {
     mmInterest: acc.mmInterest + r.mmInterest,
   }), { dealFee: 0, interest: 0, totalReturn: 0, prinReturned: 0, globalReturn: 0, mmInterest: 0 });
   const mmCumTotal = regularRows[regularRows.length - 1].mmDeposit;
-  // IRR: use regular rows only (balloon principal already in M12 globalReturn)
+  // IRR: regular rows + add balloon principal to final month cashflow
   const irrCashflows = regularRows.map(r => r.globalReturn);
+  irrCashflows[irrCashflows.length - 1] += (balloonRow?.globalReturn ?? 0);
   const annualIRR = Math.pow(1 + computeIRR(irrCashflows), 12) - 1;
   const irrMMCashflows = regularRows.map(r => r.globalReturn + r.mmInterest);
+  irrMMCashflows[irrMMCashflows.length - 1] += (balloonRow?.globalReturn ?? 0) + (balloonRow?.mmInterest ?? 0);
   const annualIRRMM = Math.pow(1 + computeIRR(irrMMCashflows), 12) - 1;
   const displayIRR = mmOn ? annualIRRMM : annualIRR;
 
@@ -368,18 +416,32 @@ function ReturnProfile() {
           <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#94a3b8" }}>
             Export Table Logic
           </span>
-          <button
-            onClick={() => exportTablePDF(schedule, mmOn, displayIRR)}
-            style={{
-              padding: "4px 14px", borderRadius: 6, fontSize: 10, fontWeight: 700,
-              cursor: "pointer", fontFamily: "inherit",
-              background: "rgba(15,23,42,0.05)",
-              border: "1px solid rgba(15,23,42,0.12)",
-              color: "#0f172a", transition: "all .15s",
-            }}
-          >
-            Export PDF ↗
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => exportTablePDF(schedule, mmOn, displayIRR)}
+              style={{
+                padding: "4px 14px", borderRadius: 6, fontSize: 10, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+                background: "rgba(15,23,42,0.05)",
+                border: "1px solid rgba(15,23,42,0.12)",
+                color: "#0f172a", transition: "all .15s",
+              }}
+            >
+              Export PDF ↗
+            </button>
+            <button
+              onClick={() => exportTableExcel(schedule, mmOn, displayIRR)}
+              style={{
+                padding: "4px 14px", borderRadius: 6, fontSize: 10, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+                background: "rgba(22,163,74,0.06)",
+                border: "1px solid rgba(22,163,74,0.2)",
+                color: "#15803d", transition: "all .15s",
+              }}
+            >
+              Export Excel ↗
+            </button>
+          </div>
         </div>
       </div>
     </div>
