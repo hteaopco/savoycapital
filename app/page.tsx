@@ -121,8 +121,7 @@ function exportTableExcel(schedule: ReturnType<typeof buildSchedule>, mmOn: bool
     ...rows.map(r => r.map(escape).join(",")),
   ];
 
-  const csv = csvLines.join("
-");
+  const csv = csvLines.join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
