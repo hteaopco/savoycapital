@@ -688,6 +688,131 @@ function InvestmentHistoryTable() {
     </div>
   );
 }
+
+// --- Fund Overview Pie Chart ---
+function FundOverview() {
+  const [mode, setMode] = useState<"committed" | "deployed">("committed");
+  const FUND_SIZE = 10_000_000;
+  const CREDIT = 1_010_000;
+  const REAL_ESTATE = 180_000;
+  const DEPLOYED = CREDIT + REAL_ESTATE;
+  const UNALLOCATED = FUND_SIZE - DEPLOYED;
+
+  const slicesCommitted = [
+    { label: "Credit", value: CREDIT, color: "#38bdf8" },
+    { label: "Real Estate", value: REAL_ESTATE, color: "#818cf8" },
+    { label: "Unallocated", value: UNALLOCATED, color: "#e2e8f0" },
+  ];
+  const slicesDeployed = [
+    { label: "Credit", value: CREDIT, color: "#38bdf8" },
+    { label: "Real Estate", value: REAL_ESTATE, color: "#818cf8" },
+  ];
+
+  const slices = mode === "committed" ? slicesCommitted : slicesDeployed;
+  const total = slices.reduce((s, r) => s + r.value, 0);
+
+  // Build SVG pie slices
+  const cx = 80, cy = 80, r = 64;
+  let cumAngle = -Math.PI / 2;
+  const paths = slices.map(slice => {
+    const angle = (slice.value / total) * 2 * Math.PI;
+    const x1 = cx + r * Math.cos(cumAngle);
+    const y1 = cy + r * Math.sin(cumAngle);
+    cumAngle += angle;
+    const x2 = cx + r * Math.cos(cumAngle);
+    const y2 = cy + r * Math.sin(cumAngle);
+    const large = angle > Math.PI ? 1 : 0;
+    return { d: `M${cx},${cy} L${x1},${y1} A${r},${r},0,${large},1,${x2},${y2} Z`, color: slice.color };
+  });
+
+  const fmtShort = (n: number) => n >= 1_000_000
+    ? `$${(n / 1_000_000).toFixed(1)}M`
+    : `$${(n / 1_000).toFixed(0)}K`;
+
+  const divisor = mode === "committed" ? FUND_SIZE : DEPLOYED;
+
+  return (
+    <div style={{
+      background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)",
+      borderRadius: 12, padding: "20px 20px 16px", marginBottom: 16,
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#64748b", marginBottom: 4 }}>
+            Committed vs Deployed
+          </div>
+          <div style={{ display: "flex", gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8" }}>Fund Size</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>$10.0M</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8" }}>Deployed</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#38bdf8", fontVariantNumeric: "tabular-nums" }}>{fmtShort(DEPLOYED)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Chart + Legend */}
+      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        {/* SVG Pie */}
+        <svg width={160} height={160} viewBox="0 0 160 160" style={{ flexShrink: 0 }}>
+          {paths.map((p, i) => (
+            <path key={i} d={p.d} fill={p.color} stroke="#ffffff" strokeWidth={2} />
+          ))}
+          {/* Center label */}
+          <text x={cx} y={cy - 6} textAnchor="middle" fontSize={10} fontWeight={700} fill="#64748b">
+            {mode === "committed" ? "Committed" : "Deployed"}
+          </text>
+          <text x={cx} y={cy + 10} textAnchor="middle" fontSize={13} fontWeight={800} fill="#0f172a">
+            {mode === "committed" ? "11.9%" : "100%"}
+          </text>
+        </svg>
+
+        {/* Legend */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#64748b", marginBottom: 10 }}>
+            Portfolio Construction
+          </div>
+          {slices.map(s => (
+            <div key={s.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{s.label}</span>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>
+                  {fmtShort(s.value)}
+                </span>
+                <span style={{ fontSize: 10, color: "#94a3b8", marginLeft: 6, fontVariantNumeric: "tabular-nums" }}>
+                  {(s.value / divisor * 100).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          ))}
+          {/* Toggle */}
+          <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
+            {(["committed", "deployed"] as const).map(m => (
+              <button key={m} onClick={() => setMode(m)} style={{
+                padding: "4px 12px", borderRadius: 6, fontSize: 9, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit", border: "none",
+                textTransform: "uppercase", letterSpacing: ".06em",
+                background: mode === m ? "#0f172a" : "rgba(0,0,0,0.04)",
+                color: mode === m ? "#ffffff" : "#94a3b8",
+                transition: "all .15s",
+              }}>
+                {m === "committed" ? "Of Commitment" : "Of Deployed"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [investOpen, setInvestOpen] = useState(false);
@@ -736,9 +861,9 @@ export default function Home() {
           }}>
             Investment History {investOpen ? "▲" : "▼"}
           </button>
+          <FundOverview />
           {investOpen && (
             <div>
-
               <InvestmentCard />
             </div>
           )}
