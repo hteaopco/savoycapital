@@ -699,13 +699,6 @@ export default function Home() {
         borderBottom: "1px solid rgba(0,0,0,0.07)", padding: "0 20px",
         height: 52, display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <nav className="desktop-nav" style={{ display: "flex", gap: 20 }}>
-          <a href="/" style={navLinkStyle}>Dashboard</a>
-          <a href="/presentations" style={navLinkStyle}>Presentations</a>
-        </nav>
-        <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "#0f172a" }}>
-          Savoy Capital Fund
-        </span>
         <button onClick={() => setMenuOpen(!menuOpen)} className="hamburger"
           style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, padding: 4 }}
           aria-label="Toggle menu">
@@ -713,14 +706,20 @@ export default function Home() {
           <span style={barStyle(menuOpen, "mid")} />
           <span style={barStyle(menuOpen, "bot")} />
         </button>
+        <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "#0f172a" }}>
+          Savoy Capital Fund
+        </span>
+        <div style={{ width: 28 }} />
       </header>
       {menuOpen && (
         <div className="mobile-menu" style={{
-          position: "fixed", top: 52, left: 0, right: 0, zIndex: 40,
-          background: "#ffffff", borderBottom: "1px solid rgba(0,0,0,0.07)",
-          padding: "12px 20px 16px", display: "flex", flexDirection: "column", gap: 2,
+          position: "fixed", top: 52, left: 0, bottom: 0, zIndex: 40, width: 240,
+          background: "#ffffff", borderRight: "1px solid rgba(0,0,0,0.07)",
+          padding: "20px 20px 16px", display: "flex", flexDirection: "column", gap: 2,
+          boxShadow: "4px 0 16px rgba(0,0,0,0.06)",
         }}>
-          <a href="#" onClick={() => setMenuOpen(false)} style={mobileNavLinkStyle}>Dashboard</a>
+          <a href="/" onClick={() => setMenuOpen(false)} style={mobileNavLinkStyle}>Dashboard</a>
+          <a href="/presentations" onClick={() => setMenuOpen(false)} style={mobileNavLinkStyle}>Presentations</a>
         </div>
       )}
       <main style={{ paddingTop: 52 }}>

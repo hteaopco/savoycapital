@@ -1,4 +1,7 @@
+"use client";
+import { useState } from "react";
 export default function Presentations() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const presentations = [
     {
       date: "02/13/26",
@@ -15,15 +18,29 @@ export default function Presentations() {
         borderBottom: "1px solid rgba(0,0,0,0.07)", padding: "0 20px", height: 52,
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <nav style={{ display: "flex", gap: 20 }}>
-          <a href="/" style={navLinkStyle}>Dashboard</a>
-          <a href="/presentations" style={{ ...navLinkStyle, color: "#0f172a" }}>Presentations</a>
-        </nav>
+        <button onClick={() => setMenuOpen(!menuOpen)}
+          style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, padding: 4 }}
+          aria-label="Toggle menu">
+          <span style={{ display: "block", width: 20, height: 2, background: "#0f172a", borderRadius: 2 }} />
+          <span style={{ display: "block", width: 20, height: 2, background: "#0f172a", borderRadius: 2 }} />
+          <span style={{ display: "block", width: 20, height: 2, background: "#0f172a", borderRadius: 2 }} />
+        </button>
         <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "#0f172a" }}>
           Savoy Capital Fund
         </span>
         <div style={{ width: 28 }} />
       </header>
+      {menuOpen && (
+        <div style={{
+          position: "fixed", top: 52, left: 0, bottom: 0, zIndex: 40, width: 240,
+          background: "#ffffff", borderRight: "1px solid rgba(0,0,0,0.07)",
+          padding: "20px 20px 16px", display: "flex", flexDirection: "column", gap: 2,
+          boxShadow: "4px 0 16px rgba(0,0,0,0.06)",
+        }}>
+          <a href="/" onClick={() => setMenuOpen(false)} style={mobileNavLinkStyle}>Dashboard</a>
+          <a href="/presentations" onClick={() => setMenuOpen(false)} style={{ ...mobileNavLinkStyle, color: "#0f172a", fontWeight: 800 }}>Presentations</a>
+        </div>
+      )}
 
       <main style={{ paddingTop: 52 }}>
         <section style={{ padding: "48px 24px 40px", maxWidth: 900, margin: "0 auto" }}>
@@ -68,6 +85,11 @@ export default function Presentations() {
   );
 }
 
+const mobileNavLinkStyle: React.CSSProperties = {
+  fontSize: 13, fontWeight: 700, letterSpacing: ".06em",
+  textTransform: "uppercase", color: "#0f172a", textDecoration: "none",
+  padding: "10px 0", borderBottom: "1px solid rgba(0,0,0,0.05)",
+};
 const navLinkStyle: React.CSSProperties = {
   fontSize: 11, fontWeight: 700, letterSpacing: ".08em",
   textTransform: "uppercase", color: "#64748b", textDecoration: "none",
