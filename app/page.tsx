@@ -700,7 +700,8 @@ export default function Home() {
         height: 52, display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <nav className="desktop-nav" style={{ display: "flex", gap: 20 }}>
-          <a href="#" style={navLinkStyle}>Dashboard</a>
+          <a href="/" style={navLinkStyle}>Dashboard</a>
+          <a href="/presentations" style={navLinkStyle}>Presentations</a>
         </nav>
         <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "#0f172a" }}>
           Savoy Capital Fund
