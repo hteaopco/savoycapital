@@ -5,7 +5,7 @@ export default function Presentations() {
   const presentations = [
     {
       date: "02/13/26",
-      description: "Preliminary Conceptual Idea — Savoy Capital Fund",
+      description: "Preliminary Conceptual Idea",
       file: "/docs/savoy-conceptual-presentation-feb2026.pdf",
     },
   ];
