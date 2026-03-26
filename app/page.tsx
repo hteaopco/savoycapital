@@ -830,6 +830,143 @@ function SnyderCard() {
     </div>
   );
 }
+
+function CashFlowCard() {
+  const [open, setOpen] = useState(false);
+  const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const months = ["Apr \u201926", "May \u201926", "Jun \u201926", "Jul \u201926", "Aug \u201926", "Sep \u201926", "Oct \u201926", "Nov \u201926", "Dec \u201926"];
+
+  // Monthly values by index 0=Apr ... 8=Dec
+  const contributions  = [6000, 1010000, 150000, 0, 0, 0, 0, 0, 0];
+  const hteaoLoanIn    = [0, 10100, 13347, 13347, 13347, 13347, 13347, 13347, 13347];
+  const flipIn         = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const hteaoLoanOut   = [0, 1010000, 0, 0, 0, 0, 0, 0, 0];
+  const flipOut        = [0, 0, 150000, 0, 0, 0, 0, 0, 0];
+  const mgmtSalary     = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const legal          = [5000, 0, 0, 0, 0, 0, 0, 0, 0];
+  const miscStartup    = [1000, 0, 0, 0, 0, 0, 0, 0, 0];
+  const distributions  = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+  // Compute MM interest and balances
+  const mmRate = 0.035 / 12;
+  let mmBal = 0;
+  const mmInterest: number[] = [];
+  for (let i = 0; i < 9; i++) {
+    const interest = Math.round(mmBal * mmRate);
+    mmInterest.push(interest);
+    mmBal = mmBal + interest + hteaoLoanIn[i];
+  }
+
+  // Compute beginning and ending balances
+  const begBal: number[] = [];
+  const endBal: number[] = [];
+  let bal = 0;
+  for (let i = 0; i < 9; i++) {
+    begBal.push(bal);
+    const totalIn = contributions[i] + hteaoLoanIn[i] + flipIn[i] + mmInterest[i];
+    const totalOut = hteaoLoanOut[i] + flipOut[i] + mgmtSalary[i] + legal[i] + miscStartup[i] + distributions[i];
+    bal = bal + totalIn - totalOut;
+    endBal.push(bal);
+  }
+
+  const fmt = (n: number) => n === 0 ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+  const fmtBal = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+
+  // Row definitions: [label, values[], isHeader, isSubRow, isBold]
+  type RowDef = { label: string; values: number[]; header?: boolean; sub?: boolean; bold?: boolean; neg?: boolean };
+  const rows: RowDef[] = [
+    { label: "Beginning Balance", values: begBal, bold: true },
+    { label: "Partner Contributions", values: contributions, sub: false },
+    { label: "Investment Cash In", values: months.map((_,i) => hteaoLoanIn[i]+flipIn[i]+mmInterest[i]), header: true },
+    { label: "From HTeaO Bridge Loan", values: hteaoLoanIn, sub: true },
+    { label: "From HTeaO RE Flip", values: flipIn, sub: true },
+    { label: "From Money Markets (3.5%)", values: mmInterest, sub: true },
+    { label: "Investment Cash Out", values: months.map((_,i) => hteaoLoanOut[i]+flipOut[i]), header: true, neg: true },
+    { label: "To HTeaO Bridge Loan", values: hteaoLoanOut, sub: true, neg: true },
+    { label: "To HTeaO RE Flip", values: flipOut, sub: true, neg: true },
+    { label: "Overheads", values: months.map((_,i) => mgmtSalary[i]+legal[i]+miscStartup[i]), header: true, neg: true },
+    { label: "Mgmt Salary", values: mgmtSalary, sub: true, neg: true },
+    { label: "Legal", values: legal, sub: true, neg: true },
+    { label: "Misc Start Up", values: miscStartup, sub: true, neg: true },
+    { label: "Partner Distributions", values: distributions, neg: true },
+    { label: "Ending Balance", values: endBal, bold: true },
+  ];
+
+  const COL0 = 160;
+  const COLN = 82;
+  const totalW = COL0 + COLN * 9;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <button onClick={() => setOpen(!open)} style={{
+        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "12px 20px",
+        background: open ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
+        border: "1px solid rgba(0,0,0,0.08)",
+        borderRadius: open ? "12px 12px 0 0" : 12,
+        cursor: "pointer", fontFamily: "inherit",
+      }}>
+        <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#0f172a" }}>
+          Investment Cash Flow
+        </span>
+        <span style={{ fontSize: 11, color: "#94a3b8" }}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div style={{ border: "1px solid rgba(0,0,0,0.08)", borderTop: "none", borderRadius: "0 0 12px 12px", overflow: "hidden", background: "#ffffff" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ borderCollapse: "collapse", minWidth: totalW, width: "100%" }}>
+              {/* Month header row */}
+              <thead>
+                <tr style={{ background: "#0f172a" }}>
+                  <th style={{ width: COL0, minWidth: COL0, padding: "8px 14px", textAlign: "left", fontSize: 9, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".08em", borderRight: "1px solid rgba(255,255,255,0.08)" }}>
+                    Line Item
+                  </th>
+                  {months.map(m => (
+                    <th key={m} style={{ width: COLN, minWidth: COLN, padding: "8px 10px", textAlign: "right", fontSize: 9, fontWeight: 800, color: "#ffffff", textTransform: "uppercase", letterSpacing: ".06em", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+                      {m}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, ri) => {
+                  const isBal = row.label === "Beginning Balance" || row.label === "Ending Balance";
+                  const bg = isBal ? "rgba(56,189,248,0.04)" : row.header ? "rgba(0,0,0,0.03)" : ri % 2 === 0 ? "#ffffff" : "rgba(0,0,0,0.012)";
+                  const borderTop = isBal ? "2px solid rgba(56,189,248,0.2)" : row.header ? "1px solid rgba(0,0,0,0.06)" : "1px solid rgba(0,0,0,0.04)";
+                  return (
+                    <tr key={row.label} style={{ background: bg, borderTop }}>
+                      <td style={{ padding: row.sub ? "5px 14px 5px 26px" : "6px 14px", fontSize: row.header ? 9 : 10, fontWeight: row.bold || row.header ? 700 : 400, color: row.header ? "#64748b" : "#0f172a", textTransform: row.header ? "uppercase" : "none", letterSpacing: row.header ? ".06em" : "normal", borderRight: "1px solid rgba(0,0,0,0.06)", whiteSpace: "nowrap" }}>
+                        {row.label}
+                      </td>
+                      {row.values.map((v, ci) => {
+                        const isNeg = row.neg && v > 0;
+                        const color = isBal ? (v < 0 ? "#f87171" : "#0f172a") : isNeg ? "#f87171" : v > 0 ? "#0f172a" : "#94a3b8";
+                        return (
+                          <td key={ci} style={{ padding: "5px 10px", textAlign: "right", fontSize: 10, fontWeight: row.bold ? 700 : 400, color, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", borderRight: "1px solid rgba(0,0,0,0.04)" }}>
+                            {isBal ? fmtBal(v) : isNeg ? `(${fmt(v).replace("—","")})` : fmt(v)}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {/* Footnote */}
+          <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(0,0,0,0.06)", background: "#fafafa" }}>
+            <p style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.6, margin: 0 }}>
+              The below table is a rough estimate of incoming and outgoing cash. A full set of Financials will be produced quarterly and saved / distributed. The below will change from time to time based on investment activity.
+            </p>
+            <p style={{ fontSize: 9, color: "#94a3b8", margin: "4px 0 0", fontWeight: 600 }}>
+              Last Updated: {today}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [investOpen, setInvestOpen] = useState(false);
