@@ -1017,7 +1017,7 @@ export default function Home() {
           </button>
           {investOpen && (
             <div>
-
+              <CashFlowCard />
               <InvestmentCard />
               <SnyderCard />
             </div>
