@@ -846,7 +846,7 @@ function CashFlowCard() {
   const legal         = [5000,0,0,0,0,0,0,0,0,0,0,0,0,0];
   const miscStartup   = [1000,0,0,0,0,0,0,0,0,0,0,0,0,0];
   const accounting    = [0,0,0,0,0,0,0,0,0,0,5000,0,0,0];
-  const distributions = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  const distributions = [0,0,0,0,0,0,0,0,0,0,0,150000,0,0];
 
   const mmRate = 0.035/12;
   let mmBal = 0;
