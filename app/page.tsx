@@ -845,6 +845,7 @@ function CashFlowCard() {
   const mgmtSalary    = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
   const legal         = [5000,0,0,0,0,0,0,0,0,0,0,0,0,0];
   const miscStartup   = [1000,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  const accounting    = [0,0,0,0,0,0,0,0,0,0,5000,0,0,0];
   const distributions = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
   const mmRate = 0.035/12;
@@ -858,7 +859,7 @@ function CashFlowCard() {
 
   const totalCashIn  = months.map((_,i)=>hteaoLoanIn[i]+flipIn[i]+mmInterest[i]);
   const totalCashOut = months.map((_,i)=>hteaoLoanOut[i]+flipOut[i]);
-  const totalOverhead= months.map((_,i)=>mgmtSalary[i]+legal[i]+miscStartup[i]);
+  const totalOverhead= months.map((_,i)=>mgmtSalary[i]+legal[i]+miscStartup[i]+accounting[i]);
 
   const begBal: number[] = [];
   const netChange: number[] = [];
@@ -867,7 +868,7 @@ function CashFlowCard() {
   for (let i=0;i<N;i++){
     begBal.push(bal);
     const inn = contributions[i]+hteaoLoanIn[i]+flipIn[i]+mmInterest[i];
-    const out = hteaoLoanOut[i]+flipOut[i]+mgmtSalary[i]+legal[i]+miscStartup[i]+distributions[i];
+    const out = hteaoLoanOut[i]+flipOut[i]+mgmtSalary[i]+legal[i]+miscStartup[i]+accounting[i]+distributions[i];
     const net = inn - out;
     netChange.push(net);
     bal += net;
@@ -899,6 +900,7 @@ function CashFlowCard() {
     {type:"sub",    label:"Mgmt Salary",                 values:mgmtSalary,                neg:true,  totalVal:sum(mgmtSalary)},
     {type:"sub",    label:"Legal",                       values:legal,                     neg:true,  totalVal:sum(legal)},
     {type:"sub",    label:"Misc Start Up",               values:miscStartup,               neg:true,  totalVal:sum(miscStartup)},
+    {type:"sub",    label:"Accounting & Tax",             values:accounting,                neg:true,  totalVal:sum(accounting)},
     {type:"total",  label:"Total Overheads",             values:totalOverhead,             neg:true,  totalVal:sum(totalOverhead)},
     {type:"spacer", label:""},
     {type:"dist",   label:"Partner Distributions",       values:distributions,             neg:true,  totalVal:sum(distributions)},
