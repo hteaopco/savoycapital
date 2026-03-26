@@ -834,139 +834,195 @@ function SnyderCard() {
 function CashFlowCard() {
   const [open, setOpen] = useState(false);
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-  const months = ["Apr \u201926", "May \u201926", "Jun \u201926", "Jul \u201926", "Aug \u201926", "Sep \u201926", "Oct \u201926", "Nov \u201926", "Dec \u201926"];
+  const months = ["Apr \u201926","May \u201926","Jun \u201926","Jul \u201926","Aug \u201926","Sep \u201926","Oct \u201926","Nov \u201926","Dec \u201926"];
+  const N = 9;
 
-  // Monthly values by index 0=Apr ... 8=Dec
-  const contributions  = [6000, 1010000, 150000, 0, 0, 0, 0, 0, 0];
-  const hteaoLoanIn    = [0, 10100, 13347, 13347, 13347, 13347, 13347, 13347, 13347];
-  const flipIn         = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-  const hteaoLoanOut   = [0, 1010000, 0, 0, 0, 0, 0, 0, 0];
-  const flipOut        = [0, 0, 150000, 0, 0, 0, 0, 0, 0];
-  const mgmtSalary     = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-  const legal          = [5000, 0, 0, 0, 0, 0, 0, 0, 0];
-  const miscStartup    = [1000, 0, 0, 0, 0, 0, 0, 0, 0];
-  const distributions  = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const contributions = [6000,1010000,150000,0,0,0,0,0,0];
+  const hteaoLoanIn   = [0,10100,13347,13347,13347,13347,13347,13347,13347];
+  const flipIn        = [0,0,0,0,0,0,0,0,0];
+  const hteaoLoanOut  = [0,1010000,0,0,0,0,0,0,0];
+  const flipOut       = [0,0,150000,0,0,0,0,0,0];
+  const mgmtSalary    = [0,0,0,0,0,0,0,0,0];
+  const legal         = [5000,0,0,0,0,0,0,0,0];
+  const miscStartup   = [1000,0,0,0,0,0,0,0,0];
+  const distributions = [0,0,0,0,0,0,0,0,0];
 
-  // Compute MM interest and balances
-  const mmRate = 0.035 / 12;
+  const mmRate = 0.035/12;
   let mmBal = 0;
   const mmInterest: number[] = [];
-  for (let i = 0; i < 9; i++) {
-    const interest = Math.round(mmBal * mmRate);
+  for (let i=0;i<N;i++){
+    const interest = Math.round(mmBal*mmRate);
     mmInterest.push(interest);
     mmBal = mmBal + interest + hteaoLoanIn[i];
   }
 
-  // Compute beginning and ending balances
+  const totalCashIn  = months.map((_,i)=>hteaoLoanIn[i]+flipIn[i]+mmInterest[i]);
+  const totalCashOut = months.map((_,i)=>hteaoLoanOut[i]+flipOut[i]);
+  const totalOverhead= months.map((_,i)=>mgmtSalary[i]+legal[i]+miscStartup[i]);
+
   const begBal: number[] = [];
+  const netChange: number[] = [];
   const endBal: number[] = [];
   let bal = 0;
-  for (let i = 0; i < 9; i++) {
+  for (let i=0;i<N;i++){
     begBal.push(bal);
-    const totalIn = contributions[i] + hteaoLoanIn[i] + flipIn[i] + mmInterest[i];
-    const totalOut = hteaoLoanOut[i] + flipOut[i] + mgmtSalary[i] + legal[i] + miscStartup[i] + distributions[i];
-    bal = bal + totalIn - totalOut;
+    const inn = contributions[i]+hteaoLoanIn[i]+flipIn[i]+mmInterest[i];
+    const out = hteaoLoanOut[i]+flipOut[i]+mgmtSalary[i]+legal[i]+miscStartup[i]+distributions[i];
+    const net = inn - out;
+    netChange.push(net);
+    bal += net;
     endBal.push(bal);
   }
 
-  const fmt = (n: number) => n === 0 ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
-  const fmtBal = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+  const sum = (arr: number[]) => arr.reduce((a,b)=>a+b,0);
+  const fmtC = (n: number) => n===0?"—":new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(n);
+  const fmtB = (n: number) => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(n);
+  const fmtNeg = (n: number) => n===0?"—":`(${fmtB(n)})`;
+  const fmtNet = (n: number) => n===0?"—":n<0?`(${fmtB(Math.abs(n))})`:fmtB(n);
 
-  // Row definitions: [label, values[], isHeader, isSubRow, isBold]
-  type RowDef = { label: string; values: number[]; header?: boolean; sub?: boolean; bold?: boolean; neg?: boolean };
-  const rows: RowDef[] = [
-    { label: "Beginning Balance", values: begBal, bold: true },
-    { label: "Partner Contributions", values: contributions, sub: false },
-    { label: "Investment Cash In", values: months.map((_,i) => hteaoLoanIn[i]+flipIn[i]+mmInterest[i]), header: true },
-    { label: "From HTeaO Bridge Loan", values: hteaoLoanIn, sub: true },
-    { label: "From HTeaO RE Flip", values: flipIn, sub: true },
-    { label: "From Money Markets (3.5%)", values: mmInterest, sub: true },
-    { label: "Investment Cash Out", values: months.map((_,i) => hteaoLoanOut[i]+flipOut[i]), header: true, neg: true },
-    { label: "To HTeaO Bridge Loan", values: hteaoLoanOut, sub: true, neg: true },
-    { label: "To HTeaO RE Flip", values: flipOut, sub: true, neg: true },
-    { label: "Overheads", values: months.map((_,i) => mgmtSalary[i]+legal[i]+miscStartup[i]), header: true, neg: true },
-    { label: "Mgmt Salary", values: mgmtSalary, sub: true, neg: true },
-    { label: "Legal", values: legal, sub: true, neg: true },
-    { label: "Misc Start Up", values: miscStartup, sub: true, neg: true },
-    { label: "Partner Distributions", values: distributions, neg: true },
-    { label: "Ending Balance", values: endBal, bold: true },
+  // Row types: 'bal'|'contrib'|'header'|'sub'|'total'|'spacer'|'dist'|'net'
+  type Row = {type:string;label:string;values?:number[];neg?:boolean;totalVal?:number};
+  const rows: Row[] = [
+    {type:"bal",    label:"Beginning Balance",           values:begBal},
+    {type:"spacer", label:""},
+    {type:"contrib",label:"Partner Contributions",       values:contributions,                        totalVal:sum(contributions)},
+    {type:"header", label:"Investment Cash In",          values:Array(N).fill(0)},
+    {type:"sub",    label:"From HTeaO Bridge Loan",      values:hteaoLoanIn,                          totalVal:sum(hteaoLoanIn)},
+    {type:"sub",    label:"From HTeaO RE Flip",          values:flipIn,                               totalVal:sum(flipIn)},
+    {type:"sub",    label:"From Money Markets (3.5%)",   values:mmInterest,                           totalVal:sum(mmInterest)},
+    {type:"total",  label:"Total Investment Cash In",    values:totalCashIn,                          totalVal:sum(totalCashIn)},
+    {type:"header", label:"Investment Cash Out",         values:Array(N).fill(0),          neg:true},
+    {type:"sub",    label:"To HTeaO Bridge Loan",        values:hteaoLoanOut,              neg:true,  totalVal:sum(hteaoLoanOut)},
+    {type:"sub",    label:"To HTeaO RE Flip",            values:flipOut,                   neg:true,  totalVal:sum(flipOut)},
+    {type:"total",  label:"Total Investment Cash Out",   values:totalCashOut,              neg:true,  totalVal:sum(totalCashOut)},
+    {type:"header", label:"Overheads",                   values:Array(N).fill(0),          neg:true},
+    {type:"sub",    label:"Mgmt Salary",                 values:mgmtSalary,                neg:true,  totalVal:sum(mgmtSalary)},
+    {type:"sub",    label:"Legal",                       values:legal,                     neg:true,  totalVal:sum(legal)},
+    {type:"sub",    label:"Misc Start Up",               values:miscStartup,               neg:true,  totalVal:sum(miscStartup)},
+    {type:"total",  label:"Total Overheads",             values:totalOverhead,             neg:true,  totalVal:sum(totalOverhead)},
+    {type:"spacer", label:""},
+    {type:"dist",   label:"Partner Distributions",       values:distributions,             neg:true,  totalVal:sum(distributions)},
+    {type:"spacer", label:""},
+    {type:"net",    label:"Net Change in Cash",          values:netChange,                            totalVal:sum(netChange)},
+    {type:"spacer", label:""},
+    {type:"bal",    label:"Ending Balance",              values:endBal},
   ];
 
-  const COL0 = 160;
-  const COLN = 82;
-  const totalW = COL0 + COLN * 9;
+  const COL0=175; const COLN=80;
+  const totalCols = N+1; // months + Total col
+
+  const cellBg = (type:string) => {
+    if(type==="bal")    return "rgba(56,189,248,0.04)";
+    if(type==="total")  return "rgba(0,0,0,0.03)";
+    if(type==="header") return "rgba(0,0,0,0.02)";
+    if(type==="net")    return "rgba(74,222,128,0.04)";
+    if(type==="spacer") return "transparent";
+    return "#ffffff";
+  };
+  const cellBorder = (type:string) => {
+    if(type==="bal"||type==="net")   return "2px solid rgba(56,189,248,0.15)";
+    if(type==="total")               return "1px solid rgba(0,0,0,0.08)";
+    if(type==="header")              return "1px solid rgba(0,0,0,0.06)";
+    return "1px solid rgba(0,0,0,0.04)";
+  };
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <button onClick={() => setOpen(!open)} style={{
-        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "12px 20px",
-        background: open ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
-        border: "1px solid rgba(0,0,0,0.08)",
-        borderRadius: open ? "12px 12px 0 0" : 12,
-        cursor: "pointer", fontFamily: "inherit",
+      <button onClick={()=>setOpen(!open)} style={{
+        width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between",
+        padding:"12px 20px",
+        background: open?"rgba(56,189,248,0.06)":"rgba(0,0,0,0.02)",
+        border:"1px solid rgba(0,0,0,0.08)",
+        borderRadius: open?"12px 12px 0 0":12,
+        cursor:"pointer", fontFamily:"inherit",
       }}>
-        <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#0f172a" }}>
+        <span style={{fontSize:11,fontWeight:800,textTransform:"uppercase",letterSpacing:".08em",color:"#0f172a"}}>
           Investment Cash Flow
         </span>
-        <span style={{ fontSize: 11, color: "#94a3b8" }}>{open ? "▲" : "▼"}</span>
+        <span style={{fontSize:11,color:"#94a3b8"}}>{open?"▲":"▼"}</span>
       </button>
       {open && (
-        <div style={{ border: "1px solid rgba(0,0,0,0.08)", borderTop: "none", borderRadius: "0 0 12px 12px", overflow: "hidden", background: "#ffffff" }}>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ borderCollapse: "collapse", minWidth: totalW, width: "100%" }}>
-              {/* Month header row */}
+        <div style={{border:"1px solid rgba(0,0,0,0.08)",borderTop:"none",borderRadius:"0 0 12px 12px",overflow:"hidden",background:"#ffffff"}}>
+          <div style={{overflowX:"auto"}}>
+            <table style={{borderCollapse:"collapse",minWidth:COL0+COLN*totalCols,width:"100%"}}>
               <thead>
-                <tr style={{ background: "#0f172a" }}>
-                  <th style={{ width: COL0, minWidth: COL0, padding: "8px 14px", textAlign: "left", fontSize: 9, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".08em", borderRight: "1px solid rgba(255,255,255,0.08)" }}>
-                    Line Item
-                  </th>
-                  {months.map(m => (
-                    <th key={m} style={{ width: COLN, minWidth: COLN, padding: "8px 10px", textAlign: "right", fontSize: 9, fontWeight: 800, color: "#ffffff", textTransform: "uppercase", letterSpacing: ".06em", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-                      {m}
-                    </th>
+                <tr style={{background:"#0f172a"}}>
+                  <th style={{width:COL0,minWidth:COL0,padding:"8px 14px",textAlign:"left",fontSize:9,fontWeight:800,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".08em",borderRight:"1px solid rgba(255,255,255,0.08)"}}>Line Item</th>
+                  {months.map(m=>(
+                    <th key={m} style={{width:COLN,minWidth:COLN,padding:"8px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#ffffff",textTransform:"uppercase",letterSpacing:".06em",borderRight:"1px solid rgba(255,255,255,0.06)"}}>{m}</th>
                   ))}
+                  <th style={{width:COLN,minWidth:COLN,padding:"8px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#38bdf8",textTransform:"uppercase",letterSpacing:".06em",borderLeft:"2px solid rgba(56,189,248,0.3)"}}>Total</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row, ri) => {
-                  const isBal = row.label === "Beginning Balance" || row.label === "Ending Balance";
-                  const bg = isBal ? "rgba(56,189,248,0.04)" : row.header ? "rgba(0,0,0,0.03)" : ri % 2 === 0 ? "#ffffff" : "rgba(0,0,0,0.012)";
-                  const borderTop = isBal ? "2px solid rgba(56,189,248,0.2)" : row.header ? "1px solid rgba(0,0,0,0.06)" : "1px solid rgba(0,0,0,0.04)";
+                {rows.map((row,ri)=>{
+                  if(row.type==="spacer") return (
+                    <tr key={`spacer-${ri}`}><td colSpan={totalCols+1} style={{height:6,background:"transparent",padding:0}} /></tr>
+                  );
+                  if(row.type==="header") return (
+                    <tr key={row.label} style={{background:cellBg("header"),borderTop:cellBorder("header")}}>
+                      <td style={{padding:"5px 14px",fontSize:9,fontWeight:800,color:"#64748b",textTransform:"uppercase",letterSpacing:".06em",borderRight:"1px solid rgba(0,0,0,0.06)",whiteSpace:"nowrap"}}>{row.label}</td>
+                      {months.map((_,ci)=><td key={ci} style={{padding:"5px 10px",borderRight:"1px solid rgba(0,0,0,0.04)"}} />)}
+                      <td style={{padding:"5px 10px",borderLeft:"2px solid rgba(56,189,248,0.1)"}} />
+                    </tr>
+                  );
+                  const isBal = row.type==="bal";
+                  const isTotal = row.type==="total";
+                  const isNet = row.type==="net";
+                  const isSub = row.type==="sub";
+                  const vals = row.values||[];
                   return (
-                    <tr key={row.label} style={{ background: bg, borderTop }}>
-                      <td style={{ padding: row.sub ? "5px 14px 5px 26px" : "6px 14px", fontSize: row.header ? 9 : 10, fontWeight: row.bold || row.header ? 700 : 400, color: row.header ? "#64748b" : "#0f172a", textTransform: row.header ? "uppercase" : "none", letterSpacing: row.header ? ".06em" : "normal", borderRight: "1px solid rgba(0,0,0,0.06)", whiteSpace: "nowrap" }}>
-                        {row.label}
-                      </td>
-                      {row.values.map((v, ci) => {
-                        const isNeg = row.neg && v > 0;
-                        const color = isBal ? (v < 0 ? "#f87171" : "#0f172a") : isNeg ? "#f87171" : v > 0 ? "#0f172a" : "#94a3b8";
+                    <tr key={row.label} style={{background:cellBg(row.type),borderTop:cellBorder(row.type)}}>
+                      <td style={{
+                        padding: isSub?"5px 14px 5px 28px":"6px 14px",
+                        fontSize: isSub?10:10,
+                        fontWeight: (isBal||isTotal||isNet)?700:400,
+                        color:"#0f172a",
+                        borderRight:"1px solid rgba(0,0,0,0.06)",
+                        whiteSpace:"nowrap",
+                      }}>{row.label}</td>
+                      {vals.map((v,ci)=>{
+                        const isNegVal = row.neg&&v>0;
+                        const color = isBal||isNet ? (v<0?"#f87171":v>0?"#0f172a":"#94a3b8") : isNegVal?"#f87171":v>0?"#0f172a":"#94a3b8";
+                        let display = "—";
+                        if(isBal) display = fmtB(v);
+                        else if(isNegVal) display = fmtNeg(v);
+                        else if(isNet) display = fmtNet(v);
+                        else if(v!==0) display = fmtC(v);
                         return (
-                          <td key={ci} style={{ padding: "5px 10px", textAlign: "right", fontSize: 10, fontWeight: row.bold ? 700 : 400, color, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", borderRight: "1px solid rgba(0,0,0,0.04)" }}>
-                            {isBal ? fmtBal(v) : isNeg ? `(${fmt(v).replace("—","")})` : fmt(v)}
-                          </td>
+                          <td key={ci} style={{padding:"5px 10px",textAlign:"right",fontSize:10,fontWeight:(isBal||isTotal||isNet)?700:400,color,fontVariantNumeric:"tabular-nums",whiteSpace:"nowrap",borderRight:"1px solid rgba(0,0,0,0.04)"}}>{display}</td>
                         );
                       })}
+                      {/* Total column */}
+                      {(()=>{
+                        const tv = row.totalVal??0;
+                        const isTotalNeg = row.neg&&tv>0;
+                        const tColor = isBal? "#38bdf8" : isNet?(tv<0?"#f87171":tv>0?"#16a34a":"#94a3b8") : isTotalNeg?"#f87171":tv>0?"#0f172a":"#94a3b8";
+                        let tDisplay = "—";
+                        if(isBal) tDisplay = row.label==="Beginning Balance"?"$0":fmtB(endBal[N-1]);
+                        else if(isTotalNeg) tDisplay = fmtNeg(tv);
+                        else if(isNet) tDisplay = fmtNet(tv);
+                        else if(tv!==0) tDisplay = fmtC(tv);
+                        return <td style={{padding:"5px 10px",textAlign:"right",fontSize:10,fontWeight:(isBal||isTotal||isNet)?700:400,color:tColor,fontVariantNumeric:"tabular-nums",whiteSpace:"nowrap",borderLeft:"2px solid rgba(56,189,248,0.1)",background:"rgba(56,189,248,0.02)"}}>{tDisplay}</td>;
+                      })()}
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-          {/* Footnote */}
-          <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(0,0,0,0.06)", background: "#fafafa" }}>
-            <p style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.6, margin: 0 }}>
+          <div style={{padding:"12px 16px",borderTop:"1px solid rgba(0,0,0,0.06)",background:"#fafafa"}}>
+            <p style={{fontSize:9,color:"#94a3b8",lineHeight:1.6,margin:0}}>
               The below table is a rough estimate of incoming and outgoing cash. A full set of Financials will be produced quarterly and saved / distributed. The below will change from time to time based on investment activity.
             </p>
-            <p style={{ fontSize: 9, color: "#94a3b8", margin: "4px 0 0", fontWeight: 600 }}>
-              Last Updated: {today}
-            </p>
+            <p style={{fontSize:9,color:"#94a3b8",margin:"4px 0 0",fontWeight:600}}>Last Updated: {today}</p>
           </div>
         </div>
       )}
     </div>
   );
 }
+
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [investOpen, setInvestOpen] = useState(false);
@@ -1006,6 +1062,7 @@ export default function Home() {
           <h1 style={{ fontSize: "clamp(28px, 7vw, 44px)", fontWeight: 800, letterSpacing: "-.02em", color: "#0f172a", marginBottom: 32, lineHeight: 1.1 }}>
             Savoy Capital Fund
           </h1>
+          <CashFlowCard />
           <button onClick={() => setInvestOpen(!investOpen)} style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             padding: "10px 24px", borderRadius: 8, fontSize: 12, fontWeight: 800,
@@ -1017,7 +1074,6 @@ export default function Home() {
           </button>
           {investOpen && (
             <div>
-              <CashFlowCard />
               <InvestmentCard />
               <SnyderCard />
             </div>
