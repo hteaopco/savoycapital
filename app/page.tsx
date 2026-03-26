@@ -839,7 +839,7 @@ function CashFlowCard() {
 
   const contributions = [6000,1010000,150000,0,0,0,0,0,0,0,0,0,0,0];
   const hteaoLoanIn   = [0,10100,13347,13347,13347,13347,13347,13347,13347,13347,13347,13347,13347,13347];
-  const flipIn        = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  const flipIn        = [0,0,0,0,0,0,0,0,0,0,0,258000,0,0];
   const hteaoLoanOut  = [0,1010000,0,0,0,0,0,0,0,0,0,0,0,0];
   const flipOut       = [0,0,150000,0,0,0,0,0,0,0,0,0,0,0];
   const mgmtSalary    = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -853,7 +853,7 @@ function CashFlowCard() {
   for (let i=0;i<N;i++){
     const interest = Math.round(mmBal*mmRate);
     mmInterest.push(interest);
-    mmBal = mmBal + interest + hteaoLoanIn[i];
+    mmBal = mmBal + interest + hteaoLoanIn[i] + flipIn[i];
   }
 
   const totalCashIn  = months.map((_,i)=>hteaoLoanIn[i]+flipIn[i]+mmInterest[i]);
