@@ -1025,9 +1025,120 @@ function CashFlowCard() {
   );
 }
 
+
+function PortfolioCard() {
+  const COMMITTED = 10_000_000;
+  const CREDIT = 1_010_000;
+  const RE = 150_000;
+  const ALLOCATED = CREDIT + RE;
+  const UNALLOCATED = COMMITTED - ALLOCATED;
+  const fmtM = (n: number) => n >= 1_000_000 ? `$${(n/1_000_000).toFixed(2)}M` : `$${(n/1_000).toFixed(0)}K`;
+  const fmtD = (n: number) => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(n);
+
+  // Pie slices: Credit 87%, RE 13% of allocated
+  const creditPct = CREDIT / ALLOCATED;
+  const rePct = RE / ALLOCATED;
+
+  // SVG pie
+  const cx = 90, cy = 90, r = 72;
+  const slice = (startPct: number, endPct: number, color: string) => {
+    const startA = startPct * 2 * Math.PI - Math.PI/2;
+    const endA = endPct * 2 * Math.PI - Math.PI/2;
+    const x1 = cx + r * Math.cos(startA), y1 = cy + r * Math.sin(startA);
+    const x2 = cx + r * Math.cos(endA),   y2 = cy + r * Math.sin(endA);
+    const large = (endPct - startPct) > 0.5 ? 1 : 0;
+    return `M${cx},${cy} L${x1},${y1} A${r},${r},0,${large},1,${x2},${y2} Z`;
+  };
+
+  // Label positions (midpoint of arc, pushed outward)
+  const labelPos = (startPct: number, endPct: number, dist: number) => {
+    const mid = (startPct + endPct) / 2 * 2 * Math.PI - Math.PI/2;
+    return { x: cx + dist * Math.cos(mid), y: cy + dist * Math.sin(mid) };
+  };
+
+  const creditStart = 0, creditEnd = creditPct;
+  const reStart = creditPct, reEnd = 1;
+  const creditLabel = labelPos(creditStart, creditEnd, 54);
+  const reLabel = labelPos(reStart, reEnd, 54);
+  const creditOuter = labelPos(creditStart, creditEnd, 100);
+  const reOuter = labelPos(reStart, reEnd, 100);
+
+  return (
+    <div style={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 12, overflow: "hidden", padding: "20px 20px 16px" }}>
+      {/* Capital summary */}
+      <div style={{ display: "flex", gap: 24, marginBottom: 20 }}>
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Committed Capital</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>{fmtM(COMMITTED)}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Allocated Capital</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#38bdf8" }}>{fmtM(ALLOCATED)}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Unallocated</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>{fmtM(UNALLOCATED)}</div>
+        </div>
+      </div>
+
+      {/* Allocation rows */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+        {[
+          { label: "Credit", amount: CREDIT, color: "#854d0e" },
+          { label: "Real Estate", amount: RE, color: "#a16207" },
+        ].map(s => (
+          <div key={s.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 12px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.color }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{s.label}</span>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>{fmtD(s.amount)}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Investment Mix heading */}
+      <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#64748b", marginBottom: 12 }}>
+        Investment Mix — {fmtD(ALLOCATED)} Invested
+      </div>
+
+      {/* Pie chart — deck style */}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <svg width={180} height={180} viewBox="0 0 180 180">
+          {/* Dark background circle (deck feel) */}
+          <circle cx={cx} cy={cy} r={r+4} fill="#0f172a" />
+          {/* Credit slice — dark olive gold */}
+          <path d={slice(creditStart, creditEnd, "#a16207")} stroke="#0f172a" strokeWidth={1.5} />
+          {/* RE slice — lighter gold */}
+          <path d={slice(reStart, reEnd, "#d97706")} stroke="#0f172a" strokeWidth={1.5} />
+          {/* Inner circle — cream/white center */}
+          <circle cx={cx} cy={cy} r={32} fill="#fafaf7" />
+          {/* Center text */}
+          <text x={cx} y={cy-6} textAnchor="middle" fontSize={8} fontWeight={700} fill="#64748b" fontFamily="system-ui">INVESTED</text>
+          <text x={cx} y={cy+8} textAnchor="middle" fontSize={10} fontWeight={800} fill="#0f172a" fontFamily="system-ui">11.6%</text>
+          <text x={cx} y={cy+19} textAnchor="middle" fontSize={7} fontWeight={500} fill="#94a3b8" fontFamily="system-ui">of fund</text>
+
+          {/* Credit label line + text */}
+          <line x1={creditLabel.x} y1={creditLabel.y} x2={creditOuter.x} y2={creditOuter.y} stroke="#a16207" strokeWidth={1} />
+          <circle cx={creditOuter.x} cy={creditOuter.y} r={2.5} fill="#a16207" />
+          <text x={creditOuter.x + (creditOuter.x > cx ? 5 : -5)} y={creditOuter.y - 4} textAnchor={creditOuter.x > cx ? "start" : "end"} fontSize={8} fontWeight={800} fill="#854d0e" fontFamily="system-ui">87%</text>
+          <text x={creditOuter.x + (creditOuter.x > cx ? 5 : -5)} y={creditOuter.y + 7} textAnchor={creditOuter.x > cx ? "start" : "end"} fontSize={7} fill="#64748b" fontFamily="system-ui">Credit</text>
+
+          {/* RE label line + text */}
+          <line x1={reLabel.x} y1={reLabel.y} x2={reOuter.x} y2={reOuter.y} stroke="#d97706" strokeWidth={1} />
+          <circle cx={reOuter.x} cy={reOuter.y} r={2.5} fill="#d97706" />
+          <text x={reOuter.x + (reOuter.x > cx ? 5 : -5)} y={reOuter.y - 4} textAnchor={reOuter.x > cx ? "start" : "end"} fontSize={8} fontWeight={800} fill="#92400e" fontFamily="system-ui">13%</text>
+          <text x={reOuter.x + (reOuter.x > cx ? 5 : -5)} y={reOuter.y + 7} textAnchor={reOuter.x > cx ? "start" : "end"} fontSize={7} fill="#64748b" fontFamily="system-ui">Real Estate</text>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [investOpen, setInvestOpen] = useState(false);
+  const [portfolioOpen, setPortfolioOpen] = useState(false);
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
       <header style={{
@@ -1065,19 +1176,38 @@ export default function Home() {
             Savoy Capital Fund
           </h1>
           <CashFlowCard />
-          <button onClick={() => setInvestOpen(!investOpen)} style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "10px 24px", borderRadius: 8, fontSize: 12, fontWeight: 800,
-            background: investOpen ? "rgba(56,189,248,0.15)" : "rgba(56,189,248,0.10)",
-            border: "1px solid rgba(56,189,248,0.35)", color: "#38bdf8", cursor: "pointer",
-            transition: "all .15s", fontFamily: "inherit", marginBottom: investOpen ? 20 : 0,
-          }}>
-            Investment History {investOpen ? "▲" : "▼"}
-          </button>
+          {/* Horizontal spacer */}
+          <hr style={{ border: "none", borderTop: "1px solid rgba(0,0,0,0.08)", margin: "20px 0" }} />
+          {/* Side-by-side buttons */}
+          <div style={{ display: "flex", gap: 12, marginBottom: (investOpen || portfolioOpen) ? 20 : 0 }}>
+            <button onClick={() => { setInvestOpen(!investOpen); setPortfolioOpen(false); }} style={{
+              flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+              padding: "10px 24px", borderRadius: 8, fontSize: 12, fontWeight: 800,
+              background: investOpen ? "rgba(56,189,248,0.15)" : "rgba(56,189,248,0.10)",
+              border: "1px solid rgba(56,189,248,0.35)", color: "#38bdf8", cursor: "pointer",
+              transition: "all .15s", fontFamily: "inherit",
+            }}>
+              Investments {investOpen ? "▲" : "▼"}
+            </button>
+            <button onClick={() => { setPortfolioOpen(!portfolioOpen); setInvestOpen(false); }} style={{
+              flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+              padding: "10px 24px", borderRadius: 8, fontSize: 12, fontWeight: 800,
+              background: portfolioOpen ? "rgba(56,189,248,0.15)" : "rgba(56,189,248,0.10)",
+              border: "1px solid rgba(56,189,248,0.35)", color: "#38bdf8", cursor: "pointer",
+              transition: "all .15s", fontFamily: "inherit",
+            }}>
+              Portfolio {portfolioOpen ? "▲" : "▼"}
+            </button>
+          </div>
           {investOpen && (
             <div>
               <InvestmentCard />
               <SnyderCard />
+            </div>
+          )}
+          {portfolioOpen && (
+            <div>
+              <PortfolioCard />
             </div>
           )}
         </section>
