@@ -688,6 +688,148 @@ function InvestmentHistoryTable() {
     </div>
   );
 }
+
+function SnyderDataRoom() {
+  const [open, setOpen] = useState(false);
+  const checkmark = () => (<span style={{ color: "#16a34a", fontSize: 13, marginRight: 6 }}>✓</span>);
+  const pendingRed = () => (<span style={{ color: "#f87171", fontSize: 11, marginRight: 6 }}>●</span>);
+  const exportBtn = (path: string) => (
+    <button onClick={() => window.open(path, "_blank")} style={{
+      padding: "2px 10px", borderRadius: 5, fontSize: 9, fontWeight: 700,
+      cursor: "pointer", fontFamily: "inherit",
+      background: "rgba(15,23,42,0.05)", border: "1px solid rgba(15,23,42,0.12)",
+      color: "#0f172a", transition: "all .15s", whiteSpace: "nowrap",
+    }}>Export ↗</button>
+  );
+  const sectionLabel = (label: string) => (
+    <div style={{ fontSize: 8, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#94a3b8", marginTop: 16, marginBottom: 6 }}>{label}</div>
+  );
+  const docRow = (name: string, received: boolean, exportPath?: string, redPending?: boolean) => (
+    <div key={name} style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "7px 12px", borderRadius: 7,
+      background: "rgba(0,0,0,0.015)", border: "1px solid rgba(0,0,0,0.05)", marginBottom: 4,
+    }}>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        {received ? checkmark() : redPending ? pendingRed() : <span style={{ color: "#cbd5e1", fontSize: 11, marginRight: 6 }}>○</span>}
+        <span style={{ fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{name}</span>
+      </div>
+      {received && exportPath && exportBtn(exportPath)}
+    </div>
+  );
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <button onClick={() => setOpen(!open)} style={{
+        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "11px 16px",
+        background: open ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
+        border: "1px solid rgba(0,0,0,0.07)",
+        borderRadius: open ? "8px 8px 0 0" : 8,
+        cursor: "pointer", fontFamily: "inherit",
+      }}>
+        <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#0f172a" }}>Data Room</span>
+        <span style={{ fontSize: 11, color: "#0f172a" }}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div style={{ padding: "12px 16px 16px", border: "1px solid rgba(0,0,0,0.07)", borderTop: "none", borderRadius: "0 0 8px 8px", background: "#fafafa" }}>
+          {sectionLabel("Investment Documents")}
+          {docRow("Investment Memo", true, "/docs/snyder-re-proforma.pdf")}
+          {docRow("Recent Comps", true, "/docs/snyder-recent-comps.pdf")}
+          {sectionLabel("Legal")}
+          {docRow("HT Snyder Articles", false, undefined, true)}
+          {docRow("HT Snyder OA", false, undefined, true)}
+          {docRow("HT Snyder EIN", false, undefined, true)}
+          {docRow("HT Snyder W9", false, undefined, true)}
+          {docRow("Bank Loan Docs", false, undefined, true)}
+          {docRow("Acquisition Closing Docs", false, undefined, true)}
+          {docRow("Disposition Closing Docs", false, undefined, true)}
+        </div>
+      )}
+    </div>
+  );
+}
+function SnyderCard() {
+  const [dealOpen, setDealOpen] = useState(false);
+  const highlights = [
+    ["Investment", "$150,000"],
+    ["Hold Period", "9 Months"],
+    ["Gain on Sale", "$100,000"],
+    ["Gain on Lease", "$8,000"],
+    ["Total Returned", "$258,000"],
+  ];
+  return (
+    <div style={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 12, overflow: "hidden", marginBottom: 8 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>HTeaO RE Flip</span>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <span style={{ fontSize: 13, color: "#0f172a", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>$150,000</span>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.4)", color: "#b45309" }}>Upcoming</span>
+        </div>
+      </div>
+      {/* Body */}
+      <div style={{ padding: "16px 20px" }}>
+        <SnyderDataRoom />
+        {/* Deal Terms */}
+        <div style={{ marginBottom: 8 }}>
+          <button onClick={() => setDealOpen(!dealOpen)} style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "11px 16px",
+            background: dealOpen ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
+            border: "1px solid rgba(0,0,0,0.07)",
+            borderRadius: dealOpen ? "8px 8px 0 0" : 8,
+            cursor: "pointer", fontFamily: "inherit",
+          }}>
+            <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#0f172a" }}>Deal Terms</span>
+            <span style={{ fontSize: 11, color: "#0f172a" }}>{dealOpen ? "▲" : "▼"}</span>
+          </button>
+          {dealOpen && (
+            <div style={{ padding: "14px 16px", border: "1px solid rgba(0,0,0,0.07)", borderTop: "none", borderRadius: "0 0 8px 8px", background: "#fafafa" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+                {[
+                  ["Date", "06/01/26"],
+                  ["Investment", "$150,000"],
+                  ["Structure", "Flip"],
+                  ["Expected Hold", "~6-12 Months"],
+                ].map(([label, value]) => (
+                  <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 8 }}>
+                    <span style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>{label}</span>
+                    <span style={{ fontSize: 12, color: "#0f172a", fontWeight: 700 }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Return Profile — equity/flip style */}
+              <div style={{ marginTop: 12, border: "1px solid rgba(0,0,0,0.07)", borderRadius: 8, overflow: "hidden" }}>
+                {/* Header */}
+                <div style={{ padding: "10px 14px", background: "rgba(251,191,36,0.05)", borderBottom: "1px solid rgba(251,191,36,0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#b45309" }}>Return Profile</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>Est. (9 Month Hold)</span>
+                </div>
+                {/* IRR */}
+                <div style={{ padding: "10px 14px", background: "rgba(74,222,128,0.03)", borderBottom: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#64748b" }}>Est. IRR</span>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: "#16a34a", fontVariantNumeric: "tabular-nums" }}>~93%</span>
+                </div>
+                {/* Investment Highlights */}
+                <div style={{ padding: "12px 14px", background: "#fafafa" }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#64748b", marginBottom: 10 }}>Investment Highlights (Estimated)</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {highlights.map(([label, value]) => (
+                      <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
+                        <span style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>{label}</span>
+                        <span style={{ fontSize: 11, color: label === "Total Returned" ? "#16a34a" : "#0f172a", fontWeight: label === "Total Returned" ? 800 : 600, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [investOpen, setInvestOpen] = useState(false);
@@ -740,6 +882,7 @@ export default function Home() {
             <div>
 
               <InvestmentCard />
+              <SnyderCard />
             </div>
           )}
         </section>
