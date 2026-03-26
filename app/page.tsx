@@ -834,18 +834,18 @@ function SnyderCard() {
 function CashFlowCard() {
   const [open, setOpen] = useState(false);
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-  const months = ["Apr \u201926","May \u201926","Jun \u201926","Jul \u201926","Aug \u201926","Sep \u201926","Oct \u201926","Nov \u201926","Dec \u201926"];
-  const N = 9;
+  const months = ["Apr \u201926","May \u201926","Jun \u201926","Jul \u201926","Aug \u201926","Sep \u201926","Oct \u201926","Nov \u201926","Dec \u201926","Jan \u201927","Feb \u201927","Mar \u201927","Apr \u201927","May \u201927"];
+  const N = 14;
 
-  const contributions = [6000,1010000,150000,0,0,0,0,0,0];
-  const hteaoLoanIn   = [0,10100,13347,13347,13347,13347,13347,13347,13347];
-  const flipIn        = [0,0,0,0,0,0,0,0,0];
-  const hteaoLoanOut  = [0,1010000,0,0,0,0,0,0,0];
-  const flipOut       = [0,0,150000,0,0,0,0,0,0];
-  const mgmtSalary    = [0,0,0,0,0,0,0,0,0];
-  const legal         = [5000,0,0,0,0,0,0,0,0];
-  const miscStartup   = [1000,0,0,0,0,0,0,0,0];
-  const distributions = [0,0,0,0,0,0,0,0,0];
+  const contributions = [6000,1010000,150000,0,0,0,0,0,0,0,0,0,0,0];
+  const hteaoLoanIn   = [0,10100,13347,13347,13347,13347,13347,13347,13347,13347,13347,13347,13347,13347];
+  const flipIn        = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  const hteaoLoanOut  = [0,1010000,0,0,0,0,0,0,0,0,0,0,0,0];
+  const flipOut       = [0,0,150000,0,0,0,0,0,0,0,0,0,0,0];
+  const mgmtSalary    = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  const legal         = [5000,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  const miscStartup   = [1000,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  const distributions = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
   const mmRate = 0.035/12;
   let mmBal = 0;
@@ -1013,7 +1013,7 @@ function CashFlowCard() {
           </div>
           <div style={{padding:"12px 16px",borderTop:"1px solid rgba(0,0,0,0.06)",background:"#fafafa"}}>
             <p style={{fontSize:9,color:"#94a3b8",lineHeight:1.6,margin:0}}>
-              The below table is a rough estimate of incoming and outgoing cash. A full set of Financials will be produced quarterly and saved / distributed. The below will change from time to time based on investment activity.
+              The above table is a rough estimate of incoming and outgoing cash. A full set of Financials will be produced quarterly and saved / distributed. The above will change from time to time based on investment activity.
             </p>
             <p style={{fontSize:9,color:"#94a3b8",margin:"4px 0 0",fontWeight:600}}>Last Updated: {today}</p>
           </div>
