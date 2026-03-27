@@ -1115,19 +1115,19 @@ function PortfolioCard() {
           { label: "Private Equity", target: 5_000_000, current: 0 },
           { label: "Private Credit", target: 2_000_000, current: 1_010_000 },
           { label: "Real Estate",    target: 2_000_000, current: 150_000 },
-          { label: "Cash",           target: 1_000_000, current: 0 },
+          { label: "Reserved",       target: 1_000_000, current: 0 },
         ].map(({ label, target, current }) => {
           const pct = Math.min(current / target * 100, 100);
           const fmtM = (n: number) => n >= 1_000_000 ? `$${(n/1_000_000).toFixed(0)}M` : n >= 1_000 ? `$${(n/1_000).toFixed(0)}K` : `$${n}`;
           return (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              <span style={{ fontSize: 11, fontWeight: 500, color: "#0f172a", width: 100, flexShrink: 0, textAlign: "right" as const }}>{label}</span>
-              <div style={{ flex: 1, position: "relative" as const, height: 24, border: "1.5px solid #f4a574", borderRadius: 4, background: "rgba(244,165,116,0.08)", overflow: "hidden" }}>
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 500, color: "#0f172a", width: 90, flexShrink: 0 }}>{label}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", width: 32, flexShrink: 0, fontVariantNumeric: "tabular-nums", textAlign: "right" as const }}>{fmtM(target)}</span>
+              <div style={{ flex: 1, position: "relative" as const, height: 22, border: "0.5px dashed #f4a574", borderRadius: 4, background: "rgba(244,165,116,0.06)", overflow: "hidden" }}>
                 {pct > 0 && (
                   <div style={{ position: "absolute" as const, left: 0, top: 0, bottom: 0, width: `${pct}%`, background: "rgba(244,165,116,0.45)", borderRadius: "2px 0 0 2px" }} />
                 )}
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", width: 36, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{fmtM(target)}</span>
             </div>
           );
         })}
