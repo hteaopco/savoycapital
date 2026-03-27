@@ -1086,8 +1086,8 @@ function PortfolioCard() {
       {/* Allocation rows */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
         {[
-          { label: "Credit", amount: CREDIT, color: "#d97706" },
-          { label: "Real Estate", amount: RE, color: "#a16207" },
+          { label: "Credit", amount: CREDIT, color: "#eab308" },
+          { label: "Real Estate", amount: RE, color: "#f59e0b" },
         ].map(s => (
           <div key={s.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 12px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1107,27 +1107,27 @@ function PortfolioCard() {
       {/* Pie chart — deck style */}
       <div style={{ display: "flex", justifyContent: "center" }}>
         <svg width={260} height={220} viewBox="0 0 260 220">
-          {/* Dark outer ring */}
-          <circle cx={130} cy={110} r={76} fill="#1a1a1a" />
-          {/* Credit slice - amber */}
-          <path d="M130,110 L130.00,38.00 A72,72,0,1,1,77.51,60.71 Z" fill="#d97706" stroke="#1a1a1a" strokeWidth={2} />
-          {/* RE slice - olive gold */}
-          <path d="M130,110 L77.51,60.71 A72,72,0,0,1,130.00,38.00 Z" fill="#a16207" stroke="#1a1a1a" strokeWidth={2} />
-          {/* White center donut */}
-          <circle cx={130} cy={110} r={32} fill="#fafaf7" />
+          {/* Dark outer ring - 2px border */}
+          <circle cx={130} cy={110} r={74} fill="#1a1a1a" />
+          {/* Credit slice - yellow */}
+          <path d="M130,110 L130.00,38.00 A72,72,0,1,1,77.51,60.71 Z" fill="#eab308" stroke="#1a1a1a" strokeWidth={1} />
+          {/* RE slice - amber */}
+          <path d="M130,110 L77.51,60.71 A72,72,0,0,1,130.00,38.00 Z" fill="#f59e0b" stroke="#1a1a1a" strokeWidth={1} />
+          {/* White center donut with 0.5px border */}
+          <circle cx={130} cy={110} r={32} fill="#fafaf7" stroke="#1a1a1a" strokeWidth={0.5} />
           {/* Center labels */}
           <text x={130} y={104} textAnchor="middle" fontSize={7} fontWeight={700} fill="#94a3b8" fontFamily="system-ui">INVESTED</text>
           <text x={130} y={116} textAnchor="middle" fontSize={11} fontWeight={800} fill="#0f172a" fontFamily="system-ui">11.6%</text>
           <text x={130} y={126} textAnchor="middle" fontSize={7} fill="#94a3b8" fontFamily="system-ui">of fund</text>
           {/* Credit annotation */}
-          <line x1={158.6} y1={176.1} x2={172.5} y2={208.2} stroke="#d97706" strokeWidth={1} />
-          <circle cx={172.5} cy={208.2} r={2.5} fill="#d97706" />
-          <text x={177.5} y={205.2} textAnchor="start" fontSize={9} fontWeight={800} fill="#d97706" fontFamily="system-ui">87%</text>
+          <line x1={158.6} y1={176.1} x2={172.5} y2={208.2} stroke="#eab308" strokeWidth={1} />
+          <circle cx={172.5} cy={208.2} r={2.5} fill="#eab308" />
+          <text x={177.5} y={205.2} textAnchor="start" fontSize={9} fontWeight={800} fill="#eab308" fontFamily="system-ui">87%</text>
           <text x={177.5} y={217.2} textAnchor="start" fontSize={7} fill="#64748b" fontFamily="system-ui">Credit</text>
           {/* RE annotation */}
-          <line x1={101.4} y1={43.9} x2={87.5} y2={11.8} stroke="#a16207" strokeWidth={1} />
-          <circle cx={87.5} cy={11.8} r={2.5} fill="#a16207" />
-          <text x={82.5} y={8.8} textAnchor="end" fontSize={9} fontWeight={800} fill="#a16207" fontFamily="system-ui">13%</text>
+          <line x1={101.4} y1={43.9} x2={87.5} y2={11.8} stroke="#f59e0b" strokeWidth={1} />
+          <circle cx={87.5} cy={11.8} r={2.5} fill="#f59e0b" />
+          <text x={82.5} y={8.8} textAnchor="end" fontSize={9} fontWeight={800} fill="#f59e0b" fontFamily="system-ui">13%</text>
           <text x={82.5} y={20.8} textAnchor="end" fontSize={7} fill="#64748b" fontFamily="system-ui">Real Estate</text>
         </svg>
       </div>
