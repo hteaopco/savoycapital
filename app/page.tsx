@@ -1106,7 +1106,7 @@ function PortfolioCard() {
 
       {/* Pie chart — deck style */}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <svg width={260} height={260} viewBox="0 0 260 260">
+        <svg width={180} height={180} viewBox="0 0 180 180">
           {/* Dark outer ring - 1px border */}
           <circle cx={130} cy={110} r={73} fill="#1a1a1a" />
           {/* Credit slice - yellow */}
@@ -1119,18 +1119,6 @@ function PortfolioCard() {
           <text x={130} y={104} textAnchor="middle" fontSize={7} fontWeight={700} fill="#94a3b8" fontFamily="system-ui">INVESTED</text>
           <text x={130} y={116} textAnchor="middle" fontSize={11} fontWeight={800} fill="#0f172a" fontFamily="system-ui">11.6%</text>
           <text x={130} y={126} textAnchor="middle" fontSize={7} fill="#94a3b8" fontFamily="system-ui">of fund</text>
-          {/* Credit annotation: horizontal right, drop down, dot, label */}
-          <line x1={161.8} y1={183.4} x2={205} y2={183.4} stroke="#0f172a" strokeWidth={1} />
-          <line x1={205} y1={183.4} x2={205} y2={207} stroke="#0f172a" strokeWidth={1} />
-          <circle cx={205} cy={210} r={3} fill="#0f172a" />
-          <text x={205} y={223} textAnchor="middle" fontSize={9} fontWeight={800} fill="#0f172a" fontFamily="system-ui">87%</text>
-          <text x={205} y={233} textAnchor="middle" fontSize={7} fill="#0f172a" fontFamily="system-ui">Credit</text>
-          {/* RE annotation: horizontal left, drop down, dot, label */}
-          <line x1={98.2} y1={36.6} x2={55} y2={36.6} stroke="#0f172a" strokeWidth={1} />
-          <line x1={55} y1={36.6} x2={55} y2={12} stroke="#0f172a" strokeWidth={1} />
-          <circle cx={55} cy={9} r={3} fill="#0f172a" />
-          <text x={55} y={-4} textAnchor="middle" fontSize={9} fontWeight={800} fill="#0f172a" fontFamily="system-ui">13%</text>
-          <text x={55} y={6} textAnchor="middle" fontSize={7} fill="#0f172a" fontFamily="system-ui">Real Estate</text>
         </svg>
       </div>
     </div>
