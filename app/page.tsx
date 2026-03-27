@@ -1123,9 +1123,21 @@ function PortfolioCard() {
             <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <span style={{ fontSize: 11, fontWeight: 500, color: "#0f172a", width: 90, flexShrink: 0 }}>{label}</span>
               <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", width: 32, flexShrink: 0, fontVariantNumeric: "tabular-nums", textAlign: "right" as const }}>{fmtM(target)}</span>
-              <div style={{ flex: 1, position: "relative" as const, height: 22, border: "0.5px dashed #f4a574", borderRadius: 4, background: "rgba(244,165,116,0.06)", overflow: "hidden" }}>
+              <div style={{ flex: 1, position: "relative" as const, height: 22, border: "0.5px dashed #f4a574", borderRadius: 4, background: "rgba(244,165,116,0.06)", overflow: "visible" }}>
                 {pct > 0 && (
-                  <div style={{ position: "absolute" as const, left: 0, top: 0, bottom: 0, width: `${pct}%`, background: "rgba(244,165,116,0.45)", borderRadius: "2px 0 0 2px" }} />
+                  <div style={{ position: "absolute" as const, left: 0, top: 0, bottom: 0, width: `${pct}%`, background: "rgba(244,165,116,0.45)", borderRadius: "2px 0 0 2px", overflow: "hidden" }} />
+                )}
+                {pct > 0 && (
+                  <div style={{
+                    position: "absolute" as const,
+                    left: `${pct}%`,
+                    top: -8,
+                    transform: "translateX(-50%)",
+                    width: 0, height: 0,
+                    borderLeft: "5px solid transparent",
+                    borderRight: "5px solid transparent",
+                    borderTop: "7px solid #c2410c",
+                  }} />
                 )}
               </div>
             </div>
