@@ -281,7 +281,7 @@ function ReturnProfile() {
               onClick={() => setMmOn(val)}
               style={{
                 padding: "4px 12px", borderRadius: 6, fontSize: 10, fontWeight: 700,
-                cursor: "pointer", fontFamily: "inherit", border: "none",
+                cursor: "pointer", border: "none",
                 background: mmOn === val
                   ? val ? "rgba(22,163,74,0.15)" : "rgba(248,113,113,0.15)"
                   : "rgba(0,0,0,0.04)",
@@ -350,7 +350,7 @@ function ReturnProfile() {
           background: tableOpen ? "rgba(56,189,248,0.04)" : "rgba(0,0,0,0.02)",
           border: "none",
           borderTop: "1px solid rgba(0,0,0,0.06)",
-          cursor: "pointer", fontFamily: "inherit",
+          cursor: "pointer",
         }}>
           <span style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#64748b" }}>
             {tableOpen ? "Collapse Investment Table" : "Expand Investment Table"}
@@ -462,7 +462,7 @@ function ReturnProfile() {
               onClick={() => exportTablePDF(schedule, mmOn, displayIRR)}
               style={{
                 padding: "4px 14px", borderRadius: 6, fontSize: 10, fontWeight: 700,
-                cursor: "pointer", fontFamily: "inherit",
+                cursor: "pointer",
                 background: "rgba(15,23,42,0.05)",
                 border: "1px solid rgba(15,23,42,0.12)",
                 color: "#0f172a", transition: "all .15s",
@@ -474,7 +474,7 @@ function ReturnProfile() {
               onClick={() => exportTableExcel(schedule, mmOn, displayIRR)}
               style={{
                 padding: "4px 14px", borderRadius: 6, fontSize: 10, fontWeight: 700,
-                cursor: "pointer", fontFamily: "inherit",
+                cursor: "pointer",
                 background: "rgba(22,163,74,0.06)",
                 border: "1px solid rgba(22,163,74,0.2)",
                 color: "#15803d", transition: "all .15s",
@@ -499,7 +499,7 @@ function DataRoom() {
       onClick={() => window.open(path, "_blank")}
       style={{
         padding: "2px 10px", borderRadius: 5, fontSize: 9, fontWeight: 700,
-        cursor: "pointer", fontFamily: "inherit",
+        cursor: "pointer",
         background: "rgba(15,23,42,0.05)", border: "1px solid rgba(15,23,42,0.12)",
         color: "#0f172a", transition: "all .15s", whiteSpace: "nowrap",
       }}
@@ -537,7 +537,7 @@ function DataRoom() {
         background: open ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
         border: "1px solid rgba(0,0,0,0.07)",
         borderRadius: open ? "8px 8px 0 0" : 8,
-        cursor: "pointer", fontFamily: "inherit",
+        cursor: "pointer",
       }}>
         <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#0f172a" }}>
           Data Room
@@ -606,7 +606,7 @@ function InvestmentCard() {
             background: dealOpen ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
             border: "1px solid rgba(0,0,0,0.07)",
             borderRadius: dealOpen ? "8px 8px 0 0" : 8,
-            cursor: "pointer", fontFamily: "inherit",
+            cursor: "pointer",
           }}>
             <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#0f172a" }}>
               Deal Terms
@@ -696,7 +696,7 @@ function SnyderDataRoom() {
   const exportBtn = (path: string) => (
     <button onClick={() => window.open(path, "_blank")} style={{
       padding: "2px 10px", borderRadius: 5, fontSize: 9, fontWeight: 700,
-      cursor: "pointer", fontFamily: "inherit",
+      cursor: "pointer",
       background: "rgba(15,23,42,0.05)", border: "1px solid rgba(15,23,42,0.12)",
       color: "#0f172a", transition: "all .15s", whiteSpace: "nowrap",
     }}>Export ↗</button>
@@ -725,7 +725,7 @@ function SnyderDataRoom() {
         background: open ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
         border: "1px solid rgba(0,0,0,0.07)",
         borderRadius: open ? "8px 8px 0 0" : 8,
-        cursor: "pointer", fontFamily: "inherit",
+        cursor: "pointer",
       }}>
         <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#0f172a" }}>Data Room</span>
         <span style={{ fontSize: 11, color: "#0f172a" }}>{open ? "▲" : "▼"}</span>
@@ -778,7 +778,7 @@ function SnyderCard() {
             background: dealOpen ? "rgba(56,189,248,0.06)" : "rgba(0,0,0,0.02)",
             border: "1px solid rgba(0,0,0,0.07)",
             borderRadius: dealOpen ? "8px 8px 0 0" : 8,
-            cursor: "pointer", fontFamily: "inherit",
+            cursor: "pointer",
           }}>
             <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: "#0f172a" }}>Deal Terms</span>
             <span style={{ fontSize: 11, color: "#0f172a" }}>{dealOpen ? "▲" : "▼"}</span>
@@ -1105,6 +1105,33 @@ function PortfolioCard() {
       </div>
 
 
+
+      {/* Target Allocation */}
+      <div style={{ marginTop: 20 }}>
+        <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#64748b", marginBottom: 12 }}>
+          Target Allocation
+        </div>
+        {[
+          { label: "Private Equity", target: 5_000_000, current: 0 },
+          { label: "Private Credit", target: 2_000_000, current: 1_010_000 },
+          { label: "Real Estate",    target: 2_000_000, current: 150_000 },
+          { label: "Cash",           target: 1_000_000, current: 0 },
+        ].map(({ label, target, current }) => {
+          const pct = Math.min(current / target * 100, 100);
+          const fmtM = (n: number) => n >= 1_000_000 ? `$${(n/1_000_000).toFixed(0)}M` : n >= 1_000 ? `$${(n/1_000).toFixed(0)}K` : `$${n}`;
+          return (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <span style={{ fontSize: 11, fontWeight: 500, color: "#0f172a", width: 100, flexShrink: 0, textAlign: "right" as const }}>{label}</span>
+              <div style={{ flex: 1, position: "relative" as const, height: 24, border: "1.5px solid #f4a574", borderRadius: 4, background: "rgba(244,165,116,0.08)", overflow: "hidden" }}>
+                {pct > 0 && (
+                  <div style={{ position: "absolute" as const, left: 0, top: 0, bottom: 0, width: `${pct}%`, background: "rgba(244,165,116,0.45)", borderRadius: "2px 0 0 2px" }} />
+                )}
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", width: 36, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{fmtM(target)}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1159,7 +1186,7 @@ export default function Home() {
               padding: "10px 24px", borderRadius: 8, fontSize: 12, fontWeight: 800,
               background: investOpen ? "rgba(56,189,248,0.15)" : "rgba(56,189,248,0.10)",
               border: "1px solid rgba(56,189,248,0.35)", color: "#38bdf8", cursor: "pointer",
-              transition: "all .15s", fontFamily: "inherit",
+              transition: "all .15s",
             }}>
               Investments {investOpen ? "▲" : "▼"}
             </button>
@@ -1168,7 +1195,7 @@ export default function Home() {
               padding: "10px 24px", borderRadius: 8, fontSize: 12, fontWeight: 800,
               background: portfolioOpen ? "rgba(56,189,248,0.15)" : "rgba(56,189,248,0.10)",
               border: "1px solid rgba(56,189,248,0.35)", color: "#38bdf8", cursor: "pointer",
-              transition: "all .15s", fontFamily: "inherit",
+              transition: "all .15s",
             }}>
               Portfolio {portfolioOpen ? "▲" : "▼"}
             </button>
