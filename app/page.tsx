@@ -1085,42 +1085,28 @@ function PortfolioCard() {
 
       {/* Allocation rows */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+        {/* Header row */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px", gap: 8, padding: "4px 12px", marginBottom: 4 }}>
+          <span style={{ fontSize: 8, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8" }}>Category</span>
+          <span style={{ fontSize: 8, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", textAlign: "right" as const }}>Amount</span>
+          <span style={{ fontSize: 8, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", textAlign: "right" as const }}>% Allocated</span>
+        </div>
         {[
           { label: "Credit", amount: CREDIT, color: "#eab308" },
           { label: "Real Estate", amount: RE, color: "#f59e0b" },
         ].map(s => (
-          <div key={s.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 12px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 8 }}>
+          <div key={s.label} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px", gap: 8, alignItems: "center", padding: "7px 12px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 8, marginBottom: 4 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.color }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
               <span style={{ fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{s.label}</span>
             </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>{fmtD(s.amount)}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums", textAlign: "right" as const }}>{fmtD(s.amount)}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#64748b", fontVariantNumeric: "tabular-nums", textAlign: "right" as const }}>{(s.amount / ALLOCATED * 100).toFixed(1)}%</span>
           </div>
         ))}
       </div>
 
-      {/* Investment Mix heading */}
-      <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#64748b", marginBottom: 12 }}>
-        Investment Mix — {fmtD(ALLOCATED)} Invested
-      </div>
 
-      {/* Pie chart — deck style */}
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <svg width={180} height={180} viewBox="0 0 180 180">
-          {/* Dark outer ring - 1px border */}
-          <circle cx={130} cy={110} r={73} fill="#1a1a1a" />
-          {/* Credit slice - yellow */}
-          <path d="M130,110 L130.00,38.00 A72,72,0,1,1,77.51,60.71 Z" fill="#eab308" stroke="#1a1a1a" strokeWidth={0.5} />
-          {/* RE slice - amber */}
-          <path d="M130,110 L77.51,60.71 A72,72,0,0,1,130.00,38.00 Z" fill="#f59e0b" stroke="#1a1a1a" strokeWidth={0.5} />
-          {/* White center donut */}
-          <circle cx={130} cy={110} r={32} fill="#fafaf7" stroke="#1a1a1a" strokeWidth={0.5} />
-          {/* Center labels */}
-          <text x={130} y={104} textAnchor="middle" fontSize={7} fontWeight={700} fill="#94a3b8" fontFamily="system-ui">INVESTED</text>
-          <text x={130} y={116} textAnchor="middle" fontSize={11} fontWeight={800} fill="#0f172a" fontFamily="system-ui">11.6%</text>
-          <text x={130} y={126} textAnchor="middle" fontSize={7} fill="#94a3b8" fontFamily="system-ui">of fund</text>
-        </svg>
-      </div>
     </div>
   );
 }
