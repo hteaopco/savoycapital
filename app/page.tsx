@@ -1070,7 +1070,6 @@ function PortfolioCard() {
         <div>
           <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Committed<br/>Capital</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>{fmtM(COMMITTED)}</div>
-          <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2 }}>100%</div>
         </div>
         <div>
           <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Allocated<br/>Capital</div>
@@ -1107,31 +1106,41 @@ function PortfolioCard() {
 
       {/* Pie chart — deck style */}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <svg width={180} height={180} viewBox="0 0 180 180">
-          {/* Dark background circle (deck feel) */}
-          <circle cx={cx} cy={cy} r={r+4} fill="#0f172a" />
-          {/* Credit slice — amber */}
-          <path d={slice(creditStart, creditEnd, "#d97706")} stroke="#000000" strokeWidth={1.5} />
-          {/* RE slice — olive gold */}
-          <path d={slice(reStart, reEnd, "#a16207")} stroke="#000000" strokeWidth={1.5} />
-          {/* Inner circle */}
-          <circle cx={cx} cy={cy} r={32} fill="#fafaf7" />
-          {/* Center text */}
-          <text x={cx} y={cy-6} textAnchor="middle" fontSize={8} fontWeight={700} fill="#64748b" fontFamily="system-ui">INVESTED</text>
-          <text x={cx} y={cy+8} textAnchor="middle" fontSize={10} fontWeight={800} fill="#0f172a" fontFamily="system-ui">11.6%</text>
-          <text x={cx} y={cy+19} textAnchor="middle" fontSize={7} fontWeight={500} fill="#94a3b8" fontFamily="system-ui">of fund</text>
-
-          {/* Credit annotation — amber, points into bottom-right of large slice */}
-          <line x1={cx+52} y1={cy+30} x2={cx+78} y2={cy+55} stroke="#d97706" strokeWidth={1} />
-          <circle cx={cx+78} cy={cy+55} r={2.5} fill="#d97706" />
-          <text x={cx+82} y={cy+52} textAnchor="start" fontSize={9} fontWeight={800} fill="#d97706" fontFamily="system-ui">87%</text>
-          <text x={cx+82} y={cy+63} textAnchor="start" fontSize={7} fill="#64748b" fontFamily="system-ui">Credit</text>
-
-          {/* RE annotation — olive gold, points into top-left small slice */}
-          <line x1={cx-30} y1={cy-62} x2={cx-55} y2={cy-78} stroke="#a16207" strokeWidth={1} />
-          <circle cx={cx-55} cy={cy-78} r={2.5} fill="#a16207" />
-          <text x={cx-58} y={cy-82} textAnchor="end" fontSize={9} fontWeight={800} fill="#a16207" fontFamily="system-ui">13%</text>
-          <text x={cx-58} y={cy-71} textAnchor="end" fontSize={7} fill="#64748b" fontFamily="system-ui">Real Estate</text>
+        <svg width={260} height={220} viewBox="0 0 260 220" style={{ overflow: "visible" }}>
+          {(() => {
+            const pcx = 130, pcy = 110, pr = 72;
+            const pslice = (s: number, e: number, color: string) => {
+              const sa = s * 2 * Math.PI - Math.PI/2, ea = e * 2 * Math.PI - Math.PI/2;
+              const x1 = pcx + pr * Math.cos(sa), y1 = pcy + pr * Math.sin(sa);
+              const x2 = pcx + pr * Math.cos(ea), y2 = pcy + pr * Math.sin(ea);
+              return `M${pcx},${pcy} L${x1},${y1} A${pr},${pr},0,${(e-s)>0.5?1:0},1,${x2},${y2} Z`;
+            };
+            // Credit: 0 to 0.87 (large slice, midpoint ~0.435 → ~157° → bottom-right)
+            // RE: 0.87 to 1.0 (small slice, midpoint ~0.935 → ~336° → top-right)
+            const creditMidA = 0.435 * 2 * Math.PI - Math.PI/2;
+            const reMidA = 0.935 * 2 * Math.PI - Math.PI/2;
+            const creditEdge = { x: pcx + pr * Math.cos(creditMidA), y: pcy + pr * Math.sin(creditMidA) };
+            const reEdge = { x: pcx + pr * Math.cos(reMidA), y: pcy + pr * Math.sin(reMidA) };
+            const creditEnd2 = { x: creditEdge.x + 30 * Math.cos(creditMidA), y: creditEdge.y + 30 * Math.sin(creditMidA) };
+            const reEnd2 = { x: reEdge.x + 30 * Math.cos(reMidA), y: reEdge.y + 30 * Math.sin(reMidA) };
+            return (<>
+              <circle cx={pcx} cy={pcy} r={pr+4} fill="#0f172a" />
+              <path d={pslice(0, creditPct, "#d97706")} stroke="#000000" strokeWidth={1.5} />
+              <path d={pslice(creditPct, 1, "#a16207")} stroke="#000000" strokeWidth={1.5} />
+              <circle cx={pcx} cy={pcy} r={32} fill="#fafaf7" />
+              <text x={pcx} y={pcy-6} textAnchor="middle" fontSize={8} fontWeight={700} fill="#64748b" fontFamily="system-ui">INVESTED</text>
+              <text x={pcx} y={pcy+8} textAnchor="middle" fontSize={10} fontWeight={800} fill="#0f172a" fontFamily="system-ui">11.6%</text>
+              <text x={pcx} y={pcy+19} textAnchor="middle" fontSize={7} fontWeight={500} fill="#94a3b8" fontFamily="system-ui">of fund</text>
+              <line x1={creditEdge.x} y1={creditEdge.y} x2={creditEnd2.x} y2={creditEnd2.y} stroke="#d97706" strokeWidth={1} />
+              <circle cx={creditEnd2.x} cy={creditEnd2.y} r={2.5} fill="#d97706" />
+              <text x={creditEnd2.x + 5} y={creditEnd2.y - 3} textAnchor="start" fontSize={9} fontWeight={800} fill="#d97706" fontFamily="system-ui">87%</text>
+              <text x={creditEnd2.x + 5} y={creditEnd2.y + 9} textAnchor="start" fontSize={7} fill="#64748b" fontFamily="system-ui">Credit</text>
+              <line x1={reEdge.x} y1={reEdge.y} x2={reEnd2.x} y2={reEnd2.y} stroke="#a16207" strokeWidth={1} />
+              <circle cx={reEnd2.x} cy={reEnd2.y} r={2.5} fill="#a16207" />
+              <text x={reEnd2.x + 5} y={reEnd2.y - 3} textAnchor="start" fontSize={9} fontWeight={800} fill="#a16207" fontFamily="system-ui">13%</text>
+              <text x={reEnd2.x + 5} y={reEnd2.y + 9} textAnchor="start" fontSize={7} fill="#64748b" fontFamily="system-ui">Real Estate</text>
+            </>);
+          })()}
         </svg>
       </div>
     </div>
