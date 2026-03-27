@@ -20,13 +20,5 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Desktop nav visible, hamburger hidden */
-@media (min-width: 640px) {
-  .hamburger { display: none !important; }
-  .mobile-menu { display: none !important; }
-  .desktop-nav { display: flex !important; }
-}
-/* Mobile: hamburger visible, desktop nav hidden */
-@media (max-width: 639px) {
-  .desktop-nav { display: none !important; }
-}
+/* Hamburger always visible, desktop-nav always hidden */
+.desktop-nav { display: none !important; }
