@@ -1107,28 +1107,28 @@ function PortfolioCard() {
       {/* Pie chart — deck style */}
       <div style={{ display: "flex", justifyContent: "center" }}>
         <svg width={260} height={220} viewBox="0 0 260 220">
-          {/* Dark outer ring - 2px border */}
-          <circle cx={130} cy={110} r={74} fill="#1a1a1a" />
+          {/* Dark outer ring - 1px border */}
+          <circle cx={130} cy={110} r={73} fill="#1a1a1a" />
           {/* Credit slice - yellow */}
-          <path d="M130,110 L130.00,38.00 A72,72,0,1,1,77.51,60.71 Z" fill="#eab308" stroke="#1a1a1a" strokeWidth={1} />
+          <path d="M130,110 L130.00,38.00 A72,72,0,1,1,77.51,60.71 Z" fill="#eab308" stroke="#1a1a1a" strokeWidth={0.5} />
           {/* RE slice - amber */}
-          <path d="M130,110 L77.51,60.71 A72,72,0,0,1,130.00,38.00 Z" fill="#f59e0b" stroke="#1a1a1a" strokeWidth={1} />
-          {/* White center donut with 0.5px border */}
+          <path d="M130,110 L77.51,60.71 A72,72,0,0,1,130.00,38.00 Z" fill="#f59e0b" stroke="#1a1a1a" strokeWidth={0.5} />
+          {/* White center donut */}
           <circle cx={130} cy={110} r={32} fill="#fafaf7" stroke="#1a1a1a" strokeWidth={0.5} />
           {/* Center labels */}
           <text x={130} y={104} textAnchor="middle" fontSize={7} fontWeight={700} fill="#94a3b8" fontFamily="system-ui">INVESTED</text>
           <text x={130} y={116} textAnchor="middle" fontSize={11} fontWeight={800} fill="#0f172a" fontFamily="system-ui">11.6%</text>
           <text x={130} y={126} textAnchor="middle" fontSize={7} fill="#94a3b8" fontFamily="system-ui">of fund</text>
-          {/* Credit annotation */}
-          <line x1={158.6} y1={176.1} x2={172.5} y2={208.2} stroke="#eab308" strokeWidth={1} />
-          <circle cx={172.5} cy={208.2} r={2.5} fill="#eab308" />
-          <text x={177.5} y={205.2} textAnchor="start" fontSize={9} fontWeight={800} fill="#eab308" fontFamily="system-ui">87%</text>
-          <text x={177.5} y={217.2} textAnchor="start" fontSize={7} fill="#64748b" fontFamily="system-ui">Credit</text>
-          {/* RE annotation */}
-          <line x1={101.4} y1={43.9} x2={87.5} y2={11.8} stroke="#f59e0b" strokeWidth={1} />
-          <circle cx={87.5} cy={11.8} r={2.5} fill="#f59e0b" />
-          <text x={82.5} y={8.8} textAnchor="end" fontSize={9} fontWeight={800} fill="#f59e0b" fontFamily="system-ui">13%</text>
-          <text x={82.5} y={20.8} textAnchor="end" fontSize={7} fill="#64748b" fontFamily="system-ui">Real Estate</text>
+          {/* Credit annotation — elbow out from rim, horizontal, black */}
+          <line x1={161.8} y1={183.4} x2={190} y2={183.4} stroke="#0f172a" strokeWidth={1} />
+          <circle cx={161.8} cy={183.4} r={2} fill="#0f172a" />
+          <text x={193} y={180} textAnchor="start" fontSize={9} fontWeight={800} fill="#0f172a" fontFamily="system-ui">87%</text>
+          <text x={193} y={191} textAnchor="start" fontSize={7} fill="#0f172a" fontFamily="system-ui">Credit</text>
+          {/* RE annotation — elbow out from rim, horizontal, black */}
+          <line x1={98.2} y1={36.6} x2={70} y2={36.6} stroke="#0f172a" strokeWidth={1} />
+          <circle cx={98.2} cy={36.6} r={2} fill="#0f172a" />
+          <text x={67} y={33} textAnchor="end" fontSize={9} fontWeight={800} fill="#0f172a" fontFamily="system-ui">13%</text>
+          <text x={67} y={44} textAnchor="end" fontSize={7} fill="#0f172a" fontFamily="system-ui">Real Estate</text>
         </svg>
       </div>
     </div>
