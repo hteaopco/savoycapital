@@ -1106,41 +1106,29 @@ function PortfolioCard() {
 
       {/* Pie chart — deck style */}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <svg width={260} height={220} viewBox="0 0 260 220" style={{ overflow: "visible" }}>
-          {(() => {
-            const pcx = 130, pcy = 110, pr = 72;
-            const pslice = (s: number, e: number, color: string) => {
-              const sa = s * 2 * Math.PI - Math.PI/2, ea = e * 2 * Math.PI - Math.PI/2;
-              const x1 = pcx + pr * Math.cos(sa), y1 = pcy + pr * Math.sin(sa);
-              const x2 = pcx + pr * Math.cos(ea), y2 = pcy + pr * Math.sin(ea);
-              return `M${pcx},${pcy} L${x1},${y1} A${pr},${pr},0,${(e-s)>0.5?1:0},1,${x2},${y2} Z`;
-            };
-            // Credit: 0 to 0.87 (large slice, midpoint ~0.435 → ~157° → bottom-right)
-            // RE: 0.87 to 1.0 (small slice, midpoint ~0.935 → ~336° → top-right)
-            const creditMidA = 0.435 * 2 * Math.PI - Math.PI/2;
-            const reMidA = 0.935 * 2 * Math.PI - Math.PI/2;
-            const creditEdge = { x: pcx + pr * Math.cos(creditMidA), y: pcy + pr * Math.sin(creditMidA) };
-            const reEdge = { x: pcx + pr * Math.cos(reMidA), y: pcy + pr * Math.sin(reMidA) };
-            const creditEnd2 = { x: creditEdge.x + 30 * Math.cos(creditMidA), y: creditEdge.y + 30 * Math.sin(creditMidA) };
-            const reEnd2 = { x: reEdge.x + 30 * Math.cos(reMidA), y: reEdge.y + 30 * Math.sin(reMidA) };
-            return (<>
-              <circle cx={pcx} cy={pcy} r={pr+4} fill="#0f172a" />
-              <path d={pslice(0, creditPct, "#d97706")} stroke="#000000" strokeWidth={1.5} />
-              <path d={pslice(creditPct, 1, "#a16207")} stroke="#000000" strokeWidth={1.5} />
-              <circle cx={pcx} cy={pcy} r={32} fill="#fafaf7" />
-              <text x={pcx} y={pcy-6} textAnchor="middle" fontSize={8} fontWeight={700} fill="#64748b" fontFamily="system-ui">INVESTED</text>
-              <text x={pcx} y={pcy+8} textAnchor="middle" fontSize={10} fontWeight={800} fill="#0f172a" fontFamily="system-ui">11.6%</text>
-              <text x={pcx} y={pcy+19} textAnchor="middle" fontSize={7} fontWeight={500} fill="#94a3b8" fontFamily="system-ui">of fund</text>
-              <line x1={creditEdge.x} y1={creditEdge.y} x2={creditEnd2.x} y2={creditEnd2.y} stroke="#d97706" strokeWidth={1} />
-              <circle cx={creditEnd2.x} cy={creditEnd2.y} r={2.5} fill="#d97706" />
-              <text x={creditEnd2.x + 5} y={creditEnd2.y - 3} textAnchor="start" fontSize={9} fontWeight={800} fill="#d97706" fontFamily="system-ui">87%</text>
-              <text x={creditEnd2.x + 5} y={creditEnd2.y + 9} textAnchor="start" fontSize={7} fill="#64748b" fontFamily="system-ui">Credit</text>
-              <line x1={reEdge.x} y1={reEdge.y} x2={reEnd2.x} y2={reEnd2.y} stroke="#a16207" strokeWidth={1} />
-              <circle cx={reEnd2.x} cy={reEnd2.y} r={2.5} fill="#a16207" />
-              <text x={reEnd2.x + 5} y={reEnd2.y - 3} textAnchor="start" fontSize={9} fontWeight={800} fill="#a16207" fontFamily="system-ui">13%</text>
-              <text x={reEnd2.x + 5} y={reEnd2.y + 9} textAnchor="start" fontSize={7} fill="#64748b" fontFamily="system-ui">Real Estate</text>
-            </>);
-          })()}
+        <svg width={260} height={220} viewBox="0 0 260 220">
+          {/* Dark outer ring */}
+          <circle cx={130} cy={110} r={76} fill="#1a1a1a" />
+          {/* Credit slice - amber */}
+          <path d="M130,110 L130.00,38.00 A72,72,0,1,1,77.51,60.71 Z" fill="#d97706" stroke="#1a1a1a" strokeWidth={2} />
+          {/* RE slice - olive gold */}
+          <path d="M130,110 L77.51,60.71 A72,72,0,0,1,130.00,38.00 Z" fill="#a16207" stroke="#1a1a1a" strokeWidth={2} />
+          {/* White center donut */}
+          <circle cx={130} cy={110} r={32} fill="#fafaf7" />
+          {/* Center labels */}
+          <text x={130} y={104} textAnchor="middle" fontSize={7} fontWeight={700} fill="#94a3b8" fontFamily="system-ui">INVESTED</text>
+          <text x={130} y={116} textAnchor="middle" fontSize={11} fontWeight={800} fill="#0f172a" fontFamily="system-ui">11.6%</text>
+          <text x={130} y={126} textAnchor="middle" fontSize={7} fill="#94a3b8" fontFamily="system-ui">of fund</text>
+          {/* Credit annotation */}
+          <line x1={158.6} y1={176.1} x2={172.5} y2={208.2} stroke="#d97706" strokeWidth={1} />
+          <circle cx={172.5} cy={208.2} r={2.5} fill="#d97706" />
+          <text x={177.5} y={205.2} textAnchor="start" fontSize={9} fontWeight={800} fill="#d97706" fontFamily="system-ui">87%</text>
+          <text x={177.5} y={217.2} textAnchor="start" fontSize={7} fill="#64748b" fontFamily="system-ui">Credit</text>
+          {/* RE annotation */}
+          <line x1={101.4} y1={43.9} x2={87.5} y2={11.8} stroke="#a16207" strokeWidth={1} />
+          <circle cx={87.5} cy={11.8} r={2.5} fill="#a16207" />
+          <text x={82.5} y={8.8} textAnchor="end" fontSize={9} fontWeight={800} fill="#a16207" fontFamily="system-ui">13%</text>
+          <text x={82.5} y={20.8} textAnchor="end" fontSize={7} fill="#64748b" fontFamily="system-ui">Real Estate</text>
         </svg>
       </div>
     </div>
