@@ -1066,7 +1066,7 @@ function PortfolioCard() {
   return (
     <div style={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 12, overflow: "hidden", padding: "20px 20px 16px" }}>
       {/* Capital summary */}
-      <div style={{ display: "flex", gap: 24, marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Committed<br/>Capital</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>{fmtM(COMMITTED)}</div>
