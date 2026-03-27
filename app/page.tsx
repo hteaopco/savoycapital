@@ -1068,23 +1068,26 @@ function PortfolioCard() {
       {/* Capital summary */}
       <div style={{ display: "flex", gap: 24, marginBottom: 20 }}>
         <div>
-          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Committed Capital</div>
+          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Committed<br/>Capital</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>{fmtM(COMMITTED)}</div>
+          <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2 }}>100%</div>
         </div>
         <div>
-          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Allocated Capital</div>
+          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Allocated<br/>Capital</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "#38bdf8" }}>{fmtM(ALLOCATED)}</div>
+          <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2 }}>{(ALLOCATED/COMMITTED*100).toFixed(1)}% of fund</div>
         </div>
         <div>
-          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Unallocated</div>
+          <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Unallocated<br/>Capital</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>{fmtM(UNALLOCATED)}</div>
+          <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2 }}>{(UNALLOCATED/COMMITTED*100).toFixed(1)}% of fund</div>
         </div>
       </div>
 
       {/* Allocation rows */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
         {[
-          { label: "Credit", amount: CREDIT, color: "#854d0e" },
+          { label: "Credit", amount: CREDIT, color: "#d97706" },
           { label: "Real Estate", amount: RE, color: "#a16207" },
         ].map(s => (
           <div key={s.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 12px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 8 }}>
@@ -1107,28 +1110,28 @@ function PortfolioCard() {
         <svg width={180} height={180} viewBox="0 0 180 180">
           {/* Dark background circle (deck feel) */}
           <circle cx={cx} cy={cy} r={r+4} fill="#0f172a" />
-          {/* Credit slice — dark olive gold */}
-          <path d={slice(creditStart, creditEnd, "#a16207")} stroke="#0f172a" strokeWidth={1.5} />
-          {/* RE slice — lighter gold */}
-          <path d={slice(reStart, reEnd, "#d97706")} stroke="#0f172a" strokeWidth={1.5} />
-          {/* Inner circle — cream/white center */}
+          {/* Credit slice — amber */}
+          <path d={slice(creditStart, creditEnd, "#d97706")} stroke="#000000" strokeWidth={1.5} />
+          {/* RE slice — olive gold */}
+          <path d={slice(reStart, reEnd, "#a16207")} stroke="#000000" strokeWidth={1.5} />
+          {/* Inner circle */}
           <circle cx={cx} cy={cy} r={32} fill="#fafaf7" />
           {/* Center text */}
           <text x={cx} y={cy-6} textAnchor="middle" fontSize={8} fontWeight={700} fill="#64748b" fontFamily="system-ui">INVESTED</text>
           <text x={cx} y={cy+8} textAnchor="middle" fontSize={10} fontWeight={800} fill="#0f172a" fontFamily="system-ui">11.6%</text>
           <text x={cx} y={cy+19} textAnchor="middle" fontSize={7} fontWeight={500} fill="#94a3b8" fontFamily="system-ui">of fund</text>
 
-          {/* Credit label line + text */}
-          <line x1={creditLabel.x} y1={creditLabel.y} x2={creditOuter.x} y2={creditOuter.y} stroke="#a16207" strokeWidth={1} />
-          <circle cx={creditOuter.x} cy={creditOuter.y} r={2.5} fill="#a16207" />
-          <text x={creditOuter.x + (creditOuter.x > cx ? 5 : -5)} y={creditOuter.y - 4} textAnchor={creditOuter.x > cx ? "start" : "end"} fontSize={8} fontWeight={800} fill="#854d0e" fontFamily="system-ui">87%</text>
-          <text x={creditOuter.x + (creditOuter.x > cx ? 5 : -5)} y={creditOuter.y + 7} textAnchor={creditOuter.x > cx ? "start" : "end"} fontSize={7} fill="#64748b" fontFamily="system-ui">Credit</text>
+          {/* Credit annotation — amber, points into bottom-right of large slice */}
+          <line x1={cx+52} y1={cy+30} x2={cx+78} y2={cy+55} stroke="#d97706" strokeWidth={1} />
+          <circle cx={cx+78} cy={cy+55} r={2.5} fill="#d97706" />
+          <text x={cx+82} y={cy+52} textAnchor="start" fontSize={9} fontWeight={800} fill="#d97706" fontFamily="system-ui">87%</text>
+          <text x={cx+82} y={cy+63} textAnchor="start" fontSize={7} fill="#64748b" fontFamily="system-ui">Credit</text>
 
-          {/* RE label line + text */}
-          <line x1={reLabel.x} y1={reLabel.y} x2={reOuter.x} y2={reOuter.y} stroke="#d97706" strokeWidth={1} />
-          <circle cx={reOuter.x} cy={reOuter.y} r={2.5} fill="#d97706" />
-          <text x={reOuter.x + (reOuter.x > cx ? 5 : -5)} y={reOuter.y - 4} textAnchor={reOuter.x > cx ? "start" : "end"} fontSize={8} fontWeight={800} fill="#92400e" fontFamily="system-ui">13%</text>
-          <text x={reOuter.x + (reOuter.x > cx ? 5 : -5)} y={reOuter.y + 7} textAnchor={reOuter.x > cx ? "start" : "end"} fontSize={7} fill="#64748b" fontFamily="system-ui">Real Estate</text>
+          {/* RE annotation — olive gold, points into top-left small slice */}
+          <line x1={cx-30} y1={cy-62} x2={cx-55} y2={cy-78} stroke="#a16207" strokeWidth={1} />
+          <circle cx={cx-55} cy={cy-78} r={2.5} fill="#a16207" />
+          <text x={cx-58} y={cy-82} textAnchor="end" fontSize={9} fontWeight={800} fill="#a16207" fontFamily="system-ui">13%</text>
+          <text x={cx-58} y={cy-71} textAnchor="end" fontSize={7} fill="#64748b" fontFamily="system-ui">Real Estate</text>
         </svg>
       </div>
     </div>
