@@ -1074,12 +1074,10 @@ function PortfolioCard() {
         <div>
           <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Allocated<br/>Capital</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "#38bdf8" }}>{fmtM(ALLOCATED)}</div>
-          <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2 }}>{(ALLOCATED/COMMITTED*100).toFixed(1)}% of fund</div>
         </div>
         <div>
           <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", marginBottom: 3 }}>Unallocated<br/>Capital</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>{fmtM(UNALLOCATED)}</div>
-          <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2 }}>{(UNALLOCATED/COMMITTED*100).toFixed(1)}% of fund</div>
         </div>
       </div>
 
