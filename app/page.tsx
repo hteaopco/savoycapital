@@ -1027,7 +1027,7 @@ function CashFlowCard() {
 function PortfolioCard() {
   const COMMITTED = 10_000_000;
   const CREDIT = 1_010_000;
-  const RE = 150_000;
+  const RE = 0;
   const ALLOCATED = CREDIT + RE;
   const UNALLOCATED = COMMITTED - ALLOCATED;
   const fmtM = (n: number) => n >= 1_000_000 ? `$${(n/1_000_000).toFixed(2)}M` : `$${(n/1_000).toFixed(0)}K`;
