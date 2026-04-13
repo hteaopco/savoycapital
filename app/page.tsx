@@ -1112,7 +1112,7 @@ function PortfolioCard() {
         {[
           { label: "Private Equity", target: 5_000_000, current: 0 },
           { label: "Private Credit", target: 2_000_000, current: 1_010_000 },
-          { label: "Real Estate",    target: 2_000_000, current: 150_000 },
+          { label: "Real Estate",    target: 2_000_000, current: 0 },
           { label: "Reserved",       target: 1_000_000, current: 0 },
         ].map(({ label, target, current }) => {
           const pct = Math.min(current / target * 100, 100);
