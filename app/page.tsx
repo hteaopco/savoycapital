@@ -855,7 +855,7 @@ function CashFlowCard() {
   for (let i=0;i<N;i++){
     const interest = Math.round(mmBal*mmRate);
     mmInterest.push(interest);
-    mmBal = mmBal + interest + hteaoLoanIn[i] + flipIn[i];
+    mmBal = mmBal + interest + hteaoInterest[i] + hteaoPrincipal[i] + flipIn[i];
   }
 
   const totalCashIn  = months.map((_,i)=>hteaoLoanIn[i]+flipIn[i]+mmInterest[i]);
