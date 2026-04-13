@@ -868,7 +868,7 @@ function CashFlowCard() {
   let bal = 0;
   for (let i=0;i<N;i++){
     begBal.push(bal);
-    const inn = contributions[i]+hteaoLoanIn[i]+flipIn[i]+mmInterest[i];
+    const inn = contributions[i]+hteaoInterest[i]+hteaoPrincipal[i]+flipIn[i]+mmInterest[i];
     const out = hteaoLoanOut[i]+flipOut[i]+mgmtSalary[i]+legal[i]+miscStartup[i]+accounting[i]+distributions[i];
     const net = inn - out;
     netChange.push(net);
