@@ -882,7 +882,7 @@ function CashFlowCard() {
   const fmtNeg = (n: number) => n===0?"—":`(${fmtB(n)})`;
   const fmtNet = (n: number) => n===0?"—":n<0?`(${fmtB(Math.abs(n))})`:fmtB(n);
 
-  // Row types: 'bal'|'contrib'|'header'|'sub'|'total'|'spacer'|'dist'|'net'
+  // Row types: 'bal'|'contrib'|'header'|'subheader'|'sub'|'total'|'spacer'|'dist'|'net'
   type Row = {type:string;label:string;values?:number[];neg?:boolean;totalVal?:number};
   const rows: Row[] = [
     {type:"bal",    label:"Beginning Balance",           values:begBal},
