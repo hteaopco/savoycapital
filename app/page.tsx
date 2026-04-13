@@ -1099,7 +1099,7 @@ function PortfolioCard() {
           <span style={{ fontSize: 8, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em", color: "#94a3b8", textAlign: "right" as const }}>% Allocated</span>
         </div>
         {[
-          { label: "Private Equity", amount: 0, color: "#6366f1" },
+          { label: "Equity", amount: 0, color: "#f97316" },
           { label: "Credit", amount: CREDIT, color: "#eab308" },
           { label: "Real Estate", amount: RE, color: "#f59e0b" },
         ].map(s => (
