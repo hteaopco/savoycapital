@@ -1184,7 +1184,7 @@ export default function Home() {
       <main style={{ paddingTop: 52 }}>
         <section style={{ padding: "48px 24px 40px", maxWidth: 760, margin: "0 auto" }}>
           <h1 style={{ fontSize: "clamp(28px, 7vw, 44px)", fontWeight: 800, letterSpacing: "-.02em", color: "#0f172a", marginBottom: 32, lineHeight: 1.1 }}>
-            Savoy Capital Fund
+            Savoy Capital
           </h1>
           {/* Side-by-side buttons */}
           <div style={{ display: "flex", gap: 12, marginBottom: (investOpen || portfolioOpen) ? 20 : 0 }}>
