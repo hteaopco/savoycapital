@@ -970,6 +970,13 @@ function CashFlowCard() {
                       <td style={{padding:"5px 10px",borderLeft:"2px solid rgba(56,189,248,0.1)"}} />
                     </tr>
                   );
+                  if(row.type==="subheader") return (
+                    <tr key={row.label}>
+                      <td style={{padding:"3px 14px 2px 28px",fontSize:8,fontWeight:800,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".1em",borderRight:"1px solid rgba(0,0,0,0.06)",whiteSpace:"nowrap"}}>{row.label}</td>
+                      {months.map((_,ci)=><td key={ci} style={{padding:"2px 10px",borderRight:"1px solid rgba(0,0,0,0.04)"}} />)}
+                      <td style={{padding:"2px 10px",borderLeft:"2px solid rgba(56,189,248,0.1)"}} />
+                    </tr>
+                  );
                   const isBal = row.type==="bal";
                   const isTotal = row.type==="total";
                   const isNet = row.type==="net";
