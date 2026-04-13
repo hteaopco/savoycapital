@@ -1201,7 +1201,6 @@ export default function Home() {
           {investOpen && (
             <div>
               <InvestmentCard />
-              <SnyderCard />
             </div>
           )}
           {portfolioOpen && (
