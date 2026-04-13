@@ -893,7 +893,6 @@ function CashFlowCard() {
     {type:"total",  label:"Total Investment Cash In",    values:totalCashIn,                          totalVal:sum(totalCashIn)},
     {type:"header", label:"Investment Cash Out",         values:Array(N).fill(0),          neg:true},
     {type:"sub",    label:"To HTeaO Bridge Loan",        values:hteaoLoanOut,              neg:true,  totalVal:sum(hteaoLoanOut)},
-    {type:"sub",    label:"To HTeaO RE Flip",            values:flipOut,                   neg:true,  totalVal:sum(flipOut)},
     {type:"total",  label:"Total Investment Cash Out",   values:totalCashOut,              neg:true,  totalVal:sum(totalCashOut)},
     {type:"header", label:"Overheads",                   values:Array(N).fill(0),          neg:true},
     {type:"sub",    label:"Mgmt Salary",                 values:mgmtSalary,                neg:true,  totalVal:sum(mgmtSalary)},
