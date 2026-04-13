@@ -1166,7 +1166,7 @@ export default function Home() {
           <span style={barStyle(menuOpen, "bot")} />
         </button>
         <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "#0f172a" }}>
-          Savoy Capital Fund
+          Savoy Capital
         </span>
         <div style={{ width: 28 }} />
       </header>
