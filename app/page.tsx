@@ -1185,9 +1185,6 @@ export default function Home() {
           <h1 style={{ fontSize: "clamp(28px, 7vw, 44px)", fontWeight: 800, letterSpacing: "-.02em", color: "#0f172a", marginBottom: 32, lineHeight: 1.1 }}>
             Savoy Capital Fund
           </h1>
-          <CashFlowCard />
-          {/* Horizontal spacer */}
-          <hr style={{ border: "none", borderTop: "1px solid rgba(0,0,0,0.08)", margin: "20px 0" }} />
           {/* Side-by-side buttons */}
           <div style={{ display: "flex", gap: 12, marginBottom: (investOpen || portfolioOpen) ? 20 : 0 }}>
             <button onClick={() => { setInvestOpen(!investOpen); setPortfolioOpen(false); }} style={{
