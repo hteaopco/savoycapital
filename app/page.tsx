@@ -889,7 +889,6 @@ function CashFlowCard() {
     {type:"contrib",label:"Partner Contributions",       values:contributions,                        totalVal:sum(contributions)},
     {type:"header", label:"Investment Cash In",          values:Array(N).fill(0)},
     {type:"sub",    label:"From HTeaO Bridge Loan",      values:hteaoLoanIn,                          totalVal:sum(hteaoLoanIn)},
-    {type:"sub",    label:"From HTeaO RE Flip",          values:flipIn,                               totalVal:sum(flipIn)},
     {type:"sub",    label:"From Money Markets (3.5%)",   values:mmInterest,                           totalVal:sum(mmInterest)},
     {type:"total",  label:"Total Investment Cash In",    values:totalCashIn,                          totalVal:sum(totalCashIn)},
     {type:"header", label:"Investment Cash Out",         values:Array(N).fill(0),          neg:true},
