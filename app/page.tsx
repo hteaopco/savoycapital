@@ -858,7 +858,7 @@ function CashFlowCard() {
     mmBal = mmBal + interest + hteaoInterest[i] + hteaoPrincipal[i] + flipIn[i];
   }
 
-  const totalCashIn  = months.map((_,i)=>hteaoLoanIn[i]+flipIn[i]+mmInterest[i]);
+  const totalCashIn  = months.map((_,i)=>hteaoInterest[i]+hteaoPrincipal[i]+flipIn[i]+mmInterest[i]);
   const totalCashOut = months.map((_,i)=>hteaoLoanOut[i]+flipOut[i]);
   const totalOverhead= months.map((_,i)=>mgmtSalary[i]+legal[i]+miscStartup[i]+accounting[i]);
 
