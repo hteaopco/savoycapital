@@ -5,17 +5,20 @@
 > ### ⚠️ savoycapital divergence — this file is no longer identical to theAPlink's
 >
 > Every other file in `design/` is byte-for-byte theAPlink's. **This one is not, as of
-> 2026-08-23.** One rule has been amended for this product, by the owner:
+> 2026-08-23.** Two rules have been amended for this product, both by the owner:
 >
 > | § | theAPlink | savoycapital |
 > |---|---|---|
 > | 0.8 | No animations over 200ms | Same, **except a content crossfade may run to 400ms** |
+> | 0.8 / 9 | Tap targets ≥44×44px, no size exceptions | Same, **except a spaced secondary control may go to 36×36px** |
 >
-> The carve-out is narrow on purpose: it covers one block of content replacing another
-> (the portfolio carousel), not UI feedback, which still has a hard 200ms ceiling.
+> Both carve-outs are narrow on purpose. The first covers one block of content replacing
+> another (the portfolio carousel), not UI feedback, which still has a hard 200ms ceiling.
+> The second covers a spaced secondary control, not primary actions or list rows, and sets
+> 36px as a floor rather than a new default.
 > Rationale and the standing rule for future divergences: `.claudet/DECISIONS.md`.
 >
-> **If you are diffing this file against theAPlink's, that is the expected difference.**
+> **If you are diffing this file against theAPlink's, these are the expected differences.**
 > Do not "restore" it, and do not add further divergences without recording them here.
 
 
@@ -32,7 +35,7 @@ The kitchen-sink page at `/admin/design-system` is **built** (`src/app/(dashboar
 5. **Negative space is the layout.** Chrome (borders, shadows, dividers) supports content, never decorates it. If you're considering an extra border to "separate things," start by adding 4px of space instead.
 6. **One canonical state per role.** One loading pattern. One empty pattern. One error pattern. One save bar. One modal. One sheet. Inventing a new state for a new screen is a system failure.
 7. **Truncate, don't wrap — except for values that must be read in full.** Lists, cards, table cells use `whiteSpace: "nowrap"; overflow: "hidden"; textOverflow: "ellipsis"` for **labels and names**. Money amounts, counts, account last-4s, and dates are never truncated — they must always render fully or break to a new line. Multiline copy lives inside card body copy only.
-8. **Performance is part of UX.** Tap targets ≥44×44px on every interactive element a thumb hits. No animations over 200ms — **except a content crossfade**, one block of content replacing another in place, which may run to **400ms**: at 200ms two full paragraphs swapping reads as a flicker rather than a transition. UI feedback — hover, press, open, close — stays under 200ms, no exception. No font load that blocks first paint. No layout shift after the first frame. These aren't engineering concerns — they're UX.
+8. **Performance is part of UX.** Tap targets ≥44×44px on every interactive element a thumb hits — **except a spaced secondary control**, which may go to **36×36px** (see § 9 Accessibility for the conditions). No animations over 200ms — **except a content crossfade**, one block of content replacing another in place, which may run to **400ms**: at 200ms two full paragraphs swapping reads as a flicker rather than a transition. UI feedback — hover, press, open, close — stays under 200ms, no exception. No font load that blocks first paint. No layout shift after the first frame. These aren't engineering concerns — they're UX.
 
 ---
 
@@ -787,7 +790,16 @@ The rule is "don't reinvent icons" — not "no inline SVG anywhere." Principle 4
 
 ## Section 7 — Accessibility baseline
 
-- **Tap targets ≥44×44px** on every interactive element a thumb hits. Documented exception: chips in a horizontal scrollable row (§3.8) — the row is the tap zone.
+- **Tap targets ≥44×44px** on every interactive element a thumb hits. Documented exceptions:
+  - Chips in a horizontal scrollable row (§3.8) — the row is the tap zone.
+  - **A spaced secondary control may go to 36×36px** (savoycapital, owner 2026-08-23). It
+    qualifies only if it is *all* of: secondary (not the screen's primary action), separated
+    from its neighbours by at least 8px, and not repeated in a dense list or tight column.
+    Carousel arrows are the case this was written for.
+    **36px is a floor, not a new default** — it clears WCAG 2.2 AA's 24×24px minimum
+    comfortably, but it is below the 44px comfort standard that AAA and the platform HIGs
+    ask for. Primary actions, list rows, form controls and anything a thumb hits repeatedly
+    stay at 44.
 - **Color contrast ≥4.5:1** for body text, ≥3:1 for large text. All canonical tokens meet this in both themes; new tokens must be verified before they land in `globals.css`.
 - **Focus rings visible** — never `outline: none` on a focusable element without providing an alternative `:focus-visible` ring.
 - **`aria-label` on every icon-only button** (header back/home, table action buttons, close buttons, etc.).

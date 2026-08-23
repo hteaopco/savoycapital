@@ -90,10 +90,12 @@ const INVESTMENTS: Investment[] = [
 ];
 
 /**
- * 44px on touch, 36px from md up. § 0.8's ≥44×44px floor is written for "every
- * interactive element a thumb hits" — a pointer is not a thumb, so the desktop
- * size is a size choice and the mobile size is the rule. Sizing lives in the
- * className; this holds only the theming.
+ * 36×36px at every width. design/DESIGN_SYSTEM.md § 9 permits a SPACED SECONDARY
+ * control to sit below the ≥44×44px floor, and these qualify: secondary, 8px
+ * clear of their neighbours, not repeated in a dense list. 36px is the floor that
+ * exception allows, not a new default — do not copy this size onto a primary
+ * action, a list row or a form control. Sizing lives in the className; this holds
+ * only the theming.
  */
 const arrowButton: React.CSSProperties = {
   display: "flex",
@@ -198,7 +200,7 @@ export function RecentInvestments() {
       type="button"
       onClick={direction === "prev" ? prev : next}
       aria-label={direction === "prev" ? "Previous investment" : "Next investment"}
-      className="h-11 w-11 md:h-9 md:w-9"
+      className="h-9 w-9"
       style={arrowButton}
     >
       {direction === "prev" ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
