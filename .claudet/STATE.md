@@ -7,9 +7,11 @@ learning that). Keep this to a paragraph. Edit it only when the answer actually 
 
 ## Now
 
-The repo is a **scaffold and nothing runs yet.** What exists: `design/` (carried verbatim
-from theAPlink), this `.claudet/` structure, and `.gitignore`. What does not exist: any app
-code, `package.json`, Prisma schema, CI, or guardrail scripts.
+The repo is **folder architecture and nothing else.** The directory skeleton is in place —
+`.claude/{hooks,rules}`, `.github/workflows`, `docs`, `prisma/migrations`, `scripts`, and
+`src/{app,app/api,components,content,lib}` — all empty, held by `.gitkeep`. **Deliberately
+blank** (owner, 2026-08-23): no `package.json`, no configs, no schema, no code. `design/`
+and this `.claudet/` are the only populated directories.
 
 The product is now defined — a private investment fund's public landing page plus a
 two-person portfolio monitor (`FACTS.md`). **What's still open before app scaffolding:** the

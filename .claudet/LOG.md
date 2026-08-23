@@ -8,6 +8,15 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Architecture folders scaffolded, deliberately empty** (2026-08-23). The directory
+  skeleton mirroring theAPlink's shape — `.claude/{hooks,rules}`, `.github/workflows`,
+  `docs/`, `prisma/migrations/`, `scripts/`, `src/{app,app/api,components,content,lib}` —
+  created and held by `.gitkeep`. Owner's instruction was infrastructure and architecture
+  folders only, everything blank outside `design/`. No `package.json`, no configs, no schema,
+  no source files, and no `src/lib` domain subfolders — theAPlink's (`accounting`,
+  `quickbooks`, `labor`, `tenancy`) are its own and guessing this product's would be
+  inventing structure ahead of the decisions that shape it.
+
 - **Product defined; multi-tenancy ruled out** (2026-08-23). Savoy Capital is a private
   investment fund (Rodney Savoy, Jett Dueitt) making PE and private-debt investments — one
   fund, multiple investments, two authenticated users, plus a public landing page for
