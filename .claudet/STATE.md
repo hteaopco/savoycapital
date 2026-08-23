@@ -7,12 +7,21 @@ learning that). Keep this to a paragraph. Edit it only when the answer actually 
 
 ## Now
 
-The repo is a **fresh scaffold and nothing runs yet.** What exists: `design/` (carried
-verbatim from theAPlink) and this `.claudet/` structure. What does not exist: any app code,
-`package.json`, Prisma schema, CI, or the `scripts/` gates theAPlink runs.
+**The app builds and runs.** Next.js 16 + React 19 + TypeScript + Tailwind (layout only),
+with the public landing page at `/` and a dependency-free healthcheck at `/api/health`.
+`npm run verify` (typecheck + lint) and `npm run build` both pass clean, and the production
+server was confirmed serving the page, the healthcheck and the three image assets before
+this was committed. `railway.json` is in place but **nothing is connected to Railway yet.**
 
-**Blocked on the owner:** what savoycapital actually is. `FACTS.md § TO FILL IN` lists the
-open questions — product, stack, scale target — and none of the scaffolding past this point
-should be guessed at until they're answered.
+The landing page is real code, not a mockup: "What we invest in" over a Recent Investments
+carousel (Westfield Fluid Controls, HTeaO, Marucci). Its copy is **drafted, not approved** —
+every `[BRACKETED]` value is a fact nobody has supplied, and the write-ups are `[TBD]` by
+the owner's instruction.
 
-Not connected to Railway yet.
+**Deliberately still absent:** Prisma (no schema yet, so no client to generate), Clerk, any
+authenticated surface, tests, and CI. `prisma/`, `scripts/`, `docs/`, `.github/workflows`
+and `src/lib` are still empty by intent.
+
+**Blocked on a person:** what an equity vs. debt position holds — the decision the portfolio
+monitor's schema is built on. And the securities-marketing question in `FACTS.md`, which
+gates what the *public* page may say, not whether it may exist.
