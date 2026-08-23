@@ -44,3 +44,19 @@ Treat this as the standing intent, to be made real when the app's component laye
 Until the gate is built, "source of truth" is a convention held by hand. Do not write it up
 anywhere as enforced — an unenforced rule described as enforced is worse than an
 acknowledged convention.
+
+## The gap this folder does not cover
+
+Everything here is an **internal-application** design system: dense tables, modals, tabs,
+pills, forms — the vocabulary of a portal someone works in. That fits Savoy Capital's
+**portfolio monitor** directly, and the exemplars are worth copying 1:1 for it.
+
+It does **not** cover the **public landing page**. A marketing surface for a fund needs a
+hero, a display typography scale, brand expression, and layout patterns that no exemplar
+here demonstrates. The palette and the principles in `DESIGN_SYSTEM.md` still govern —
+tokens not literals, color means something, negative space is the layout — but the patterns
+have to be authored rather than copied.
+
+**Do not resolve this by loosening the palette.** If the public page needs something the
+tokens can't express, that is a decision to make explicitly and record in
+`.claudet/DECISIONS.md`, not a reason to start writing raw hex.

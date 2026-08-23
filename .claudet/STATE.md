@@ -7,12 +7,14 @@ learning that). Keep this to a paragraph. Edit it only when the answer actually 
 
 ## Now
 
-The repo is a **fresh scaffold and nothing runs yet.** What exists: `design/` (carried
-verbatim from theAPlink) and this `.claudet/` structure. What does not exist: any app code,
-`package.json`, Prisma schema, CI, or the `scripts/` gates theAPlink runs.
+The repo is a **scaffold and nothing runs yet.** What exists: `design/` (carried verbatim
+from theAPlink), this `.claudet/` structure, and `.gitignore`. What does not exist: any app
+code, `package.json`, Prisma schema, CI, or guardrail scripts.
 
-**Blocked on the owner:** what savoycapital actually is. `FACTS.md § TO FILL IN` lists the
-open questions — product, stack, scale target — and none of the scaffolding past this point
-should be guessed at until they're answered.
+The product is now defined — a private investment fund's public landing page plus a
+two-person portfolio monitor (`FACTS.md`). **What's still open before app scaffolding:** the
+stack confirmation, the domain name, and what a portfolio position actually holds for equity
+vs. debt. The securities-marketing question in `FACTS.md` gates the *public* surface
+specifically, not the private one — the portfolio monitor can be built without waiting on it.
 
-Not connected to Railway yet.
+`main` is the base branch. Not connected to Railway yet.
