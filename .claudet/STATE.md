@@ -13,10 +13,12 @@ healthcheck at `/api/health`. Deploy shape: Nixpacks, `npm run build`, `npm run 
 healthcheck on `/api/health`, Node pinned to 22 via `.nvmrc`. `npm run verify` (typecheck +
 lint) and `npm run build` pass clean.
 
-The landing page is real code, not a mockup: "What we invest in" over a Recent Investments
-carousel (Westfield Fluid Controls, HTeaO, Marucci). Its copy is **drafted, not approved** —
-every `[BRACKETED]` value is a fact nobody has supplied, and the write-ups are `[TBD]` by
-the owner's instruction.
+The public site is deliberately minimal: a nav, the **Our Portfolio** carousel (Westfield
+Fluid Controls, HTeaO, Marucci) and nothing else. The instrument cards and the footer were
+cut by the owner "until we get more formal." Investor login goes to `/coming-soon`.
+Every `[BRACKETED]` value is a fact nobody has supplied and the three write-ups are `[TBD]`.
+**The page carries no securities disclosure** — the placeholder went with the footer, and
+real language has to land before anyone is pointed at the site.
 
 **Deliberately still absent:** Prisma (no schema yet, so no client to generate), Clerk, any
 authenticated surface, tests, and CI. `prisma/`, `scripts/`, `docs/`, `.github/workflows`

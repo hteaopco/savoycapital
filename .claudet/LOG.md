@@ -8,6 +8,23 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Landing page cut back to the portfolio; carousel gains autoplay** (2026-08-23, owner's
+  changes). The "What we invest in" section and the whole footer are removed — the instrument
+  cards were carrying six bracketed placeholders and the owner pulled them "until we get more
+  formal." Recent Investments is now the page: it is the hero, its heading is "Our Portfolio",
+  and the `<h1>` moved with it. Investor login points at a new `/coming-soon` (noindex — a
+  placeholder page ranking for the firm's name is worse than no result).
+  Carousel: auto-advances every 3s, with a pause/play button, and any manual move — arrows or
+  dots — stops the autoplay for good. `prefers-reduced-motion` sets the initial state, but an
+  explicit press overrides it either way, since a play button that does nothing is worse than
+  ignoring the preference.
+  The image panel is now a FIXED height (200px / 280px at md) rather than min-height. HTeaO's
+  mark is taller in aspect than the other two, so the panel used to grow for it and the card
+  resized mid-rotation.
+  **The securities disclosure went with the footer** — the page now carries none. It was
+  placeholder text, not usable language, so nothing of value was lost, but real language has
+  to land before the site is promoted to anyone. Still recorded in `FACTS.md`.
+
 - **First deploy is live on Railway** (2026-08-23, owner-confirmed). The public landing page
   is serving. Deploy shape: Nixpacks, `npm run build`, `npm run start`, healthcheck on
   `/api/health`, Node 22 via `.nvmrc`. Nothing about the app changed to make this work — the
