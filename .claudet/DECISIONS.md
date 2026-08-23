@@ -6,6 +6,24 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The design system may diverge from theAPlink, but only on the record (owner, 2026-08-23).**
+  The first amendment: `DESIGN_SYSTEM.md` § 0.8's blanket "no animations over 200ms" now
+  carves out a **content crossfade** at up to 400ms. UI feedback — hover, press, open, close —
+  keeps the hard 200ms ceiling, so the carve-out cannot spread to the things the rule exists
+  to protect.
+  - **Why amend rather than override locally.** The portfolio carousel needed 400ms and got
+    200ms on the first pass purely because the rule said so; at 200ms a full paragraph
+    swapping reads as a flicker. A one-off override in a component would have left the
+    codebase quietly contradicting its own design system, which is the failure mode this repo
+    keeps legislating against. Changing the rule where the rule lives is the honest version.
+  - **The cost, stated plainly:** `design/` was byte-identical to theAPlink's and now is not.
+    Nine of ten content files still are. The tenth carries a banner naming the divergence, and
+    `design/README.md` carries the table. **Every future divergence goes in that table** —
+    otherwise "carried from theAPlink" becomes a claim nobody can check, and a checkable claim
+    is the entire value of the folder.
+  - **This does not license re-theming.** The palette, the primitives and the patterns are
+    still theAPlink's, still verbatim, still not up for reinterpretation.
+
 - **`design/` is excluded from the type-check and the linter (2026-08-23).** The exemplars
   are frozen `.tsx` snapshots carried byte-for-byte from theAPlink, and they import
   `@/components/accounting/palette` and `@/lib/accounting/...` — paths that exist there and

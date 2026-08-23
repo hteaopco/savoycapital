@@ -1,10 +1,23 @@
 # design/ — the design source of truth
 
-**Everything here defines the look, and it is carried from theAPlink verbatim.** The rule
-that folder was built around holds here too: *do not re-theme or approximate.* Savoy
-Capital shares the HTeaO/theAPlink visual language — same palette, same primitives, same
-patterns — so a screen built here should be indistinguishable in style from a screen built
-there.
+**Everything here defines the look, and it is carried from theAPlink.** The rule that folder
+was built around holds here too: *do not re-theme or approximate.* Savoy Capital shares the
+HTeaO/theAPlink visual language — same palette, same primitives, same patterns — so a screen
+built here should be indistinguishable in style from a screen built there.
+
+## Divergences from theAPlink
+
+Nine of the ten content files are **byte-for-byte identical** to theAPlink's, verified by
+checksum. One is not:
+
+| File | Divergence | When |
+|---|---|---|
+| `DESIGN_SYSTEM.md` | § 0.8 — a **content crossfade** may run to 400ms, against the blanket 200ms animation ceiling. UI feedback keeps the 200ms limit. | 2026-08-23, owner |
+
+The file carries a banner at the top saying the same thing, so a diff against theAPlink
+explains itself. **Add to that table before amending anything else here** — an undocumented
+divergence turns "carried from theAPlink" into a claim nobody can check, and the value of
+this folder is that the claim is checkable.
 
 ## What's in here
 

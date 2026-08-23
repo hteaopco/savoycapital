@@ -8,6 +8,18 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Crossfade to 400ms — by amending the design system, not overriding it** (2026-08-23,
+  owner). `design/DESIGN_SYSTEM.md` § 0.8's blanket "no animations over 200ms" now carves out
+  a **content crossfade** at up to 400ms; UI feedback keeps the hard 200ms ceiling. This is
+  **the first deliberate divergence of `design/` from theAPlink** — nine of ten content files
+  are still byte-identical (verified), the tenth carries a banner explaining the difference to
+  anyone diffing it, and `design/README.md` now holds the divergence table every future
+  amendment must join. Rationale in DECISIONS.
+  Also: the top-right arrow pair is deleted (the pair below the card remains), and the
+  remaining arrows shrink to 36px from `md` up while **staying 44px on touch** — § 0.8's
+  ≥44×44px floor is written for "every interactive element a thumb hits", so the desktop size
+  is a free choice and the mobile size is the rule.
+
 - **Carousel reworked: 6s, crossfade, arrows in two places, no pause button** (2026-08-23,
   owner's changes). Interval 3s -> 6s. Slides crossfade instead of cutting; the fade is
   **200ms because `design/DESIGN_SYSTEM.md` § 0.8 says no animation may exceed it** — at a 6s

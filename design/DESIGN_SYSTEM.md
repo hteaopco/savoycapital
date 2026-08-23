@@ -2,6 +2,23 @@
 
 **Status:** Live source of truth (promoted 2026-05-29). This is the authoritative reference for all UI agents — every component, form, table, badge, button, and layout element must follow these rules exactly. `.claude/rules/ui-governance.md` and `CLAUDE.md` both point here.
 
+> ### ⚠️ savoycapital divergence — this file is no longer identical to theAPlink's
+>
+> Every other file in `design/` is byte-for-byte theAPlink's. **This one is not, as of
+> 2026-08-23.** One rule has been amended for this product, by the owner:
+>
+> | § | theAPlink | savoycapital |
+> |---|---|---|
+> | 0.8 | No animations over 200ms | Same, **except a content crossfade may run to 400ms** |
+>
+> The carve-out is narrow on purpose: it covers one block of content replacing another
+> (the portfolio carousel), not UI feedback, which still has a hard 200ms ceiling.
+> Rationale and the standing rule for future divergences: `.claudet/DECISIONS.md`.
+>
+> **If you are diffing this file against theAPlink's, that is the expected difference.**
+> Do not "restore" it, and do not add further divergences without recording them here.
+
+
 The kitchen-sink page at `/admin/design-system` is **built** (`src/app/(dashboard)/admin/design-system/page.tsx`, shipped `b8587e7`) and renders the primitives in §3 — a primitive that isn't on the page isn't a primitive.
 
 ---
@@ -15,7 +32,7 @@ The kitchen-sink page at `/admin/design-system` is **built** (`src/app/(dashboar
 5. **Negative space is the layout.** Chrome (borders, shadows, dividers) supports content, never decorates it. If you're considering an extra border to "separate things," start by adding 4px of space instead.
 6. **One canonical state per role.** One loading pattern. One empty pattern. One error pattern. One save bar. One modal. One sheet. Inventing a new state for a new screen is a system failure.
 7. **Truncate, don't wrap — except for values that must be read in full.** Lists, cards, table cells use `whiteSpace: "nowrap"; overflow: "hidden"; textOverflow: "ellipsis"` for **labels and names**. Money amounts, counts, account last-4s, and dates are never truncated — they must always render fully or break to a new line. Multiline copy lives inside card body copy only.
-8. **Performance is part of UX.** Tap targets ≥44×44px on every interactive element a thumb hits. No animations over 200ms. No font load that blocks first paint. No layout shift after the first frame. These aren't engineering concerns — they're UX.
+8. **Performance is part of UX.** Tap targets ≥44×44px on every interactive element a thumb hits. No animations over 200ms — **except a content crossfade**, one block of content replacing another in place, which may run to **400ms**: at 200ms two full paragraphs swapping reads as a flicker rather than a transition. UI feedback — hover, press, open, close — stays under 200ms, no exception. No font load that blocks first paint. No layout shift after the first frame. These aren't engineering concerns — they're UX.
 
 ---
 
