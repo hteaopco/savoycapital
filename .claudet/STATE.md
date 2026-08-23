@@ -7,16 +7,20 @@ learning that). Keep this to a paragraph. Edit it only when the answer actually 
 
 ## Now
 
-**The app builds and runs.** Next.js 16 + React 19 + TypeScript + Tailwind (layout only),
-with the public landing page at `/` and a dependency-free healthcheck at `/api/health`.
-`npm run verify` (typecheck + lint) and `npm run build` both pass clean, and the production
-server was confirmed serving the page, the healthcheck and the three image assets before
-this was committed. `railway.json` is in place but **nothing is connected to Railway yet.**
+**The site is live on Railway** (owner-confirmed 2026-08-23). Next.js 16 + React 19 +
+TypeScript + Tailwind (layout only), the public landing page at `/`, and a dependency-free
+healthcheck at `/api/health`. Deploy shape: Nixpacks, `npm run build`, `npm run start`,
+healthcheck on `/api/health`, Node pinned to 22 via `.nvmrc`. `npm run verify` (typecheck +
+lint) and `npm run build` pass clean.
 
-The landing page is real code, not a mockup: "What we invest in" over a Recent Investments
-carousel (Westfield Fluid Controls, HTeaO, Marucci). Its copy is **drafted, not approved** —
-every `[BRACKETED]` value is a fact nobody has supplied, and the write-ups are `[TBD]` by
-the owner's instruction.
+The public site is deliberately minimal: a nav, the **Our Portfolio** carousel (Westfield
+Fluid Controls, HTeaO, Marucci) and nothing else. The instrument cards and the footer were
+cut by the owner "until we get more formal." Investor login goes to `/coming-soon`.
+All three slides carry the owner's real copy — write-up, instrument, year, "Current" status
+and a company link — so **no `[BRACKETED]` placeholder remains on the public page.**
+**The page carries no securities disclosure** — the placeholder went with the footer, and
+real language has to land before anyone is pointed at the site. That is now the last thing
+standing between this page and being promotable.
 
 **Deliberately still absent:** Prisma (no schema yet, so no client to generate), Clerk, any
 authenticated surface, tests, and CI. `prisma/`, `scripts/`, `docs/`, `.github/workflows`

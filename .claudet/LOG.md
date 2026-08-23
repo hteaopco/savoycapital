@@ -8,6 +8,46 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Real portfolio copy replaces every placeholder in the carousel** (2026-08-23, owner-
+  supplied). All three slides now carry the owner's own write-ups, instrument (Private Credit
+  / Private Equity), year (2026), a "Current" status badge, and a link to the company site.
+  No `[BRACKETED]` value remains anywhere on the public page.
+  Two corrections made to the supplied copy, both flagged: the company is **Marucci** (its own
+  domain is maruccisports.com), supplied variously as "Marruci" and "Marrucci"; and the
+  displayed link labels are normalised to bare domains, since one of the three arrived without
+  a `www.` prefix.
+  Slide order follows the order the owner listed them: HTeaO Franchisee, Westfield, Marucci.
+  **Note the HTeaO slide is an investment in the largest FRANCHISEE, not in HTeaO itself**, and
+  it carries the HTeaO brand mark. That is normal for how funds present a franchisee position,
+  but it is a distinction worth keeping straight if anyone later reads the page as an HTeaO
+  holding.
+  Known tradeoff, not a defect: only the first slide's copy is in the server-rendered HTML —
+  the carousel renders one slide at a time. The other two ship in the client bundle (verified)
+  and appear on interaction, so a crawler or a JS-off reader sees one investment, not three.
+
+- **Landing page cut back to the portfolio; carousel gains autoplay** (2026-08-23, owner's
+  changes). The "What we invest in" section and the whole footer are removed — the instrument
+  cards were carrying six bracketed placeholders and the owner pulled them "until we get more
+  formal." Recent Investments is now the page: it is the hero, its heading is "Our Portfolio",
+  and the `<h1>` moved with it. Investor login points at a new `/coming-soon` (noindex — a
+  placeholder page ranking for the firm's name is worse than no result).
+  Carousel: auto-advances every 3s, with a pause/play button, and any manual move — arrows or
+  dots — stops the autoplay for good. `prefers-reduced-motion` sets the initial state, but an
+  explicit press overrides it either way, since a play button that does nothing is worse than
+  ignoring the preference.
+  The image panel is now a FIXED height (200px / 280px at md) rather than min-height. HTeaO's
+  mark is taller in aspect than the other two, so the panel used to grow for it and the card
+  resized mid-rotation.
+  **The securities disclosure went with the footer** — the page now carries none. It was
+  placeholder text, not usable language, so nothing of value was lost, but real language has
+  to land before the site is promoted to anyone. Still recorded in `FACTS.md`.
+
+- **First deploy is live on Railway** (2026-08-23, owner-confirmed). The public landing page
+  is serving. Deploy shape: Nixpacks, `npm run build`, `npm run start`, healthcheck on
+  `/api/health`, Node 22 via `.nvmrc`. Nothing about the app changed to make this work — the
+  earlier failure was a host pointed at a repo with no `package.json`, and it resolved when
+  the app merged to `main`.
+
 - **The app exists: Next.js scaffold + the landing page in real code** (2026-08-23). Built
   in response to a failed deploy — a host had been pointed at a repo with no `package.json`,
   no `railway.json` and nothing any builder could act on, which was the direct consequence
