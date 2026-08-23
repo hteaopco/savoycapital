@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * The global reset bits the design relies on, ported from
+ * design/globals-reset-snippet.css.
+ *
+ * The upstream snippet's `@apply border-border outline-ring/50` and
+ * `@apply bg-background text-foreground font-sans` lines are NOT carried: they
+ * depend on a shadcn-style CSS token layer that does not exist in this app.
+ * Surfaces and text colors come from the `C` palette as inline styles instead
+ * (design/AP_DESIGN_REFERENCE.md § 2).
+ */
+@layer base {
+  input,
+  button,
+  select,
+  textarea {
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  /* The global cursor rule. Do NOT add per-element `cursor: pointer` — this
+     covers it, and the design reference calls that out explicitly. */
+  button,
+  [role="button"],
+  a {
+    cursor: pointer;
+  }
+}

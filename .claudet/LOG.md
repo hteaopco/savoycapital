@@ -8,6 +8,23 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **The app exists: Next.js scaffold + the landing page in real code** (2026-08-23). Built
+  in response to a failed deploy — a host had been pointed at a repo with no `package.json`,
+  no `railway.json` and nothing any builder could act on, which was the direct consequence
+  of the deliberate keep-it-blank decision rather than a regression. Next.js 16, React 19,
+  TypeScript strict, Tailwind for layout only, lucide-react for icons, `/api/health` for
+  Railway's healthcheck, `railway.json` for the deploy.
+  The landing page ports the design canvas: "What we invest in" over a Recent Investments
+  carousel with the three investment images. Theming is inline styles off the `C` palette
+  with no raw hex, per `design/AP_DESIGN_REFERENCE.md` § 2; responsive sizing uses `clamp()`
+  rather than media queries so the rule holds.
+  Two build failures found and fixed rather than guessed at: `design/`'s frozen exemplars
+  were being type-checked (TS2307 on theAPlink import paths), and the `@eslint/eslintrc`
+  shim crashed against `eslint-config-next` 16's native flat config. Both recorded in
+  DECISIONS with why the obvious fix is wrong. Verified before commit: clean `npm run build`,
+  `npm run verify` green, and the production server serving `/`, `/api/health` and all three
+  image assets.
+
 - **`uploads/` added; investment logos moved out of `design/`** (2026-08-23). Three files for
   the landing page's Recent Investments section (Westfield Fluid Controls, HTeaO, Marucci)
   were uploaded into `design/` through the GitHub web UI. Moved to a new top-level

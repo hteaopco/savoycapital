@@ -26,6 +26,16 @@ there.
   theAPlink's AP domain and is not expected to mean anything here — read them for the
   shape, not the content.
 
+## This folder is not app source
+
+`design/` is excluded from `tsconfig.json`, and it must stay excluded. The exemplars are
+frozen `.tsx` snapshots carried from theAPlink: they import `@/components/accounting/palette`
+and `@/lib/accounting/...`, paths that exist in that repo and not in this one. Left in the
+type-check they fail the build — which is exactly how this exclusion got added, on the first
+`next build` this repo ever ran.
+
+Read them. Copy patterns out of them. Never compile them.
+
 ## Mirrors — not yet enforced
 
 In theAPlink nothing in the app imports from `design/`; the runtime holds its own copy, and
