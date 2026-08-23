@@ -7,8 +7,13 @@ import { C } from "./palette";
 
 const AUTOPLAY_MS = 6000;
 
-/** design/DESIGN_SYSTEM.md § 0.8: "No animations over 200ms." */
-const FADE_MS = 200;
+/**
+ * design/DESIGN_SYSTEM.md § 0.8 caps animation at 200ms, with one carve-out added
+ * for this product (owner, 2026-08-23): a CONTENT CROSSFADE may run to 400ms.
+ * This is that crossfade. UI feedback still has a hard 200ms ceiling — do not
+ * reach for this constant to time a hover or a press.
+ */
+const FADE_MS = 400;
 
 type Investment = {
   name: string;
@@ -84,9 +89,13 @@ const INVESTMENTS: Investment[] = [
   },
 ];
 
+/**
+ * 44px on touch, 36px from md up. § 0.8's ≥44×44px floor is written for "every
+ * interactive element a thumb hits" — a pointer is not a thumb, so the desktop
+ * size is a size choice and the mobile size is the rule. Sizing lives in the
+ * className; this holds only the theming.
+ */
 const arrowButton: React.CSSProperties = {
-  width: 44,
-  height: 44,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -189,46 +198,40 @@ export function RecentInvestments() {
       type="button"
       onClick={direction === "prev" ? prev : next}
       aria-label={direction === "prev" ? "Previous investment" : "Next investment"}
+      className="h-11 w-11 md:h-9 md:w-9"
       style={arrowButton}
     >
-      {direction === "prev" ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+      {direction === "prev" ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
     </button>
   );
 
   return (
     <div style={{ background: C.bgAlt }}>
       <div className="mx-auto max-w-[1120px] px-5 py-14 md:px-10 md:pb-24 md:pt-20">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <div className="flex flex-col gap-3">
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: ".1em",
-                color: C.accent,
-              }}
-            >
-              Recent Investments
-            </div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "clamp(30px, 4.2vw, 40px)",
-                fontWeight: 800,
-                letterSpacing: "-0.025em",
-                lineHeight: 1.1,
-                color: C.text,
-              }}
-            >
-              Our Portfolio
-            </h1>
+        <div className="mb-10 flex flex-col gap-3">
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: ".1em",
+              color: C.accent,
+            }}
+          >
+            Recent Investments
           </div>
-
-          <div className="flex items-center gap-2">
-            {arrow("prev")}
-            {arrow("next")}
-          </div>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "clamp(30px, 4.2vw, 40px)",
+              fontWeight: 800,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.1,
+              color: C.text,
+            }}
+          >
+            Our Portfolio
+          </h1>
         </div>
 
         <div
