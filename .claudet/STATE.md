@@ -7,11 +7,11 @@ learning that). Keep this to a paragraph. Edit it only when the answer actually 
 
 ## Now
 
-**The app builds and runs.** Next.js 16 + React 19 + TypeScript + Tailwind (layout only),
-with the public landing page at `/` and a dependency-free healthcheck at `/api/health`.
-`npm run verify` (typecheck + lint) and `npm run build` both pass clean, and the production
-server was confirmed serving the page, the healthcheck and the three image assets before
-this was committed. `railway.json` is in place but **nothing is connected to Railway yet.**
+**The site is live on Railway** (owner-confirmed 2026-08-23). Next.js 16 + React 19 +
+TypeScript + Tailwind (layout only), the public landing page at `/`, and a dependency-free
+healthcheck at `/api/health`. Deploy shape: Nixpacks, `npm run build`, `npm run start`,
+healthcheck on `/api/health`, Node pinned to 22 via `.nvmrc`. `npm run verify` (typecheck +
+lint) and `npm run build` pass clean.
 
 The landing page is real code, not a mockup: "What we invest in" over a Recent Investments
 carousel (Westfield Fluid Controls, HTeaO, Marucci). Its copy is **drafted, not approved** —

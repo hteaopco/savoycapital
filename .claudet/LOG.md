@@ -8,6 +8,12 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **First deploy is live on Railway** (2026-08-23, owner-confirmed). The public landing page
+  is serving. Deploy shape: Nixpacks, `npm run build`, `npm run start`, healthcheck on
+  `/api/health`, Node 22 via `.nvmrc`. Nothing about the app changed to make this work — the
+  earlier failure was a host pointed at a repo with no `package.json`, and it resolved when
+  the app merged to `main`.
+
 - **The app exists: Next.js scaffold + the landing page in real code** (2026-08-23). Built
   in response to a failed deploy — a host had been pointed at a repo with no `package.json`,
   no `railway.json` and nothing any builder could act on, which was the direct consequence
