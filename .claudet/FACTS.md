@@ -23,7 +23,9 @@ belongs in `STATE.md` or `LOG.md` instead.
    the first schema; retrofitting history onto a current-value model is expensive.
 
 **The authenticated user population is two people.** Not a growth curve — two. What scales
-is the **number of investments**, and modestly.
+is the **number of investments**, and modestly. This is enforced in code, not just assumed:
+the private surface is gated by an email allowlist (`SAVOY_ALLOWED_EMAILS`) on top of Clerk,
+and there is no self-service sign-up route. See `PLAYBOOKS/auth-clerk.md`.
 
 ## Not theAPlink — what does NOT carry over
 
@@ -48,8 +50,10 @@ exists to serve that. **Savoy Capital has one fund and two users.**
 
 ## TO FILL IN
 
-- **Stack.** Expected to follow theAPlink — Next.js (App Router), Prisma, PostgreSQL on
-  Railway, Clerk, lucide, inline styles — **not yet confirmed, and nothing is scaffolded.**
+- **Stack.** Following theAPlink. **Confirmed and built:** Next.js 16 (App Router), React 19,
+  TypeScript strict, Tailwind for layout only, lucide, inline styles off the `C` palette,
+  **Clerk** for auth, hosted on Railway. **Still unconfirmed:** Prisma + PostgreSQL — the
+  expectation, but no schema exists, so nothing is scaffolded.
 - **Domain name** for the public site.
 - **Hosting.** Not connected to Railway yet (owner, 2026-08-23).
 - **What the portfolio actually tracks.** Position types (equity vs. debt differ

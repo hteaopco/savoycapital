@@ -32,10 +32,29 @@ controls). The other nine content files are byte-identical, verified. If you are
 `design/` against theAPlink, **that difference is expected — do not "restore" it.** The file's
 own banner, `design/README.md`'s divergence table and `DECISIONS.md` all say so.
 
-**Deliberately still absent:** Prisma (no schema yet, so no client to generate), Clerk, any
-authenticated surface, tests, and CI. `prisma/`, `scripts/`, `docs/`, `.github/workflows`
-and `src/lib` are still empty by intent.
+**Clerk is wired up but not live.** The auth boundary is built and verified: `src/proxy.ts`
+protects everything except an enumerated public list, `/sign-in` is styled to the palette,
+and the `(private)` route group gates `/monitor` behind an email allowlist
+(`SAVOY_ALLOWED_EMAILS`) rather than behind "is signed in" — because whether a stranger can
+create a Clerk account is a Dashboard setting nobody can verify from this repo. It **fails
+closed**: with no allowlist set, nobody gets in, the principals included.
+`PLAYBOOKS/auth-clerk.md` is the reference; DECISIONS carries the why.
+`/monitor` is deliberately an empty shell — it exists so the boundary has something behind
+it, and what it displays waits on the position-model call below.
+
+**Deliberately still absent:** Prisma (no schema yet, so no client to generate), a `/sign-up`
+route (two users, invited from the Dashboard), Clerk webhooks (nothing to sync into yet),
+tests, and CI. `prisma/`, `scripts/`, `docs/` and `.github/workflows` are still empty by
+intent.
 
 **Blocked on a person:** what an equity vs. debt position holds — the decision the portfolio
 monitor's schema is built on. And the securities-marketing question in `FACTS.md`, which
 gates what the *public* page may say, not whether it may exist.
+
+**Blocked on the Clerk Dashboard** (four steps, `PLAYBOOKS/auth-clerk.md` § 2): create the
+application, **restrict sign-up to invitation-only**, invite Rodney and Jett, and set
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` and `SAVOY_ALLOWED_EMAILS` on
+Railway. `next build` passes without them, so the deploy will not break before they land —
+but the monitor refuses everyone until they do. Separately, the public nav's "Investor
+login" still points at `/coming-soon`; pointing it at `/sign-in` is a one-line owner call,
+left alone on purpose.

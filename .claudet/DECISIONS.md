@@ -6,6 +6,58 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The private surface is gated by an explicit email allowlist, not by "is signed in"
+  (2026-08-23).** `SAVOY_ALLOWED_EMAILS` names the people who may open the portfolio
+  monitor; `src/lib/auth.ts` checks it server-side against the **verified** addresses on the
+  Clerk account, and `src/app/(private)/layout.tsx` runs that check for every page in the
+  group.
+  - **Why "signed in" is not enough.** Clerk answers authentication only. Whether a stranger
+    can create an account is a **setting in the Clerk Dashboard** — not a fact anyone can
+    check by reading this repo — so an app that trusts the session alone is exactly as closed
+    as a checkbox no reviewer here can see. This is the concrete form of the standing rule
+    that two users is an argument against tenancy machinery and never against an auth
+    boundary.
+  - **It fails closed, and that cost is real.** An unset or empty allowlist admits nobody,
+    the principals included. The alternative — treating "unset" as "any signed-in user" —
+    converts one forgotten deploy variable into an open door onto the fund's positions. The
+    two failure modes are not equally bad, so the code takes the recoverable one; the refusal
+    page names the variable to set so the fix is a deploy setting, not a debugging session.
+  - **Verified addresses only, and all of them** — not just the primary. Matching the primary
+    alone locks out an owner who later adds and promotes an address; accepting unverified
+    ones would let anyone claim an allowlisted address they do not control.
+
+- **Route protection is deny-by-default: the PUBLIC routes are the list (2026-08-23).**
+  `src/proxy.ts` enumerates `/`, `/coming-soon`, `/sign-in(.*)` and `/api/health`; everything
+  else requires a session. The inverse — enumerate the private routes — fails in the
+  dangerous direction, because a new page under the monitor ships public until someone
+  remembers to add it.
+  - **The cost, stated plainly:** an unknown or mistyped URL redirects a signed-out visitor
+    to the login instead of 404ing, and a new marketing page will ask for a login until it is
+    added to the list. Both are loud, harmless and instantly visible. Serving fund positions
+    to the internet is none of those things.
+
+- **There is no sign-up route, and the login is not linked from the public site yet
+  (2026-08-23).** The authenticated population is two named people, provisioned by
+  invitation from the Clerk Dashboard; `<ClerkProvider>` is configured without a `signUpUrl`
+  to match. The public nav's "Investor login" still points at `/coming-soon`, not `/sign-in`.
+  - **Why the link was left alone.** Pointing the public site at a live login is what makes
+    it discoverable, and it should happen when the owner has invited the users and set the
+    keys — not as a side effect of wiring the library up. It is a one-line change in
+    `src/app/page.tsx` when they want it.
+
+- **Clerk's redirect target is set in code, not by env var (2026-08-23).** `src/proxy.ts`
+  passes an explicit `unauthenticatedUrl` to `auth.protect()`. Without it Clerk sends
+  signed-out visitors to its hosted Account Portal on a `*.accounts.dev` domain — observed on
+  the first smoke test, not theorised — which is off-brand, off-domain, and makes
+  `src/app/sign-in/` dead code. The documented alternative, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`,
+  was rejected because a forgotten deploy variable would silently restore that behaviour.
+
+- **The proxy file is `src/proxy.ts`, not `src/middleware.ts` (2026-08-23).** Next.js 16.3
+  deprecates the `middleware` file convention in favour of `proxy` and warns on every build
+  under the old name. Clerk's own docs still say `middleware.ts`; `clerkMiddleware` works
+  unchanged under the new name, verified by running it rather than assumed. Do not rename it
+  back to match Clerk's documentation.
+
 - **A spaced secondary control may sit at 36×36px (owner, 2026-08-23).** § 0.8 and § 9's
   blanket ≥44×44px tap-target floor now carves out a control that is *all* of: secondary, at
   least 8px clear of its neighbours, and not repeated in a dense list. The carousel arrows are

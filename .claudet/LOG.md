@@ -8,6 +8,37 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Clerk is wired up: the auth boundary exists, and it is closed by an allowlist**
+  (2026-08-23). `@clerk/nextjs` 7.8, `<ClerkProvider>` in the root layout with the `C`
+  palette mapped onto Clerk's appearance variables (no raw hex reaches its components), a
+  styled `/sign-in`, a `(private)` route group, and `/monitor` as its first — deliberately
+  empty — page.
+  **Two layers, not one.** `src/proxy.ts` decides whether *somebody* is signed in;
+  `src/lib/auth.ts` decides whether that someone is one of ours, against
+  `SAVOY_ALLOWED_EMAILS`. The second layer is the point: Clerk alone cannot tell you whether
+  a stranger may create an account — that is a Dashboard setting no one can verify from this
+  repo. Rationale and the fail-closed cost are in DECISIONS.
+  Route protection is **deny-by-default**: the public routes are enumerated and everything
+  else needs a session, so a forgotten private page fails shut and a forgotten public page
+  merely asks for a login.
+  **A real defect was found by testing rather than shipped.** The first smoke test redirected
+  signed-out visitors to Clerk's hosted portal on a `*.accounts.dev` domain, which would have
+  left the styled `/sign-in` page as dead code. `src/proxy.ts` now sets `unauthenticatedUrl`
+  explicitly. GOTCHA 1 in the playbook.
+  Verified end to end against a running production server: public routes 200, `/monitor` and
+  unknown routes 307 to `/sign-in` **on this domain** with `redirect_url` preserved, the
+  landing page still server-rendering all three investments, and `next build` passing with
+  the Clerk keys *unset* (so the Railway build cannot break before the keys land). The
+  allowlist logic was separately exercised over 12 cases — fail-closed on unset, empty and
+  whitespace-only lists, unverified addresses rejected, case/whitespace tolerance, secondary
+  verified addresses accepted, lookalike domain rejected.
+  **Not live.** Four steps need a person with the Clerk Dashboard — create the app, restrict
+  sign-up to invitation-only, invite Rodney and Jett, set the env vars — and until then the
+  monitor correctly refuses everyone. The public "Investor login" link still points at
+  `/coming-soon` on purpose; flipping it to `/sign-in` is the owner's call.
+  Also: the proxy lives at `src/proxy.ts`, not `src/middleware.ts` — Next 16.3 deprecated the
+  old name and warns on every build. First playbook in the repo: `PLAYBOOKS/auth-clerk.md`.
+
 - **Carousel arrows drop to 36px at every width; the tap-target rule amended to allow it**
   (2026-08-23, owner). Second deliberate divergence of `design/` from theAPlink, and the second
   amendment to the same principle. The blanket ≥44×44px floor now carves out a control that is
