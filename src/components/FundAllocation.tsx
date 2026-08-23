@@ -223,7 +223,11 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
                     opacity={!pickedId || pickedId === arc.id ? 1 : 0.35}
                     onClick={() => toggle(arc.id)}
                     // design-ok: <circle> is not covered by the global cursor rule.
-                    // Keyboard users reach the same action through the legend buttons.
+                    // A wedge is a pointer convenience, never the only way in: the
+                    // legend rows below are real buttons carrying the same action,
+                    // tab-reachable and at the § 7 tap-target floor. That is what
+                    // keeps a 26px-wide arc band from being a tap target that misses
+                    // it — nothing here is reachable by the arcs alone.
                     style={{
                       cursor: "pointer",
                       transition: `stroke-width ${TRANSITION}, opacity ${TRANSITION}`,
@@ -271,10 +275,19 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
             const isPicked = pickedId === s.id;
             return (
               <div key={s.id} className="flex flex-col">
+                {/*
+                  44px on touch, the card's own density from md up. § 7 puts the
+                  ≥44×44px floor on "every interactive element a thumb hits", and
+                  its 36px carve-out explicitly excludes list rows — these are
+                  list rows, so the floor applies whole. A pointer is not a thumb,
+                  which is why the desktop height is still a design choice; that
+                  reading is the one RecentInvestments already runs on. Sizing
+                  lives in the className, theming in the style prop.
+                */}
                 <button
                   onClick={() => toggle(s.id)}
                   aria-expanded={s.holdings.length > 0 ? isOpen : undefined}
-                  className="flex items-center"
+                  className="flex items-center min-h-[44px] md:min-h-0"
                   style={{
                     gap: 9,
                     width: "100%",
