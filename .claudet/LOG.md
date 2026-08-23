@@ -8,6 +8,14 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **`uploads/` added; investment logos moved out of `design/`** (2026-08-23). Three files for
+  the landing page's Recent Investments section (Westfield Fluid Controls, HTeaO, Marucci)
+  were uploaded into `design/` through the GitHub web UI. Moved to a new top-level
+  `uploads/` — a drop-off for raw material handed over from outside the repo, explicitly not
+  an asset directory nothing should import from. `design/` is verified byte-identical to
+  theAPlink again (10/10 content files); loose uploads sitting in it blur the source-of-truth
+  line. `marruci.png` renamed to `marucci.png` to match the company.
+
 - **Architecture folders scaffolded, deliberately empty** (2026-08-23). The directory
   skeleton mirroring theAPlink's shape — `.claude/{hooks,rules}`, `.github/workflows`,
   `docs/`, `prisma/migrations/`, `scripts/`, `src/{app,app/api,components,content,lib}` —
