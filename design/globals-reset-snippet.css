@@ -1,0 +1,21 @@
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  input, button, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+  }
+  button, [role="button"] {
+    cursor: pointer;
+  }
+  a {
+    cursor: pointer;
+  }
+body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+/* Date inputs: auto color-scheme based on theme */
