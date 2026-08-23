@@ -13,6 +13,7 @@ checksum. One is not:
 | File | Divergence | When |
 |---|---|---|
 | `DESIGN_SYSTEM.md` | § 0.8 — a **content crossfade** may run to 400ms, against the blanket 200ms animation ceiling. UI feedback keeps the 200ms limit. | 2026-08-23, owner |
+| `DESIGN_SYSTEM.md` | § 0.8 / § 9 — a **spaced secondary control** may go to 36×36px, against the blanket ≥44×44px tap-target floor. Primary actions, list rows and form controls stay at 44. | 2026-08-23, owner |
 
 The file carries a banner at the top saying the same thing, so a diff against theAPlink
 explains itself. **Add to that table before amending anything else here** — an undocumented

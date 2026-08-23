@@ -8,6 +8,16 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Carousel arrows drop to 36px at every width; the tap-target rule amended to allow it**
+  (2026-08-23, owner). Second deliberate divergence of `design/` from theAPlink, and the second
+  amendment to the same principle. The blanket ≥44×44px floor now carves out a control that is
+  secondary, ≥8px clear of its neighbours, and not in a dense list. Amended in **both** places
+  the rule is stated (§ 0.8 and § 9) so the document does not contradict itself; the banner and
+  `design/README.md`'s divergence table both carry two rows now.
+  Honest accounting of the cost: 44px is the WCAG 2.1 AAA / platform-HIG comfort standard and
+  36px is below it, but it clears WCAG 2.2 AA's 24×24px minimum comfortably. A defensible
+  trade, not a free one, and it lands on touch users.
+
 - **Crossfade to 400ms — by amending the design system, not overriding it** (2026-08-23,
   owner). `design/DESIGN_SYSTEM.md` § 0.8's blanket "no animations over 200ms" now carves out
   a **content crossfade** at up to 400ms; UI feedback keeps the hard 200ms ceiling. This is

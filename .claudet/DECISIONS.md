@@ -6,6 +6,20 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **A spaced secondary control may sit at 36×36px (owner, 2026-08-23).** § 0.8 and § 9's
+  blanket ≥44×44px tap-target floor now carves out a control that is *all* of: secondary, at
+  least 8px clear of its neighbours, and not repeated in a dense list. The carousel arrows are
+  the case it was written for.
+  - **What this costs, stated plainly.** 44×44px is the comfort standard — WCAG 2.1 AAA
+    (2.5.5) and both platform HIGs. 36px is below it. It is **not** a violation of WCAG 2.2 AA,
+    whose minimum (2.5.8) is 24×24px, so this is a defensible trade rather than a reckless one
+    — but it is a trade, and it lands on touch users first.
+  - **36px is a floor, not a new default.** Primary actions, list rows, form controls and
+    anything a thumb hits repeatedly stay at 44. If this size starts appearing on those, the
+    exception has been misread.
+  - **Both statements of the rule were amended**, § 0.8 and § 9. A design system that
+    contradicts itself in two places is worse than one that says the wrong thing once.
+
 - **The design system may diverge from theAPlink, but only on the record (owner, 2026-08-23).**
   The first amendment: `DESIGN_SYSTEM.md` § 0.8's blanket "no animations over 200ms" now
   carves out a **content crossfade** at up to 400ms. UI feedback — hover, press, open, close —
