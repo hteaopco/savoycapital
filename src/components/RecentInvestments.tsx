@@ -2,18 +2,27 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Pause,
+  Play,
+} from "lucide-react";
 import { C } from "./palette";
 
 const AUTOPLAY_MS = 3000;
 
 type Investment = {
   name: string;
-  /** Instrument tag. Bracketed until the real terms are confirmed. */
+  /** Holding status. "Current" today; realized positions would read differently. */
+  status: string;
+  /** Instrument. */
   kind: string;
-  /** Year of investment. Bracketed until confirmed. */
+  /** Year of investment. */
   year: string;
   blurb: string;
+  website: { href: string; label: string };
   image: {
     src: string;
     width: number;
@@ -23,8 +32,9 @@ type Investment = {
      * edge to edge. The supplied assets are not the same kind of image (see
      * uploads/README.md), so the panel adapts rather than pretending they match.
      *
-     * The PANEL's height is fixed either way — see `panelHeight` below. That is
-     * what keeps all three slides the same size regardless of aspect ratio.
+     * The PANEL's height is fixed either way (h-[200px] md:h-[280px] on the
+     * container below). That is what keeps all three slides the same size
+     * regardless of the image's aspect ratio.
      */
     treatment: "logo" | "photo";
   };
@@ -32,22 +42,13 @@ type Investment = {
 
 const INVESTMENTS: Investment[] = [
   {
-    name: "Westfield Fluid Controls",
-    kind: "[EQUITY / DEBT]",
-    year: "[YEAR]",
-    blurb: "[TBD — write-up for Westfield Fluid Controls.]",
-    image: {
-      src: "/investments/westfield.png",
-      width: 760,
-      height: 219,
-      treatment: "logo",
-    },
-  },
-  {
-    name: "HTeaO",
-    kind: "[EQUITY / DEBT]",
-    year: "[YEAR]",
-    blurb: "[TBD — write-up for HTeaO.]",
+    name: "HTeaO Franchisee",
+    status: "Current",
+    kind: "Private Credit",
+    year: "2026",
+    blurb:
+      "Credit investment in the largest franchisee of HTeaO, a fast growing QSR that specializes in providing premium water and refreshing iced tea. The capital was used to fund store expansion through acquisition of existing stores and allowed the Operator to continue expanding in core markets.",
+    website: { href: "https://www.hteao.com", label: "hteao.com" },
     image: {
       src: "/investments/hteao.png",
       width: 520,
@@ -56,10 +57,31 @@ const INVESTMENTS: Investment[] = [
     },
   },
   {
+    name: "Westfield Fluid Controls",
+    status: "Current",
+    kind: "Private Equity",
+    year: "2026",
+    blurb:
+      "Equity investment in Westfield, an industry leader in the design, manufacture, assembly, and testing of powered and non-powered valves, solenoids, and fluid controls for aerospace and defense applications. Notable customers of Westfield include Boeing, Northrop Grumman, the Department of Defense, and more.",
+    website: {
+      href: "https://www.westfieldhydraulics.com",
+      label: "westfieldhydraulics.com",
+    },
+    image: {
+      src: "/investments/westfield.png",
+      width: 760,
+      height: 219,
+      treatment: "logo",
+    },
+  },
+  {
     name: "Marucci Sports",
-    kind: "[EQUITY / DEBT]",
-    year: "[YEAR]",
-    blurb: "[TBD — write-up for Marucci Sports.]",
+    status: "Current",
+    kind: "Private Equity",
+    year: "2026",
+    blurb:
+      "Equity investment in the MBO of Marucci Sports from publicly traded FOXA. Marucci is the leading wood and composite bat maker in both college and professional baseball, with a recent push into softball and apparel. Marucci is the official bat of the MLB.",
+    website: { href: "https://maruccisports.com", label: "maruccisports.com" },
     image: {
       src: "/investments/marucci.jpg",
       width: 900,
@@ -260,18 +282,35 @@ export function RecentInvestments() {
               >
                 {index + 1} of {count}
               </div>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: "clamp(22px, 2.6vw, 28px)",
-                  fontWeight: 800,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.2,
-                  color: C.text,
-                }}
-              >
-                {current.name}
-              </h2>
+              <div className="flex flex-wrap items-center gap-3">
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: "clamp(22px, 2.6vw, 28px)",
+                    fontWeight: 800,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.2,
+                    color: C.text,
+                  }}
+                >
+                  {current.name}
+                </h2>
+                {/* Green per the palette's convention: positive / active state. */}
+                <span
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: 4,
+                    background: C.greenBg,
+                    border: `1px solid ${C.greenBorder}`,
+                    color: C.green,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: ".04em",
+                  }}
+                >
+                  {current.status}
+                </span>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -299,6 +338,7 @@ export function RecentInvestments() {
                   fontSize: 11,
                   fontWeight: 700,
                   letterSpacing: ".04em",
+                  fontVariantNumeric: "tabular-nums",
                 }}
               >
                 {current.year}
@@ -316,6 +356,23 @@ export function RecentInvestments() {
             >
               {current.blurb}
             </p>
+
+            <a
+              href={current.website.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center self-start"
+              style={{
+                gap: 6,
+                color: C.accent,
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              {current.website.label}
+              <ExternalLink size={14} />
+            </a>
           </div>
         </div>
 

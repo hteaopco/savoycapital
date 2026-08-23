@@ -8,6 +8,23 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Real portfolio copy replaces every placeholder in the carousel** (2026-08-23, owner-
+  supplied). All three slides now carry the owner's own write-ups, instrument (Private Credit
+  / Private Equity), year (2026), a "Current" status badge, and a link to the company site.
+  No `[BRACKETED]` value remains anywhere on the public page.
+  Two corrections made to the supplied copy, both flagged: the company is **Marucci** (its own
+  domain is maruccisports.com), supplied variously as "Marruci" and "Marrucci"; and the
+  displayed link labels are normalised to bare domains, since one of the three arrived without
+  a `www.` prefix.
+  Slide order follows the order the owner listed them: HTeaO Franchisee, Westfield, Marucci.
+  **Note the HTeaO slide is an investment in the largest FRANCHISEE, not in HTeaO itself**, and
+  it carries the HTeaO brand mark. That is normal for how funds present a franchisee position,
+  but it is a distinction worth keeping straight if anyone later reads the page as an HTeaO
+  holding.
+  Known tradeoff, not a defect: only the first slide's copy is in the server-rendered HTML —
+  the carousel renders one slide at a time. The other two ship in the client bundle (verified)
+  and appear on interaction, so a crawler or a JS-off reader sees one investment, not three.
+
 - **Landing page cut back to the portfolio; carousel gains autoplay** (2026-08-23, owner's
   changes). The "What we invest in" section and the whole footer are removed — the instrument
   cards were carrying six bracketed placeholders and the owner pulled them "until we get more
