@@ -8,6 +8,24 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Carousel reworked: 6s, crossfade, arrows in two places, no pause button** (2026-08-23,
+  owner's changes). Interval 3s -> 6s. Slides crossfade instead of cutting; the fade is
+  **200ms because `design/DESIGN_SYSTEM.md` § 0.8 says no animation may exceed it** — at a 6s
+  interval a slower fade would feel better, and the documented rule wins over that preference.
+  The "Current" badge moved down onto the instrument/year row. The pause button is gone;
+  clicking an arrow or a dot is what stops the rotation. Arrows now appear twice — top right
+  and flanking the dots below the card — per the owner's second option.
+  **The rewrite changed how slides render, and that fixed the SEO gap logged above.** All three
+  are now rendered and stacked in one grid cell with opacity switching between them, so every
+  write-up is in the server HTML rather than appearing only on interaction. The stack also
+  sizes to the tallest slide, so the card no longer resizes as it advances, and there is no
+  fixed text height to overflow on a narrow screen. `visibility` (delayed by the fade) keeps an
+  inactive slide's link out of the tab order.
+  With no play control on the page, `prefers-reduced-motion` now simply means the carousel does
+  not auto-advance; the arrows still work.
+  Also: the explanatory line under "Coming soon." on `/coming-soon` was cut — the page is now
+  just the heading and a link back.
+
 - **Real portfolio copy replaces every placeholder in the carousel** (2026-08-23, owner-
   supplied). All three slides now carry the owner's own write-ups, instrument (Private Credit
   / Private Equity), year (2026), a "Current" status badge, and a link to the company site.

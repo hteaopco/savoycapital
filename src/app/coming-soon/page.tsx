@@ -57,20 +57,6 @@ export default function ComingSoon() {
           Coming soon.
         </h1>
 
-        <p
-          style={{
-            margin: 0,
-            fontSize: 16,
-            fontWeight: 500,
-            lineHeight: 1.65,
-            color: C.textMuted,
-            maxWidth: 520,
-          }}
-        >
-          The investor portal is not open yet. If you need something in the
-          meantime, reach out to Rodney or Jett directly.
-        </p>
-
         <Link
           href="/"
           className="inline-flex items-center"

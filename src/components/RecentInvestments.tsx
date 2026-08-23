@@ -2,16 +2,13 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  Pause,
-  Play,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { C } from "./palette";
 
-const AUTOPLAY_MS = 3000;
+const AUTOPLAY_MS = 6000;
+
+/** design/DESIGN_SYSTEM.md § 0.8: "No animations over 200ms." */
+const FADE_MS = 200;
 
 type Investment = {
   name: string;
@@ -28,13 +25,9 @@ type Investment = {
     width: number;
     height: number;
     /**
-     * "logo" sits centered inside the panel's padding; "photo" fills the frame
+     * "logo" sits centered inside the slide's padding; "photo" fills the frame
      * edge to edge. The supplied assets are not the same kind of image (see
-     * uploads/README.md), so the panel adapts rather than pretending they match.
-     *
-     * The PANEL's height is fixed either way (h-[200px] md:h-[280px] on the
-     * container below). That is what keeps all three slides the same size
-     * regardless of the image's aspect ratio.
+     * uploads/README.md), so the slide adapts rather than pretending they match.
      */
     treatment: "logo" | "photo";
   };
@@ -91,7 +84,7 @@ const INVESTMENTS: Investment[] = [
   },
 ];
 
-const controlButton: React.CSSProperties = {
+const arrowButton: React.CSSProperties = {
   width: 44,
   height: 44,
   display: "flex",
@@ -101,6 +94,15 @@ const controlButton: React.CSSProperties = {
   border: `1px solid ${C.border}`,
   background: C.bg,
   color: C.text,
+  flexShrink: 0,
+};
+
+const tag: React.CSSProperties = {
+  padding: "4px 10px",
+  borderRadius: 4,
+  fontSize: 11,
+  fontWeight: 800,
+  letterSpacing: ".04em",
 };
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
@@ -124,17 +126,40 @@ function useReducedMotion() {
   );
 }
 
+/**
+ * Every slide is rendered and stacked in one grid cell; `active` fades between
+ * them. Two things fall out of that which are worth keeping:
+ *
+ *  - The container sizes to the TALLEST slide, so the card never jumps as the
+ *    carousel advances — no fixed height to overflow on a narrow screen.
+ *  - All three write-ups are in the server-rendered HTML rather than appearing
+ *    only on interaction, so a crawler or a JS-off reader sees the whole
+ *    portfolio.
+ *
+ * `visibility` is what keeps an inactive slide's link out of the tab order; it
+ * is delayed by the fade so the outgoing slide stays painted while it fades.
+ */
+function stackedSlide(active: boolean, instant: boolean): React.CSSProperties {
+  return {
+    gridArea: "1 / 1",
+    opacity: active ? 1 : 0,
+    visibility: active ? "visible" : "hidden",
+    transition: instant
+      ? "none"
+      : `opacity ${FADE_MS}ms ease, visibility 0s linear ${active ? "0s" : `${FADE_MS}ms`}`,
+  };
+}
+
 export function RecentInvestments() {
   const [index, setIndex] = useState(0);
+  const [stopped, setStopped] = useState(false);
   const count = INVESTMENTS.length;
 
   // An element that moves on its own is exactly what prefers-reduced-motion is
-  // for, so it sets the DEFAULT. An explicit press of the button overrides it in
-  // either direction — a play button that does nothing would be worse than not
-  // honoring the preference at all.
+  // for. With no play control on the page, honoring it means the carousel simply
+  // does not auto-advance — the arrows still work.
   const reducedMotion = useReducedMotion();
-  const [override, setOverride] = useState<boolean | null>(null);
-  const playing = override ?? !reducedMotion;
+  const playing = !stopped && !reducedMotion;
 
   useEffect(() => {
     if (!playing) return;
@@ -145,10 +170,10 @@ export function RecentInvestments() {
     return () => window.clearInterval(id);
   }, [playing, count]);
 
-  // Any manual move stops the autoplay — a carousel that keeps sliding out from
-  // under someone who just took control is the whole reason people hate them.
+  // Any manual move stops the autoplay for good — a carousel that keeps sliding
+  // out from under someone who just took control is why people hate them.
   const goTo = useCallback((next: number) => {
-    setOverride(false);
+    setStopped(true);
     setIndex(next);
   }, []);
 
@@ -158,27 +183,16 @@ export function RecentInvestments() {
   );
   const next = useCallback(() => goTo((index + 1) % count), [goTo, index, count]);
 
-  const current = INVESTMENTS[index];
-  const isPhoto = current.image.treatment === "photo";
-
-  const controls = (
-    <div className="flex items-center gap-2">
-      <button
-        type="button"
-        onClick={() => setOverride(!playing)}
-        aria-label={playing ? "Pause automatic rotation" : "Resume automatic rotation"}
-        aria-pressed={!playing}
-        style={controlButton}
-      >
-        {playing ? <Pause size={17} /> : <Play size={17} />}
-      </button>
-      <button type="button" onClick={prev} aria-label="Previous investment" style={controlButton}>
-        <ChevronLeft size={18} />
-      </button>
-      <button type="button" onClick={next} aria-label="Next investment" style={controlButton}>
-        <ChevronRight size={18} />
-      </button>
-    </div>
+  // Rendered in two places — top right, and flanking the dots below the card.
+  const arrow = (direction: "prev" | "next") => (
+    <button
+      type="button"
+      onClick={direction === "prev" ? prev : next}
+      aria-label={direction === "prev" ? "Previous investment" : "Next investment"}
+      style={arrowButton}
+    >
+      {direction === "prev" ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+    </button>
   );
 
   return (
@@ -211,7 +225,10 @@ export function RecentInvestments() {
             </h1>
           </div>
 
-          <div className="hidden md:block">{controls}</div>
+          <div className="flex items-center gap-2">
+            {arrow("prev")}
+            {arrow("next")}
+          </div>
         </div>
 
         <div
@@ -223,160 +240,165 @@ export function RecentInvestments() {
             background: C.bg,
           }}
         >
-          {/*
-           * Fixed height, not min-height. Previously the panel grew to fit the
-           * image, so HTeaO's taller mark made its slide taller than the other
-           * two and the card resized as the carousel advanced. The panel is now
-           * a constant box and every image is contained inside it.
-           */}
+          {/* Image — fixed height so every slide is the same box. */}
           <div
-            className={`flex h-[200px] items-center justify-center md:h-[280px] ${
-              isPhoto ? "p-0" : "p-5 md:p-8"
-            }`}
+            className="grid h-[200px] md:h-[280px]"
             style={{
-              position: "relative",
               border: `1px solid ${C.border}`,
               borderRadius: 12,
               background: C.bg,
               overflow: "hidden",
             }}
           >
-            {isPhoto ? (
-              <Image
-                src={current.image.src}
-                alt={current.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 520px"
-                style={{ objectFit: "cover" }}
-              />
-            ) : (
-              <Image
-                src={current.image.src}
-                alt={current.name}
-                width={current.image.width}
-                height={current.image.height}
-                priority={index === 0}
-                style={{
-                  display: "block",
-                  width: "auto",
-                  height: "auto",
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  objectFit: "contain",
-                }}
-              />
-            )}
+            {INVESTMENTS.map((investment, i) => {
+              const isPhoto = investment.image.treatment === "photo";
+              return (
+                <div
+                  key={investment.name}
+                  aria-hidden={i !== index}
+                  className={`relative flex items-center justify-center ${
+                    isPhoto ? "p-0" : "p-5 md:p-8"
+                  }`}
+                  style={stackedSlide(i === index, reducedMotion)}
+                >
+                  {isPhoto ? (
+                    <Image
+                      src={investment.image.src}
+                      alt={investment.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 520px"
+                      style={{ objectFit: "cover" }}
+                    />
+                  ) : (
+                    <Image
+                      src={investment.image.src}
+                      alt={investment.name}
+                      width={investment.image.width}
+                      height={investment.image.height}
+                      priority={i === 0}
+                      style={{
+                        display: "block",
+                        width: "auto",
+                        height: "auto",
+                        maxWidth: "100%",
+                        maxHeight: "100%",
+                        objectFit: "contain",
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
 
-          <div className="flex flex-col justify-center gap-5">
-            <div className="flex flex-col gap-2">
+          {/* Copy — grid-stacked, so the card sizes to the longest write-up. */}
+          <div className="grid">
+            {INVESTMENTS.map((investment, i) => (
               <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: ".1em",
-                  color: C.textDim,
-                  fontVariantNumeric: "tabular-nums",
-                }}
+                key={investment.name}
+                aria-hidden={i !== index}
+                className="flex flex-col justify-center gap-5"
+                style={stackedSlide(i === index, reducedMotion)}
               >
-                {index + 1} of {count}
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <h2
+                <div className="flex flex-col gap-2">
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: ".1em",
+                      color: C.textDim,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {i + 1} of {count}
+                  </div>
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: "clamp(22px, 2.6vw, 28px)",
+                      fontWeight: 800,
+                      letterSpacing: "-0.02em",
+                      lineHeight: 1.2,
+                      color: C.text,
+                    }}
+                  >
+                    {investment.name}
+                  </h2>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    style={{
+                      ...tag,
+                      background: C.accentBg,
+                      border: `1px solid ${C.accentBorder}`,
+                      color: C.accent,
+                    }}
+                  >
+                    {investment.kind}
+                  </span>
+                  <span
+                    style={{
+                      ...tag,
+                      background: C.bgRow,
+                      border: `1px solid ${C.border}`,
+                      color: C.textMuted,
+                      fontWeight: 700,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {investment.year}
+                  </span>
+                  {/* Green per the palette's convention: positive / active state. */}
+                  <span
+                    style={{
+                      ...tag,
+                      background: C.greenBg,
+                      border: `1px solid ${C.greenBorder}`,
+                      color: C.green,
+                    }}
+                  >
+                    {investment.status}
+                  </span>
+                </div>
+
+                <p
                   style={{
                     margin: 0,
-                    fontSize: "clamp(22px, 2.6vw, 28px)",
-                    fontWeight: 800,
-                    letterSpacing: "-0.02em",
-                    lineHeight: 1.2,
-                    color: C.text,
+                    fontSize: 15,
+                    fontWeight: 500,
+                    lineHeight: 1.7,
+                    color: C.textMuted,
                   }}
                 >
-                  {current.name}
-                </h2>
-                {/* Green per the palette's convention: positive / active state. */}
-                <span
+                  {investment.blurb}
+                </p>
+
+                <a
+                  href={investment.website.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center self-start"
                   style={{
-                    padding: "4px 10px",
-                    borderRadius: 4,
-                    background: C.greenBg,
-                    border: `1px solid ${C.greenBorder}`,
-                    color: C.green,
-                    fontSize: 11,
-                    fontWeight: 800,
-                    letterSpacing: ".04em",
+                    gap: 6,
+                    color: C.accent,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    textDecoration: "none",
                   }}
                 >
-                  {current.status}
-                </span>
+                  {investment.website.label}
+                  <ExternalLink size={14} />
+                </a>
               </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 4,
-                  background: C.accentBg,
-                  border: `1px solid ${C.accentBorder}`,
-                  color: C.accent,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  letterSpacing: ".04em",
-                }}
-              >
-                {current.kind}
-              </span>
-              <span
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 4,
-                  background: C.bgRow,
-                  border: `1px solid ${C.border}`,
-                  color: C.textMuted,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: ".04em",
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {current.year}
-              </span>
-            </div>
-
-            <p
-              style={{
-                margin: 0,
-                fontSize: 15,
-                fontWeight: 500,
-                lineHeight: 1.7,
-                color: C.textMuted,
-              }}
-            >
-              {current.blurb}
-            </p>
-
-            <a
-              href={current.website.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center self-start"
-              style={{
-                gap: 6,
-                color: C.accent,
-                fontSize: 13,
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              {current.website.label}
-              <ExternalLink size={14} />
-            </a>
+            ))}
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-4 pt-6 md:justify-center">
+        {/* Arrows flanking the dots, mirroring the pair up top. */}
+        <div className="flex items-center justify-center gap-4 pt-6">
+          {arrow("prev")}
           <div className="flex items-center gap-2">
             {INVESTMENTS.map((investment, i) => (
               <button
@@ -392,12 +414,12 @@ export function RecentInvestments() {
                   border: "none",
                   borderRadius: 999,
                   background: i === index ? C.accent : C.borderStrong,
+                  transition: reducedMotion ? "none" : `width ${FADE_MS}ms ease`,
                 }}
               />
             ))}
           </div>
-
-          <div className="md:hidden">{controls}</div>
+          {arrow("next")}
         </div>
       </div>
     </div>

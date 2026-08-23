@@ -17,7 +17,9 @@ The public site is deliberately minimal: a nav, the **Our Portfolio** carousel (
 Fluid Controls, HTeaO, Marucci) and nothing else. The instrument cards and the footer were
 cut by the owner "until we get more formal." Investor login goes to `/coming-soon`.
 All three slides carry the owner's real copy — write-up, instrument, year, "Current" status
-and a company link — so **no `[BRACKETED]` placeholder remains on the public page.**
+and a company link — so **no `[BRACKETED]` placeholder remains on the public page.** The
+carousel crossfades every 6s, stops for good on any manual move, and renders all three slides
+server-side.
 **The page carries no securities disclosure** — the placeholder went with the footer, and
 real language has to land before anyone is pointed at the site. That is now the last thing
 standing between this page and being promotable.
