@@ -31,17 +31,20 @@ type Investment = {
     width: number;
     height: number;
     /**
-     * "logo" sits centered inside the slide's padding; "photo" runs edge to
-     * edge with no padding. The supplied assets are not the same kind of image
-     * (see uploads/README.md), so the slide adapts rather than pretending they
-     * match.
+     * "logo" sits centered inside the slide's padding; "photo" fills the frame
+     * edge to edge. The supplied assets are not the same kind of image (see
+     * uploads/README.md), so the slide adapts rather than pretending they match.
      *
-     * **Neither one crops any more** (owner, 2026-08-24: "the other photos look
-     * good, but this one is still clipped"). "photo" used `cover`, which fills
-     * the frame by scaling up and slicing off whatever does not fit — on a
-     * 900x412 image in a ~478x280 frame that took the left third away,
-     * including the text baked into it. The difference between the two
-     * treatments is now padding alone.
+     * **"photo" uses `cover` and therefore CROPS, and that is settled** (owner,
+     * 2026-08-24). It was changed to `contain` so nothing was cut off, shipped,
+     * looked at, and reverted: "that looks worse, lets just revert...it looked
+     * better before". A 900x412 photo in a ~478x280 frame either loses its
+     * edges or gains letterbox bands, and the owner picked the crop.
+     *
+     * So a later pass will notice the Marucci slide is missing its left third
+     * and read it as the same defect that was fixed on the LOGO branch. It is
+     * not. Do not re-raise it. If a photo's crop ever needs to change, the fix
+     * is the source image's aspect ratio, not this property.
      */
     treatment: "logo" | "photo";
   };
@@ -293,16 +296,7 @@ export function RecentInvestments() {
                       alt={investment.name}
                       fill
                       sizes="(max-width: 768px) 100vw, 520px"
-                      priority={i === 0}
-                      // `contain`, not `cover`. Cover fills the frame by
-                      // scaling up and cropping the overflow, which on a
-                      // 900x412 photo in a ~478x280 frame cut off the left
-                      // third — text included. Contain shows the whole image
-                      // and letterboxes it against the card instead.
-                      //
-                      // Edge to edge still means something: a photo carries no
-                      // padding, a logo does. That is now the only difference.
-                      style={{ objectFit: "contain" }}
+                      style={{ objectFit: "cover" }}
                     />
                   ) : (
                     /*
