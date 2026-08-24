@@ -8,8 +8,20 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
-- **The Marucci photo was still cropped; `cover` is gone from the carousel** (owner,
-  2026-08-24). The previous fix changed the LOGO branch only. The photo branch still used
+- **The carousel photo goes back to `cover`, and the crop is now a settled decision** (owner,
+  2026-08-24: "that looks worse, lets just revert...it looked better before"). Shipped as
+  `contain` so nothing was cut off, looked at on the deployed site, and reverted within the
+  hour. A 900x412 photo in a ~478x280 frame either loses its edges or gains letterbox bands;
+  the owner saw both and picked the crop.
+  **The revert is exact** — the component is byte-identical to its pre-change state, so the
+  LOGO fix from the previous PR is untouched and only the photo branch moved back.
+  The type carries a note saying the crop is deliberate and that `contain` was tried and
+  rejected, because the next agent to look at that slide will see a photo missing its left
+  third and recognise it as the defect that was just fixed one branch over. It is not. If a
+  photo's crop needs to change, the lever is the source image's aspect ratio.
+
+- **REVERTED, same day — see the entry above.** ~~The Marucci photo was still cropped;
+  `cover` is gone from the carousel~~ (owner, 2026-08-24). The previous fix changed the LOGO branch only. The photo branch still used
   `objectFit: cover`, which fills a frame by scaling up and slicing off whatever does not
   fit — on a 900x412 image in a ~478x280 frame that removed the left third, text baked into
   the photo included. Now `contain`, like the logos.
