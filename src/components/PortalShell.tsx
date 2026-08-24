@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton, useClerk, useUser } from "@clerk/nextjs";
@@ -208,6 +208,36 @@ export type PortalShellProps = {
 export function PortalShell({ title, children }: PortalShellProps) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+
+  /**
+   * `DESIGN_SYSTEM.md` § 7: "every modal closes on Esc." The drawer is a modal —
+   * it covers the page with `C.overlay` and takes the tap — so it owes the same
+   * behaviour, and a scrim you can only dismiss by tapping it is unusable to
+   * anyone driving this from a keyboard.
+   *
+   * Focus goes back to the menu button on close. Without that, dismissing the
+   * drawer drops focus to `<body>` and the next Tab restarts from the top of the
+   * document — the control you just used is suddenly nowhere.
+   *
+   * NOT a focus trap. That needs a sentinel pair and a scroll lock, it belongs
+   * with the mobile seat's drawer work rather than bolted on here, and Esc plus
+   * focus return is the part § 7 actually names. Called out so the gap is a known
+   * one rather than an oversight.
+   */
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [drawerOpen]);
 
   return (
     <div className="flex" style={{ minHeight: "100vh", background: C.bg }}>
@@ -244,6 +274,7 @@ export function PortalShell({ title, children }: PortalShellProps) {
           }}
         >
           <button
+            ref={menuButtonRef}
             onClick={() => setDrawerOpen(true)}
             aria-label="Open menu"
             aria-expanded={drawerOpen}
@@ -265,7 +296,7 @@ export function PortalShell({ title, children }: PortalShellProps) {
           <div
             className="md:hidden"
             style={{ position: "fixed", inset: 0, background: C.overlay, zIndex: 70 }}
-            onClick={() => setDrawerOpen(false)}
+            onClick={closeDrawer}
           >
             <div
               onClick={(e) => e.stopPropagation()}
@@ -284,7 +315,10 @@ export function PortalShell({ title, children }: PortalShellProps) {
               >
                 <div style={wordmark}>Investor Portal</div>
                 <button
-                  onClick={() => setDrawerOpen(false)}
+                  onClick={() => {
+                    closeDrawer();
+                    menuButtonRef.current?.focus();
+                  }}
                   aria-label="Close menu"
                   className="inline-flex items-center justify-center min-h-[44px]"
                   style={{ width: 44, border: "none", background: "transparent", color: C.textMuted }}
@@ -293,7 +327,7 @@ export function PortalShell({ title, children }: PortalShellProps) {
                 </button>
               </div>
               {/* Same NAV array as the sidebar — § 2's "one source of truth". */}
-              <NavBody pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
+              <NavBody pathname={pathname} onNavigate={closeDrawer} />
               <AccountBlock />
             </div>
           </div>

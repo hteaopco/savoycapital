@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { C } from "./palette";
+import { bodyLead, display, displaySm, eyebrow } from "./type";
 
 const AUTOPLAY_MS = 6000;
 
@@ -108,12 +109,44 @@ const arrowButton: React.CSSProperties = {
   flexShrink: 0,
 };
 
+/**
+ * A badge. `borderRadius: 4` is `DESIGN_SYSTEM.md` § 2's badge/pill step and
+ * § 4's "circular / pill badges — always rectangle `borderRadius: 4`", which
+ * supersedes `AP_DESIGN_REFERENCE.md` § 4's status pill at 8 (owner, 2026-08-24;
+ * see that file's banner). The portal's "% DEPLOYED" pill is the same 4.
+ */
 const tag: React.CSSProperties = {
   padding: "4px 10px",
   borderRadius: 4,
   fontSize: 11,
   fontWeight: 800,
   letterSpacing: ".04em",
+};
+
+/**
+ * The instrument badge is NEUTRAL, and that is the fix for a real collision
+ * rather than a style preference.
+ *
+ * It used to be accent-tinted on every slide. Meanwhile the portal's chart paints
+ * Private Equity accent and Private Credit green — so "Private Credit" read blue
+ * here and green there, and green meant "Private Credit" in one place and
+ * "Current" in the other. `DESIGN_SYSTEM.md` § 0.3: color = meaning, never
+ * decoration; § 4 forbidden: "accent color used decoratively — reserved for
+ * primary action and active state."
+ *
+ * The rule the two surfaces now share: **a badge's tone encodes STATE, never
+ * category.** Instrument is a category, so it is neutral. "Current" is a positive
+ * state, so it stays green and green means exactly that. The donut keeps accent
+ * and green as ARC IDENTITY — a chart is a separate vocabulary the design system
+ * has no words for (see `FundAllocation.tsx`'s header), and its legend chips
+ * mirror the arcs rather than badging anything.
+ */
+const categoryTag: React.CSSProperties = {
+  ...tag,
+  background: C.bgRow,
+  border: `1px solid ${C.border}`,
+  color: C.textMuted,
+  fontWeight: 700,
 };
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
@@ -211,29 +244,8 @@ export function RecentInvestments() {
     <div style={{ background: C.bgAlt }}>
       <div className="mx-auto max-w-[1120px] px-5 py-14 md:px-10 md:pb-24 md:pt-20">
         <div className="mb-10 flex flex-col gap-3">
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: ".1em",
-              color: C.accent,
-            }}
-          >
-            Recent Investments
-          </div>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "clamp(30px, 4.2vw, 40px)",
-              fontWeight: 800,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.1,
-              color: C.text,
-            }}
-          >
-            Our Portfolio
-          </h1>
+          <div style={{ ...eyebrow, color: C.accent }}>Recent Investments</div>
+          <h1 style={{ ...display, color: C.text }}>Our Portfolio</h1>
         </div>
 
         <div
@@ -318,44 +330,21 @@ export function RecentInvestments() {
                   >
                     {i + 1} of {count}
                   </div>
-                  <h2
-                    style={{
-                      margin: 0,
-                      fontSize: "clamp(22px, 2.6vw, 28px)",
-                      fontWeight: 800,
-                      letterSpacing: "-0.02em",
-                      lineHeight: 1.2,
-                      color: C.text,
-                    }}
-                  >
+                  <h2 style={{ ...displaySm, color: C.text }}>
                     {investment.name}
                   </h2>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                  <span style={categoryTag}>{investment.kind}</span>
                   <span
-                    style={{
-                      ...tag,
-                      background: C.accentBg,
-                      border: `1px solid ${C.accentBorder}`,
-                      color: C.accent,
-                    }}
-                  >
-                    {investment.kind}
-                  </span>
-                  <span
-                    style={{
-                      ...tag,
-                      background: C.bgRow,
-                      border: `1px solid ${C.border}`,
-                      color: C.textMuted,
-                      fontWeight: 700,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
+                    style={{ ...categoryTag, fontVariantNumeric: "tabular-nums" }}
                   >
                     {investment.year}
                   </span>
-                  {/* Green per the palette's convention: positive / active state. */}
+                  {/* The ONLY toned badge on this card. Green = positive state,
+                      and now nothing else on either surface says green for a
+                      category — see `categoryTag` above. */}
                   <span
                     style={{
                       ...tag,
@@ -368,15 +357,7 @@ export function RecentInvestments() {
                   </span>
                 </div>
 
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 15,
-                    fontWeight: 500,
-                    lineHeight: 1.7,
-                    color: C.textMuted,
-                  }}
-                >
+                <p style={{ ...bodyLead, color: C.textMuted }}>
                   {investment.blurb}
                 </p>
 
@@ -404,7 +385,24 @@ export function RecentInvestments() {
         {/* Arrows flanking the dots, mirroring the pair up top. */}
         <div className="flex items-center justify-center gap-4 pt-6">
           {arrow("prev")}
-          <div className="flex items-center gap-2">
+          {/*
+            The dot is the INDICATOR; the button around it is the target.
+
+            The bar itself is 6px tall — far under § 7's floor and under WCAG 2.2
+            AA's 24×24 minimum, with the three sitting 8px apart so the spacing
+            exception does not rescue them either. It was the only control on
+            either surface that failed outright.
+
+            Fixed the way this repo already fixes tap targets: the hit area grows
+            on TOUCH and the desktop tree is byte-identical. On mobile each button
+            is 24×44 (9px of transparent padding either side of the bar) with the
+            row's gap collapsed to 0 so the padding supplies the spacing; from
+            `md:` up the padding goes away and the original 8px gap returns. A
+            pointer is not a thumb — the same reading `FundAllocation` runs on.
+
+            Sizing lives in the className, theming in the style prop.
+          */}
+          <div className="flex items-center gap-0 md:gap-2">
             {INVESTMENTS.map((investment, i) => (
               <button
                 key={investment.name}
@@ -412,16 +410,23 @@ export function RecentInvestments() {
                 onClick={() => goTo(i)}
                 aria-label={`Show ${investment.name}`}
                 aria-current={i === index}
-                style={{
-                  width: i === index ? 28 : 6,
-                  height: 6,
-                  padding: 0,
-                  border: "none",
-                  borderRadius: 999,
-                  background: i === index ? C.accent : C.borderStrong,
-                  transition: reducedMotion ? "none" : `width ${FADE_MS}ms ease`,
-                }}
-              />
+                // No `padding` here: an inline value beats the Tailwind class and
+                // the touch target would silently stay 6px wide while reading as
+                // fixed. Sizing is the className's job, theming is this prop's.
+                className="flex items-center justify-center min-h-[44px] px-[9px] py-0 md:min-h-0 md:px-0"
+                style={{ border: "none", background: "transparent" }}
+              >
+                <span
+                  style={{
+                    display: "block",
+                    width: i === index ? 28 : 6,
+                    height: 6,
+                    borderRadius: 999,
+                    background: i === index ? C.accent : C.borderStrong,
+                    transition: reducedMotion ? "none" : `width ${FADE_MS}ms ease`,
+                  }}
+                />
+              </button>
             ))}
           </div>
           {arrow("next")}

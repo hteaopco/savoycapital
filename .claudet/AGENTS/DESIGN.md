@@ -64,20 +64,29 @@ right**, and the job is that it stays right without the owner having to watch.
 **The central lesson of this seat, and the one that will bite you:**
 
 **The gate proves *tokens and mechanisms*, never *values*.** The lint proves you used a
-palette token; it cannot prove you used the right one. `C.overlay` used as a shadow passes
-every rule. `C.green` meaning "Private Credit" in the portal and "positive" on the public
-page passes every rule, and is the same product telling a reader two different things with
-one color. A card at radius 10 beside a card at radius 12 passes every rule. That residue —
-typography scale, radius, spacing, semantic color, whether a screen actually *matches* its
-exemplar, whether a shared-component change shifted an unrelated screen — is permanently
-the seat's job, and `ui-governance.md` § 3 names it so nobody mistakes green CI for a
-review.
+palette token; it cannot prove you used the right one. Every finding in this seat's first
+audit passed every rule that existed: `C.green` meant "Private Credit" in the portal and
+"Current" on the public page — the same product telling a reader two different things with
+one color — and a card shipped at radius 10 beside a card at radius 12. Both are fixed and
+one became a rule; the *class* never goes away. That residue — semantic color, type scale,
+whether a screen actually *matches* its exemplar, whether a shared-component change shifted
+an unrelated screen — is permanently the seat's job, and `ui-governance.md` § 3 names it so
+nobody mistakes green CI for a review.
 
 **The rest:**
 
 - **Measure; do not argue from release notes.** A dependency review ending in "a major bump
   probably renames icons" is worthless. Resolve the icons. Run PostCSS and diff the emitted
   media queries. **Install it in the scratchpad and look.**
+- **Measure the CANON too, before writing a rule against it.** The first audit reported nine
+  spacing values "off `DESIGN_SYSTEM.md` § 2's scale". Reading § 3 showed the design system's
+  own primitives ship `padding: "10px 14px"` and `"48px 16px"` — so the scale is layout
+  rhythm, not a law about component padding, and a `spacing-scale` rule would have failed
+  honest code and pushed agents to re-theme working components. **A finding derived from one
+  section of a doc is a hypothesis until you have read what the doc does elsewhere.**
+- **Snapshot before you mutation-probe.** Probing rules with `git checkout <file>` to undo
+  each mutation *silently reverted four unstaged fixes* in the same file, and the gate went
+  green on a tree that had lost them. Copy the tree to the scratchpad and restore from that.
 - **Test the gate like product code.** `--self-test` runs in CI ahead of the gate because a
   rule with a broken regex reads green forever, which is worse than no rule. New rule → new
   fixture, same PR — and **mutate the thing it guards in the real repo and confirm it goes
@@ -178,11 +187,16 @@ Stated plainly, because the seat is easy to mistake for "makes things pretty":
 
 ## Your instruments
 
-- **`scripts/design-lint.mjs`** — 9 ratcheted rules (`raw-hex`, `raw-rgba`, `input-number`,
-  `foreign-icons`, `shadcn-import`, `tailwind-theme`, `cursor-pointer`, `breakpoint-floor`,
-  `font-family-literal`) plus a **hard, baseline-free mirror gate** on
-  `design/palette.ts` ↔ `src/components/palette.ts`. `--report` for the debt profile;
-  `--self-test` for the rules themselves; `--update` only after genuinely fixing violations.
+- **`scripts/design-lint.mjs`** — 11 ratcheted rules (`raw-hex`, `raw-rgba`, `input-number`,
+  `foreign-icons`, `inline-svg`, `shadcn-import`, `tailwind-theme`, `radius-scale`,
+  `cursor-pointer`, `breakpoint-floor`, `font-family-literal`) plus a **hard, baseline-free
+  mirror gate** on `design/palette.ts` ↔ `src/components/palette.ts`. `--report` for the debt
+  profile; `--self-test` for the rules themselves; `--update` only after genuinely fixing
+  violations. **Read `RADIUS_SCALE`'s docblock before adding a value rule** — it records why
+  `spacing-scale` does not and must not exist.
+- **`src/components/type.ts`** — the public surface's authored display scale. `design/` covers
+  an internal app and says so; this is the four sizes a marketing page needs, in one place
+  rather than as literals in two components. Adding a fifth is a conversation, not a constant.
 - **`scripts/lib/mask-comments.mjs`** — blanks comment bodies while preserving offsets.
   Every scan you write uses it, or your rule reads its own explanatory prose as a violation.
 - **`design/`** — palette, full design system, the AP pattern cheat-sheet, the mobile spec,

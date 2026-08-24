@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
 import { C } from "@/components/palette";
+import { eyebrow } from "@/components/type";
 
 export const metadata: Metadata = {
   title: "Investor Login — Savoy Capital",
@@ -33,17 +34,7 @@ export default function SignInPage() {
 
       <div className="mx-auto flex max-w-[1120px] flex-col items-center gap-8 px-5 py-16 md:px-10 md:py-24">
         <div className="flex flex-col items-center" style={{ gap: 6 }}>
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: ".1em",
-              color: C.accent,
-            }}
-          >
-            Investor Login
-          </div>
+          <div style={{ ...eyebrow, color: C.accent }}>Investor Login</div>
           <div
             style={{
               fontSize: 13,

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { C } from "@/components/palette";
+import { display, eyebrow } from "@/components/type";
 
 export const metadata: Metadata = {
   title: "Investor Portal — Savoy Capital",
@@ -32,34 +33,15 @@ export default function ComingSoon() {
       </div>
 
       <div className="mx-auto flex max-w-[1120px] flex-col items-start gap-6 px-5 py-24 md:px-10 md:py-32">
-        <div
-          style={{
-            fontSize: 10,
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: ".1em",
-            color: C.accent,
-          }}
-        >
-          Investor Portal
-        </div>
+        <div style={{ ...eyebrow, color: C.accent }}>Investor Portal</div>
 
-        <h1
-          style={{
-            margin: 0,
-            fontSize: "clamp(30px, 4.2vw, 40px)",
-            fontWeight: 800,
-            letterSpacing: "-0.025em",
-            lineHeight: 1.1,
-            color: C.text,
-          }}
-        >
-          Coming soon.
-        </h1>
+        <h1 style={{ ...display, color: C.text }}>Coming soon.</h1>
 
         <Link
           href="/"
-          className="inline-flex items-center"
+          // ~41px as written — just under § 7's floor on touch, unchanged on
+          // desktop where a pointer is doing the clicking.
+          className="inline-flex items-center min-h-[44px] md:min-h-0"
           style={{
             gap: 8,
             marginTop: 8,

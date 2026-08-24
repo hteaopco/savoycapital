@@ -7,5 +7,7 @@
   "tailwind-theme": 0,
   "cursor-pointer": 0,
   "breakpoint-floor": 0,
-  "font-family-literal": 0
+  "font-family-literal": 0,
+  "radius-scale": 0,
+  "inline-svg": 0
 }

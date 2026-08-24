@@ -48,6 +48,20 @@ const PALETTE = join("src", "components", "palette.ts");
 /** The root layout defines the font stack the whole app then inherits. */
 const FONT_ROOT = join("src", "app", "layout.tsx");
 
+/**
+ * `DESIGN_SYSTEM.md` § 2's radius scale. Note what is NOT here: **7**, which
+ * `AP_DESIGN_REFERENCE.md` § 3 lists for a pill tab. That file is superseded on
+ * this point (owner, 2026-08-24) and carries a banner saying so.
+ *
+ * There is deliberately no companion `spacing-scale` rule. § 2 lists a spacing
+ * scale of 4/6/8/10/12/16/20/24, but § 3's own primitives ship `padding:
+ * "10px 14px"` and `"48px 16px"` — the canon does not hold itself to that scale
+ * for component-internal padding, so a rule enforcing it would fail honest code
+ * and push agents to re-theme working components. Measured before writing, which
+ * is why the rule does not exist.
+ */
+const RADIUS_SCALE = new Set([0, 4, 6, 8, 10, 12, 16, 999]);
+
 /** `text-*` utilities that position text rather than theme it. */
 const TEXT_LAYOUT = new Set([
   "text-left", "text-center", "text-right", "text-justify", "text-start",
@@ -99,6 +113,15 @@ const rules = [
       ),
   },
   {
+    id: "inline-svg",
+    why:
+      "DESIGN_SYSTEM.md § 4: don't hand-roll an ICON as SVG — use lucide. Inline " +
+      "SVG for a chart, logo or data visualisation is expressly allowed, and says " +
+      "so at the call site with a `design-ok:` reason.",
+    scan: ({ masked }) => matchAll(masked, /<svg[\s>]/g),
+    waivable: true,
+  },
+  {
     id: "shadcn-import",
     why: "No shadcn components or class tokens. DESIGN_SYSTEM § 4.",
     scan: ({ masked }) => [
@@ -118,6 +141,23 @@ const rules = [
           token,
         );
       }),
+  },
+  {
+    id: "radius-scale",
+    why:
+      "DESIGN_SYSTEM.md § 2 radius scale: 4 badges/pills, 6 small chips, 8 " +
+      "buttons/inputs, 10 larger buttons and dashed empty cards, 12 cards/panels, " +
+      "16 modal/sheet top corners, 999 circular. There is no 7 — AP_DESIGN_REFERENCE " +
+      "§ 3's 6/7/8/10/12 is superseded (owner, 2026-08-24).",
+    scan: ({ masked }) =>
+      matchAll(masked, /borderRadius\s*:\s*("[^"]*"|[0-9]+)/g).filter(({ groups }) => {
+        const raw = groups[1];
+        // "50%" is the circular step spelled as a percentage — same decision as 999.
+        if (raw === '"50%"') return false;
+        const px = Number(raw.replace(/["px]/g, ""));
+        return !RADIUS_SCALE.has(px);
+      }),
+    waivable: true,
   },
   {
     id: "cursor-pointer",
@@ -292,6 +332,10 @@ const FIXTURES = [
   ["breakpoint-floor", 'src/x.tsx', '<div className="sm:flex" />', '<div className="md:flex 2xl:block" />'],
   ["breakpoint-floor", 'src/x.css', '@media (max-width: 640px) { a { color: red } }', '@media (max-width: 767px) { a { color: red } }'],
   ["font-family-literal", 'src/x.tsx', 'const a = { fontFamily: "Georgia, serif" };', 'const a = { fontFamily: "inherit" };'],
+  ["radius-scale", 'src/x.tsx', 'const a = { borderRadius: 7 };', 'const a = { borderRadius: 12 };'],
+  ["radius-scale", 'src/x.tsx', 'const a = { borderRadius: 3 };', 'const a = { borderRadius: "50%" };'],
+  ["radius-scale", 'src/x.tsx', 'const a = { borderRadius: 2 };', '// design-ok: chart vocabulary, not a badge\nconst a = { borderRadius: 2 };'],
+  ["inline-svg", 'src/x.tsx', '<svg viewBox="0 0 24 24"><path d="M0 0" /></svg>', '// design-ok: a chart, not an icon\n<svg viewBox="0 0 24 24" />'],
   // The masker itself: prose describing a rule must never trip it.
   ["raw-hex", 'src/x.tsx', 'const a = "#ff0000";', '// never write #ff0000 in a component\nconst a = C.red;'],
 ];

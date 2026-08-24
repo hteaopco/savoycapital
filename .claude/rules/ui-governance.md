@@ -32,7 +32,7 @@ Non-UI scope, modify freely: `src/app/api/**`, `src/lib/**`, `prisma/**`, `scrip
 
 ## 2. The gate: `npm run lint:design`
 
-Ten rules, wired into `npm run verify` and therefore into CI on every PR.
+Twelve rules, wired into `npm run verify` and therefore into CI on every PR.
 
 | Rule | Proves |
 |---|---|
@@ -41,6 +41,8 @@ Ten rules, wired into `npm run verify` and therefore into CI on every PR.
 | `foreign-icons` | lucide-react is the only icon library. |
 | `shadcn-import` | No shadcn components or class tokens. |
 | `tailwind-theme` | Color, radius, shadow, weight and type size are inline styles off `C` — not Tailwind classes. |
+| `radius-scale` | `borderRadius` is on `DESIGN_SYSTEM.md` § 2's scale: 4 / 6 / 8 / 10 / 12 / 16 / 999. **There is no 7.** |
+| `inline-svg` | No hand-rolled icon SVG. A chart or logo is fine and says so at the call site. |
 | `cursor-pointer` | No per-element cursor where `globals.css` already covers it. |
 | `breakpoint-floor` | No breakpoint reaches below 768px. |
 | `font-family-literal` | `fontFamily: "inherit"` everywhere but the root layout. |
@@ -67,16 +69,27 @@ The lint proves you used a palette token. **It cannot prove you used the right o
 Everything below passes every rule and can still be wrong, so it is reviewed by a person,
 every time:
 
-- **A token used for the wrong role.** `C.overlay` as a shadow. `C.green` meaning
-  "Private Credit" on one screen and "positive" on another. Color = meaning, never
+- **A token used for the wrong role.** `C.overlay` as a shadow. Color = meaning, never
   decoration (`DESIGN_SYSTEM.md` § 0.3) is a semantic claim no regex reaches.
-- **Values off the documented scales.** Spacing outside `4, 6, 8, 10, 12, 16, 20, 24`;
-  radius outside the § 2 scale; type size outside the § 2 type scale. `DESIGN_SYSTEM.md`
-  requires a *written exception in that doc* for anything off-scale — the gate does not
-  count them yet.
-- **Two screens that disagree.** A card at radius 10 beside a card at radius 12; the same
-  concept badged two different ways on two surfaces. Consistency is cross-file; the lint
-  is per-file.
+  **The standing rule this repo settled on: a badge's tone encodes STATE, never category.**
+  Instrument type is neutral; "Current" is green because green means a positive state. The
+  donut keeps accent and green as *arc identity* — a chart is a separate vocabulary the
+  design system has no words for. That rule exists because `C.green` once meant "Private
+  Credit" in the portal and "Current" on the public page, with every rule passing.
+- **Type size off the § 2 type scale.** Not linted: § 2 gives ranges ("Body 12-13px",
+  "Stat number 16-22px") rather than a set, and the public surface deliberately sits outside
+  it (`src/components/type.ts`). A rule here would be guesswork.
+- **Spacing off the § 2 spacing scale — and this one is a trap.** § 2 lists
+  `4, 6, 8, 10, 12, 16, 20, 24` and says anything else needs a written exception. But § 3's
+  **own primitives** ship `padding: "10px 14px"` and `"48px 16px"`. The canon does not hold
+  itself to that scale for component-internal padding, so **there is deliberately no
+  `spacing-scale` rule** and off-scale padding inside a component is not a finding. Treat § 2
+  as layout rhythm. Measured before concluding — the first read of this was a list of nine
+  "violations" that were nothing of the kind.
+- **Two screens that disagree.** The same concept badged two different ways on two
+  surfaces; a heading scale that exists as a literal in two files. Consistency is
+  cross-file and the lint is per-file. (Radius is the one case now mechanized — `radius-scale`
+  catches an off-scale value, though still not *the wrong on-scale value* for a given role.)
 - **Tap-target geometry.** A control's real hit area is CSS + layout + content, not a
   string. `min-h-[44px]` is greppable; a 6px-tall button is not.
 - **Whether a screen matches its exemplar** in `design/exemplars/`.
@@ -110,7 +123,10 @@ example). Never below 768px — that one the gate does enforce.
 
 When two files inside `design/` disagree with each other, `DESIGN_SYSTEM.md` wins
 (DECISIONS, 2026-08-24), and the resolution is written into the losing file's banner and
-`design/README.md`'s divergence table **in the same PR**. An undocumented divergence turns
+`design/README.md`'s divergence table **in the same PR**. Three such conflicts are already
+resolved and banner-ed in `AP_DESIGN_REFERENCE.md` — Tailwind-for-spacing, the radius scale,
+and the badge radius. **Read that banner before trusting a rule in that file**; it is the one
+labelled READ FIRST and it was wrong here on three counts. An undocumented divergence turns
 "carried from theAPlink" into a claim nobody can check, which is the only property that
 folder has.
 
@@ -120,7 +136,8 @@ code is not an amendment — it is making the doc honest — but say which one y
 ## 6. Open
 
 - **No `lint:mobile`.** § 4's second bullet is held by review only.
-- **No off-scale value rules** (`spacing-scale`, `radius-scale`, `type-scale`) and no
-  `inline-svg` rule. The first three need the scale contradictions in § 5 resolved before
-  they can be written truthfully; `inline-svg` needs one `design-ok:` line added to
-  `FundAllocation.tsx`, which is a UI-scope edit and therefore § 1 applies.
+- **No `tap-target` rule.** A control's real hit area is CSS + layout + content, so a regex
+  cannot compute it. `min-h-[44px]` is greppable; a 6px-tall button inside a padded wrapper
+  is not. Reviewed by eye, per § 3.
+- **No `spacing-scale` or `type-scale` rule**, and per § 3 that is a conclusion rather than a
+  backlog item — both would encode a rule the canon does not hold itself to.

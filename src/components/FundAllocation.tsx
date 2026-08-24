@@ -209,7 +209,9 @@ function HoldingDetail({ holding }: { holding: Holding }) {
       <div
         className="mt-2 2xl:mt-0 2xl:absolute 2xl:top-1/2 2xl:-translate-y-1/2 2xl:z-10 2xl:w-[320px] 2xl:left-[calc(100%+98px)]"
         style={{
-          borderRadius: 10,
+          // 12 = card/panel on `DESIGN_SYSTEM.md` § 2's radius scale, which
+          // supersedes AP § 3's "10 cards / 12 modals" (owner, 2026-08-24).
+          borderRadius: 12,
           border: `1px solid ${C.border}`,
           background: C.bg,
           boxShadow: C.shadowSm,
@@ -352,7 +354,11 @@ export function FundAllocation({
   return (
     <div
       style={{
-        borderRadius: 10,
+        // 12, matching `RecentInvestments`' card. `DESIGN_SYSTEM.md` § 2: 12 is
+        // cards and panels, 10 is larger buttons and dashed "empty" cards. The
+        // two surfaces shipped at 12 and 10 for a while, which is the kind of
+        // drift no lint sees and a person reading both screens does.
+        borderRadius: 12,
         border: `1px solid ${C.border}`,
         background: C.bg,
         padding: "16px 18px 18px",
@@ -373,7 +379,11 @@ export function FundAllocation({
         <span
           style={{
             padding: "4px 10px",
-            borderRadius: 8,
+            // A badge, so 4 — `DESIGN_SYSTEM.md` § 4, "circular / pill badges:
+            // always rectangle borderRadius 4". Same value the public page's
+            // tags use. Accent is right here and only here: this is the card's
+            // one active-state readout, not a category.
+            borderRadius: 4,
             background: C.accentBg,
             border: `1px solid ${C.accentBorder}`,
             color: C.accent,
@@ -399,6 +409,10 @@ export function FundAllocation({
             flexShrink: 0,
           }}
         >
+          {/* design-ok: inline SVG is a chart, not an icon. `DESIGN_SYSTEM.md`
+              § 4 permits exactly this — "inline SVG is NOT banned in general …
+              charts, custom data visualizations" — and bans hand-rolled icon
+              glyphs, which the chevron above correctly avoids. */}
           <svg
             width={208}
             height={208}
@@ -553,6 +567,10 @@ export function FundAllocation({
                       />
                     ) : null}
                   </span>
+                  {/* design-ok: radius 2 is chart vocabulary, not a badge — this
+                      chip mirrors an ARC, and § 2's scale starts at 4, which on a
+                      10px square reads as a circle and would then collide with the
+                      "no circular badges" rule. Same carve-out as the donut itself. */}
                   <span
                     style={{
                       width: 10,

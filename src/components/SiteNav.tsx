@@ -40,6 +40,12 @@ export function SiteNav({ action, trailing }: SiteNavProps) {
           {action ? (
             <Link
               href={action.href}
+              // 44px on touch, the bar's own density from md up. This is the
+              // public site's only action and it sat at ~32px, below even § 7's
+              // 36px carve-out — which would not have applied anyway, since that
+              // one is for a SECONDARY control and this is the primary. A pointer
+              // is not a thumb, so desktop is unchanged.
+              className="inline-flex items-center min-h-[44px] md:min-h-0"
               style={{
                 padding: "8px 14px",
                 borderRadius: 8,
