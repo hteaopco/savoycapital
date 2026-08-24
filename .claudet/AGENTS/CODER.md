@@ -140,9 +140,11 @@ expect the same back.
 - **GitHub through the MCP tools** for PRs, and `send_later` for PR check-ins.
 - **What this seat does NOT hold:** `src/proxy.ts` and its public-route list,
   `src/app/sign-in/`, `<ClerkProvider>` and its redirect props, Clerk keys, the Clerk
-  dashboard, and DNS. Those are the Clerk seat's. There is also **no CI in this repo** —
-  `.github/workflows/` is empty — so `npm run verify` is the only gate, and it runs on your
-  machine or not at all.
+  dashboard, and DNS. Those are the Clerk seat's.
+- **CI exists as of 2026-08-24** (#15): `.github/workflows/ci.yml` runs `npm run verify` and
+  `npm run build` on every PR, with no secrets set, so the build must keep passing without
+  Clerk keys. It does not replace your own pass — CI cannot open a browser, and every layout
+  failure this seat has shipped was invisible to typecheck and build.
 
 ## This file
 
