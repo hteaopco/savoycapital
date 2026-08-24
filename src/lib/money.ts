@@ -40,18 +40,38 @@ export function parseDollarsToCents(raw: string): number | null {
 }
 
 /**
- * Cents to a plain dollar string for an input's value — `1500000`, not
- * `$1,500,000`.
+ * Cents to a dollar string for an input's value — `1,500,000` (owner,
+ * 2026-08-24: "use the comma separator..IE instead of 10000000 make it
+ * 10,000,000").
  *
- * Deliberately unformatted: this feeds a text input the person is about to
- * edit, and commas they did not type reappearing mid-edit is the kind of thing
- * that makes a field feel possessed. Display formatting is `formatCents`.
+ * **Grouped, but no currency symbol**: this feeds a field whose label already
+ * says what it is, and a `$` inside the box is a character the person has to
+ * step over to edit the first digit.
+ *
+ * The commas are applied when a value LOADS and again on blur — never on every
+ * keystroke. Reformatting mid-word moves the caret, so typing `10000000` with
+ * live grouping lands the cursor somewhere the typist did not put it. Callers
+ * use `groupDollarInput` for the blur pass.
  */
 export function centsToDollarInput(cents: number | null | undefined): string {
   if (cents === null || cents === undefined) return "";
   const whole = Math.trunc(cents / 100);
   const remainder = Math.abs(cents % 100);
-  return remainder === 0 ? String(whole) : `${whole}.${String(remainder).padStart(2, "0")}`;
+  const grouped = whole.toLocaleString("en-US");
+  return remainder === 0 ? grouped : `${grouped}.${String(remainder).padStart(2, "0")}`;
+}
+
+/**
+ * Re-group what somebody typed, for an input's `onBlur`.
+ *
+ * Returns the input unchanged when it does not parse, so a half-typed or
+ * invalid figure is left exactly as entered for them to fix — silently
+ * rewriting or blanking a field somebody is still working on is worse than
+ * leaving it alone, and the save path rejects it anyway with a message.
+ */
+export function groupDollarInput(raw: string): string {
+  const cents = parseDollarsToCents(raw);
+  return cents === null ? raw : centsToDollarInput(cents);
 }
 
 /** Cents to a display string — `$1,500,000`. Whole dollars; funds are not priced in pennies. */

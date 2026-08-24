@@ -6,6 +6,38 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The Portfolio chart reads Postgres. There is one source for a fund figure (2026-08-24).**
+  `src/lib/portfolio.ts` builds it from `Fund.sizeCents` and each `Deal.amountCents`, grouped
+  by `Deal.instrument`. `src/content/fund-allocation.ts` keeps only the as-of date.
+  - **The reason is a reported bug, not tidiness.** Fund & Users could edit a fund size that
+    Portfolio did not render, because Portfolio rendered a hard-coded copy. The owner saved a
+    change and reported that nothing happened. Two sources for one figure always resolves
+    this way; the only question is who finds out.
+  - **What cannot be plotted is NAMED on the screen.** A deal without an amount or without an
+    instrument appears in an amber line by name, saying what it needs. Dropping it would make
+    the chart quietly disagree with the Deal Room — on a chart of a fund's money, a missing
+    row is the failure to avoid, not a tidy one.
+  - **Unallocated stays derived, and this is the load-bearing half.** `FundAllocation`
+    computes it as fund size less everything deployed, so a split that does not add up cannot
+    be drawn. `loadPortfolio` therefore returns buckets and a fund size and **never a total**.
+    The figures this chart was first built from arrived $10,000 over; accepting a total as an
+    input is how that ships.
+  - **`FUND_AS_OF` stays a literal, deliberately.** It is the date of the marks, and there are
+    no marks in the schema. `Fund.inceptionDate` and the latest investment date each answer a
+    different question, so either would put a number under a label it does not answer. When
+    positions and valuations land, this moves with them and not before.
+  - **`terms` and `fees` are free text.** What an equity vs. debt position actually holds is
+    still blocked on a person (`STATE.md`). A typed schema written now to look thorough is
+    one the real schema would start by undoing; a text column feeding a text panel is not.
+
+- **Dollar inputs group on blur, never per keystroke (2026-08-24).**
+  Owner: *"use the comma separator..IE instead of 10000000 make it 10,000,000."* Grouping on
+  every keystroke moves the caret mid-word, so typing a long figure fights back.
+  `groupDollarInput` runs on `onBlur` and `centsToDollarInput` on load; anything that does not
+  parse is returned **unchanged** rather than blanked or guessed at, because rewriting a field
+  somebody is still working on is worse than leaving it, and the save path rejects it anyway
+  with a message. `parseDollarsToCents` already stripped commas, so nothing on the wire moved.
+
 - **`lint:mobile` is built, with five rules and two deliberate departures from theAPlink's
   (owner, 2026-08-24).** `scripts/mobile-lint.mjs`, baseline `{}`, wired into `npm run verify`
   and into CI with `--self-test` ahead of the gate. It closes the gap

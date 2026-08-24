@@ -67,6 +67,7 @@ export async function GET(request: Request) {
       // $90 trillion, so the width lives in the column and not on the wire.
       amountCents: d.amountCents === null ? null : Number(d.amountCents),
       investmentDate: d.investmentDate ? d.investmentDate.toISOString().slice(0, 10) : null,
+      instrument: d.instrument,
       createdAt: d.createdAt.toISOString(),
       documentCount: d._count.documents,
     })),

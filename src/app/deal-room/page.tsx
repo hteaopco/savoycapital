@@ -85,6 +85,7 @@ export default async function DealRoomPage() {
               investmentDate: d.investmentDate
                 ? d.investmentDate.toISOString().slice(0, 10)
                 : null,
+              instrument: d.instrument,
               createdAt: d.createdAt.toISOString(),
               documentCount: d._count.documents,
             })),

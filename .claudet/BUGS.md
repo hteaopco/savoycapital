@@ -68,7 +68,7 @@ instance is fixed — say what would close it.
 **No open bugs outside the auth boundary are recorded here.** That is not a claim that none
 exist — this file is hand-maintained and only the Clerk seat has audited it (2026-08-24).
 
-## OPEN — `maskComments` desyncs, so design-lint reads its own prose as a violation
+## CLOSED 2026-08-24 (#46) — `maskComments` desyncs, so design-lint reads its own prose as a violation
 
 **Symptom.** A comment that merely *names* a forbidden pattern is reported as a violation.
 Hit on 2026-08-24: two comments explaining why money fields use a text input with a numeric
@@ -102,3 +102,18 @@ seat reported this rather than patching it.
 **What would close it.** A fix in the masker plus a fixture that puts a forbidden literal
 inside a comment late in a long file — `--self-test` currently has no case for prose that
 names the pattern it forbids, which is why this shipped.
+
+**Closed by #46** (mobile seat, 2026-08-24), which fixed the masker and added the fixture.
+The root cause was narrower than the guess above: an interpolated template literal broke out
+at `${` and never resumed, so the template's **closing** backtick was read as the **opening**
+backtick of a new string. Quoted strings now also bail at a newline, so an apostrophe in JSX
+prose (`don't`) cannot swallow the rest of a file. `DECISIONS.md` carries the full account.
+
+**Verified from this seat rather than taken on trust**, because the reproduction above is
+what filed it:
+- The line-by-line comparison on `FundUsers.tsx` (837 lines) and `DealRoom.tsx` (1,425 lines)
+  now reports **0 unmasked comment lines**. It previously desynced at roughly line 188 of the
+  first.
+- The exact original shape — an interpolated template, then `"don't"`, then a comment
+  containing the literal this repo forbids — masks correctly, so the forbidden text no longer
+  reaches a rule.

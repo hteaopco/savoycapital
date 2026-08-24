@@ -161,6 +161,37 @@ meaningfully means `@aws-sdk/lib-storage`'s multipart `Upload`, not a bigger num
 
 ---
 
+### The deal's figures ARE the Portfolio chart, as of 2026-08-24
+
+A deal carries five nullable columns beyond its name: `amountCents`, `investmentDate`,
+`instrument`, `terms` and `fees`. The first three are not documentation — **the chart at
+`/portal/portfolio` is built from them** (`src/lib/portfolio.ts`):
+
+| Column | What it does on the chart |
+|---|---|
+| `amountCents` | The arc's length, and the holding row's figure |
+| `instrument` | **Which arc.** `PRIVATE_EQUITY` → accent, `PRIVATE_CREDIT` → green |
+| `investmentDate`, `terms`, `fees` | Rows in the View Details panel; omitted when null |
+
+**A deal missing an amount or an instrument is named on that screen, not dropped.** It shows
+in an amber "Not shown on the chart" line with what it needs. That is deliberate: a chart of
+a fund's money that silently omits a position disagrees with this screen and says nothing
+about it.
+
+The editor opens by itself when any of the three is missing, which is the backfill path
+(owner: *"can you make it to where i can backfill the values on first load"*).
+
+**`terms` and `fees` are free text, capped at 500 characters.** What a position actually
+holds — rate, term, amortisation for debt; ownership and basis for equity — is still blocked
+on a person. A typed schema written to look thorough now is one the real schema starts by
+undoing.
+
+**Amounts are typed as dollars and stored as cents.** `parseDollarsToCents` is the only
+converter and it runs on both sides of the wire; the input re-groups with commas on blur
+only, never per keystroke (a caret that jumps mid-figure is worse than an ungrouped one).
+
+---
+
 ## 4. Deliberately not built
 
 - **Investor access.** The blocker is authorization, not storage. `src/proxy.ts` asks only
@@ -173,7 +204,7 @@ meaningfully means `@aws-sdk/lib-storage`'s multipart `Upload`, not a bigger num
   needs the sweep below to exist first.
 - **Undo, and any sweep for orphaned objects.** Both deletes are hard: the row is gone and
   the bytes follow. Nothing lists objects that no row points at.
-- **Positions, marks, valuations.** Still blocked on a person — see `STATE.md`.
+- **Positions, marks, valuations.** Still blocked on a person — see `STATE.md`. `terms` and `fees` are the free-text stand-in and are not a schema for this.
 - **Any test runner.** The pure functions in `src/lib/r2.ts` were exercised by a throwaway
   harness, not by a suite that runs in CI. That gap is real and named here rather than
   implied.

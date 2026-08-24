@@ -64,7 +64,7 @@ audience — and no route reads it. There is nothing there to show yet.
 
 | Model | Holds |
 |---|---|
-| `Fund` | `name`, optional `inceptionDate` (a `DATE`), its deals and role assignments |
+| `Fund` | `name`, optional `sizeCents` (`BigInt`) and `inceptionDate` (a `DATE`), its deals and role assignments |
 | `UserRole` | unique `clerkUserId`, `fundId`, `role`, `assignedBy` |
 
 **Keyed by `clerkUserId`, not phone.** Phone matching would need normalisation — `+1 555 000
@@ -75,16 +75,34 @@ that decides what somebody can see fails quietly and in the dangerous direction.
 cannot be deleted, which is why **there is no fund delete route** — it would fail at the
 database and a button that cannot work is worse than none.
 
-**`inceptionDate` is nullable on purpose.** Fund 1 predates the column, and this repo may not
-invent a fund figure — an inception date is one. A default would have written a date nobody
-supplied onto the fund every deal belongs to. It is a `DATE`, not a timestamp: an inception
-is a calendar day, and a time component invites a timezone to move it across midnight.
+**`sizeCents` and `inceptionDate` are both nullable on purpose.** Fund 1 predates both
+columns, and this repo may not invent a fund figure — a size and an inception date are each
+one. A default, or a migration backfilling from the old content module, would have written a
+figure nobody supplied onto the fund every deal belongs to. The row's editor opens by itself
+while either is missing, which is the backfill path.
+`inceptionDate` is a `DATE`, not a timestamp: an inception is a calendar day, and a time
+component invites a timezone to move it across midnight.
+
+**`sizeCents` is `BigInt`, not `Int`, and that is not premature.** A Postgres `INTEGER` caps
+at 2,147,483,647 — **$21,474,836** in cents. This fund is already at $10M. Cents stay exact
+as a JS `number` to about $90 trillion, so the API sends `Number(...)` and only the column is
+wide.
+
+**Setting the fund size here IS what the Portfolio chart divides by**, as of 2026-08-24. It
+briefly was not: `src/content/fund-allocation.ts` held a second copy and the chart drew that
+one, so saving here changed nothing on screen and the owner reported it. There is now one
+source. **A null fund size means Portfolio has nothing to take a percentage of**, and it says
+so rather than drawing a split of an unknown total.
+
+The amount field takes dollars, stores cents, and re-groups with commas **on blur only** —
+never per keystroke, because reformatting mid-word moves the caret.
 
 ### Routes
 
 ```
 GET    /api/funds                     list, with per-fund assignment and deal counts
-POST   /api/funds                     { name, inceptionDate? }
+POST   /api/funds                     { name, sizeCents?, inceptionDate? }
+PATCH  /api/funds/<id>                { sizeCents?, inceptionDate? } — the backfill/edit path
 GET    /api/users                     CLERK'S accounts, each joined to its assignment
 PUT    /api/users/<clerkUserId>/role  { role, fundId } — upsert
 DELETE /api/users/<clerkUserId>/role  clear the assignment; Clerk access is untouched

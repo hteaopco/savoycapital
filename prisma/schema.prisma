@@ -56,16 +56,16 @@ model Fund {
 
   /// Committed capital, in integer cents (owner, 2026-08-24: "fund size ($)").
   ///
-  /// NULLABLE, like `inceptionDate` and for the same reason: fund 1 predates the
-  /// column and this repo may not invent a fund figure. There IS a fund size in
-  /// `src/content/fund-allocation.ts` today, but backfilling from it would mean
-  /// a migration writing a money figure onto the fund every deal belongs to.
-  /// It is set from the screen instead.
+  /// NULLABLE, and fund 1 predates the column: this repo may not invent a fund
+  /// figure, so no migration backfilled one. It is set from the screen instead.
   ///
-  /// **The Portfolio screen still reads the content module, not this column**
-  /// (owner: "we'll make these database driven in a future phase"). Two sources
-  /// of the fund size exist as of this change, and only one is rendered — say
-  /// that plainly rather than letting the next reader assume the DB is live.
+  /// **This column IS what the Portfolio chart renders** (owner, 2026-08-24:
+  /// "lets tie the portfolio values to the values in fund and investments").
+  /// It briefly was not — `src/content/fund-allocation.ts` held a second copy
+  /// and the chart drew that one, so editing the fund size here changed nothing
+  /// on screen. There is now one source. **Null means the chart has no fund
+  /// size to divide by**, and Portfolio says so rather than drawing a split of
+  /// an unknown total.
   ///
   /// **`BigInt`, not `Int`, and that is not premature.** A Postgres `INTEGER`
   /// stops at 2,147,483,647 — which in cents is **$21,474,836**. This fund is
@@ -144,6 +144,18 @@ model UserRole {
   @@index([fundId, role])
 }
 
+/// What kind of investment a deal is. **This is what makes the Portfolio's two
+/// buckets** — the chart groups deals by it, so a deal without one cannot be
+/// plotted and the screen says so rather than dropping it silently.
+///
+/// Two values because the fund makes two kinds of investment (`FACTS.md`:
+/// private equity and private debt). A third is a migration and a conversation
+/// about what colour it takes on the chart, since `BucketTone` has two.
+enum Instrument {
+  PRIVATE_EQUITY
+  PRIVATE_CREDIT
+}
+
 /// One deal, inside a fund. The unit the owner creates and uploads into.
 model Deal {
   /// Sequential and human-quotable, on the owner's ask for "a deal id that we
@@ -163,9 +175,29 @@ model Deal {
   /// What was invested, in integer cents (owner, 2026-08-24: "investment size").
   /// Nullable — the deal that already exists predates the column.
   ///
+  /// **This is the arc length on the Portfolio chart**, and `instrument` below
+  /// is which arc. A deal missing either is NAMED on that screen rather than
+  /// dropped from it — see `src/lib/portfolio.ts`.
+  ///
   /// `BigInt` for the same reason as `Fund.sizeCents`: `INTEGER` cents cap at
   /// $21,474,836, which is not a limit a fund's deal table should carry.
   amountCents BigInt?
+
+  /// Which bucket this deal lands in on the Portfolio chart. Nullable — the
+  /// deals that predate the column have none, and a guess here would put real
+  /// money in the wrong slice.
+  instrument Instrument?
+
+  /// Terms and fees, as free text, shown in the Portfolio drill-down panel.
+  ///
+  /// **Deliberately free text rather than a typed schema**, for the reason
+  /// `FundAllocation`'s `DetailRow` already gives: what a position actually
+  /// holds — rate, term, amortisation and accrual for debt; ownership, basis
+  /// and marks for equity — is the decision `STATE.md` records as blocked on a
+  /// person. Modelling it here to look thorough would mean the real schema
+  /// starts by undoing this.
+  terms String?
+  fees  String?
 
   /// When it was invested (owner: "investment date (date picker)").
   ///

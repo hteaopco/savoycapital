@@ -2,7 +2,7 @@
 
 import { useCallback, useId, useState } from "react";
 import { Building2, ChevronDown, Plus, TriangleAlert, Users } from "lucide-react";
-import { centsToDollarInput, formatCents } from "@/lib/money";
+import { centsToDollarInput, formatCents, groupDollarInput } from "@/lib/money";
 import { C } from "./palette";
 
 /**
@@ -378,6 +378,11 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
                 inputMode="numeric"
                 value={sizeCents}
                 onChange={(e) => setSizeCents(e.target.value)}
+                // Grouped on blur, never on every keystroke. Reformatting
+                // mid-word moves the caret, so live grouping makes typing a
+                // long figure feel possessed; `groupDollarInput` leaves
+                // anything it cannot parse exactly as it was entered.
+                onBlur={(e) => setSizeCents(groupDollarInput(e.target.value))}
                 placeholder="10,000,000"
                 style={{ ...input, ...numCell }}
               />
@@ -564,6 +569,7 @@ function FundRow({ fund, onChanged }: { fund: Fund; onChanged: () => void }) {
                 inputMode="numeric"
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
+                onBlur={(e) => setSize(groupDollarInput(e.target.value))}
                 placeholder="10,000,000"
                 style={{ ...input, ...numCell }}
               />
