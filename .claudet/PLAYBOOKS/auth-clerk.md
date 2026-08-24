@@ -69,7 +69,8 @@ GOTCHA 3 is how to check it.
 ## 2. Bring-up — the five steps only a person can do
 
 **Status: done. Steps 1–4 are complete and the owner has signed in (2026-08-24); step 5 is
-half-done — `clerk.` is correct, `accounts.` is still proxied.** Kept as the runbook for a
+unconfirmed — `clerk.` is correct; `accounts.` exists but its health cannot be judged from
+here (GOTCHA 8, and `BUGS.md`).** Kept as the runbook for a
 rebuild or a second instance, not as an outstanding checklist.
 
 Nothing below can be done from this repo. Until they are complete, `/portal` correctly
@@ -193,6 +194,15 @@ frontend API already sits behind Cloudflare, so proxying it a second time is ref
 itself are unaffected and may stay proxied.
 *Observed 2026-08-24* on `clerk.` and `accounts.` — this is not theoretical, it is what the
 first production DNS attempt produced.
+
+*Do not diagnose this one with `curl`.* **Error 1000 is the signature; a bot challenge is
+not.** An automated request to `accounts.` returns HTTP 403 with `cf-mitigated: challenge`
+whether the record is proxied in our zone or DNS-only pointing at Clerk — Cloudflare
+challenges datacenter IPs either way, and browser-like headers do not change it. A later
+audit read that challenge as proof the record was still proxied and wrote it into `STATE.md`
+and `BUGS.md` as a finding; it was not one, and the correction cost more than the check
+would have. **Confirm from a real browser on a residential connection**: the Account Portal
+means it is fine, Error 1000 means this gotcha.
 
 **GOTCHA 9 — this instance identifies users by PHONE, not email.**
 *Symptom:* code or docs that reach for `user.emailAddresses` find nothing, and any check

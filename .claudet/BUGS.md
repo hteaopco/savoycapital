@@ -31,17 +31,27 @@ instance is fixed — say what would close it.
   everything else 307s. This seat runs that sweep by hand after every merge — last
   2026-08-24 after `#28`, clean.
 
-- **OPEN — `accounts.savoycapital.io` is still proxied through Cloudflare.**
-  *Symptom:* HTTP 403 with Cloudflare's "Just a moment..." challenge instead of Clerk's
-  response. Re-checked 2026-08-24.
-  *Root cause:* the CNAME was created with Cloudflare's proxy on (orange cloud); Clerk's
-  frontend API already sits behind Cloudflare and refuses double-proxying.
+- **UNKNOWN — `accounts.savoycapital.io` cannot be assessed from this seat.**
+  *What is established:* the record **exists** — it resolves to Cloudflare IPs, and a control
+  subdomain (`zzz-does-not-exist-9f3k.savoycapital.io`) does not resolve, so no wildcard is
+  faking it. Automated requests to it get **HTTP 403 with `cf-mitigated: challenge`** —
+  Cloudflare's bot challenge — with or without browser-like headers.
+  *What is NOT established: whether anything is wrong with it.* A bot challenge is what
+  Cloudflare serves to a datacenter IP regardless of which side is proxying, so it does not
+  distinguish "proxied in our zone" (GOTCHA 8's fault) from "DNS-only, and Clerk's own
+  Cloudflare is challenging the robot." **GOTCHA 8's actual signature — Error 1000, "DNS
+  points to prohibited IP" — is NOT present**, which is evidence against the misconfiguration
+  reading rather than for it.
+  *Correction, recorded on purpose:* `STATE.md` and an earlier revision of this file asserted
+  "still proxied, needs DNS-only." That inherited a claim from an earlier session and
+  amplified it past what the evidence supports. It should not have been written as a finding.
   *Impact today: none observed.* The app never routes anyone to the hosted Account Portal —
   `src/proxy.ts` passes an explicit `unauthenticatedUrl` (GOTCHA 1) — and the owner signs in
-  successfully. But Clerk's own `display_config.sign_in_url` still points there, so anything
-  following Clerk's hosted URLs would hit the challenge.
-  *What would close it:* set the `accounts.` record to **DNS only** in Cloudflare. Owner
-  action; `PLAYBOOKS/auth-clerk.md` GOTCHA 8.
+  successfully. Clerk's `display_config.sign_in_url` does point there, so it would matter to
+  anything following Clerk's hosted URLs.
+  *What would settle it:* **a real browser.** Open `https://accounts.savoycapital.io` from a
+  residential connection: Clerk's Account Portal means it is fine, Error 1000 means GOTCHA 8.
+  No instrument this seat has can answer it — do not re-run curl and conclude anything.
 
 - **OPEN (accepted, not a defect to fix) — signing out does not stop client-side navigation
   of already-visited portal pages.**

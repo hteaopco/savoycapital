@@ -173,16 +173,25 @@ gates what the *public* page may say, not whether it may exist.
 2026-08-24). The instance id came from the Dashboard and is **not exposed on the public
 environment endpoint**, so this seat cannot re-verify it from here — do not burn time trying.
 
-`clerk.` serves real Clerk JSON (re-verified 2026-08-24). **`accounts.` is still proxied**:
-it returns **HTTP 403 with Cloudflare's "Just a moment..." challenge page** — re-checked
-2026-08-24, still outstanding. Note the symptom differs from GOTCHA 8's recorded one (Error
-1000 / "DNS points to prohibited IP"); same root cause, different Cloudflare response, so
-match on *"Cloudflare HTML instead of Clerk JSON"* rather than on the exact error. It should
-be **DNS only**. This has not blocked sign-in — the app never routes anyone to the hosted
-Account Portal, because `src/proxy.ts` passes an explicit `unauthenticatedUrl` (GOTCHA 1) —
-but Clerk's own `display_config.sign_in_url` still points at
-`https://accounts.savoycapital.io/sign-in`, so anything that follows Clerk's hosted URLs
-would hit the challenge.
+`clerk.` serves real Clerk JSON (re-verified 2026-08-24).
+
+**`accounts.` exists, and whether it is healthy is UNKNOWN — this seat cannot tell.** The
+record resolves (a control subdomain does not, so there is no wildcard). Automated requests
+get HTTP 403 with `cf-mitigated: challenge`, with or without browser headers.
+
+**That proves nothing either way**, and an earlier revision of this file said it did.
+Cloudflare bot-challenges a datacenter IP whichever side is proxying, so the response cannot
+separate "proxied in our zone" (GOTCHA 8) from "DNS-only, and Clerk's own Cloudflare is
+challenging the robot." GOTCHA 8's real signature — **Error 1000, "DNS points to prohibited
+IP" — is absent**, which points away from the misconfiguration reading. The prior wording
+("still proxied, should be DNS only") was inherited from an earlier session and stated more
+firmly than the evidence allows; corrected 2026-08-24.
+
+**Only a real browser from a residential connection settles it.** Clerk's Account Portal =
+fine; Error 1000 = GOTCHA 8. Sign-in is unaffected regardless — the app never routes anyone
+to the hosted Account Portal (`src/proxy.ts` passes an explicit `unauthenticatedUrl`,
+GOTCHA 1) — but Clerk's `display_config.sign_in_url` does point at
+`https://accounts.savoycapital.io/sign-in`.
 
 Sign-up mode is **`restricted`** (owner, 2026-08-24, verified against the live instance) —
 it was `public` on first setup, which would have let anyone create an account.
