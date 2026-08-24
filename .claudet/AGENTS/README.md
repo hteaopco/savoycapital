@@ -26,4 +26,4 @@ playbook → `.claudet/STATE.md` and the `DECISIONS.md` headers for the area you
 
 | File | Seat |
 |---|---|
-| `clerk.md` | **Authentication.** The Clerk instance, the session boundary, the sign-in surface, and the configuration and DNS behind them. Not the site. |
+| `CLERK.md` | **Authentication.** The Clerk instance, the session boundary, the sign-in surface, and the configuration and DNS behind them. Not the site. |

@@ -9,7 +9,7 @@ learning that). Keep this to a paragraph. Edit it only when the answer actually 
 
 **Auth has an owner now.** The Clerk seat is commissioned (owner, 2026-08-24) — the instance,
 `src/proxy.ts`, the sign-in surface, and the configuration and DNS behind them. **Not the
-site**, which belongs to other seats. Charter in `AGENTS/clerk.md`; if you are here to change
+site**, which belongs to other seats. Charter in `AGENTS/CLERK.md`; if you are here to change
 a feature, that agent is not your agent.
 
 **The site is live on Railway** (owner-confirmed 2026-08-23). Next.js 16 + React 19 +
