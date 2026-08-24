@@ -37,7 +37,7 @@ export async function GET() {
 
   const funds = await db.fund.findMany({
     orderBy: { id: "asc" },
-    include: { _count: { select: { users: true, deals: true } } },
+    include: { _count: { select: { roles: true, deals: true } } },
   });
 
   return NextResponse.json({
@@ -48,7 +48,7 @@ export async function GET() {
       // ISO string keeps it the calendar day it was entered as, which
       // `toLocaleDateString` would shift westward.
       inceptionDate: f.inceptionDate ? f.inceptionDate.toISOString().slice(0, 10) : null,
-      userCount: f._count.users,
+      assignedCount: f._count.roles,
       dealCount: f._count.deals,
     })),
   });
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
       id: fund.id,
       name: fund.name,
       inceptionDate: fund.inceptionDate ? fund.inceptionDate.toISOString().slice(0, 10) : null,
-      userCount: 0,
+      assignedCount: 0,
       dealCount: 0,
     },
     { status: 201 },
