@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { C } from "@/components/palette";
 import { DealRoom as DealRoomScreen, type Deal } from "@/components/DealRoom";
 import { PortalShell } from "@/components/PortalShell";
 import { DEFAULT_FUND_ID, getDb } from "@/lib/db";
+import { getViewer, isManagement } from "@/lib/authz";
 
 /**
  * Deal Room — the one screen under the nav's Admin section (owner, 2026-08-24).
@@ -37,6 +39,16 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function DealRoomPage() {
+  // MANAGEMENT ONLY (owner, 2026-08-24). An investor is redirected rather than
+  // shown an empty shell: a screen that renders its chrome and nothing else
+  // reads as broken, and this one is where unannounced transactions live.
+  //
+  // The redirect is a convenience, NOT the control. Every route this page calls
+  // guards itself — a page that only hid its own UI would leave the API open to
+  // anyone who typed the URL.
+  const { viewer } = await getViewer();
+  if (!isManagement(viewer)) redirect("/portal/portfolio");
+
   const db = getDb();
 
   // `null` means "not configured", which the screen reports as such. An empty
@@ -59,7 +71,7 @@ export default async function DealRoomPage() {
     : null;
 
   return (
-    <PortalShell title="Deal Room">
+    <PortalShell title="Deal Room" isManagement>
       <div className="px-5 py-8 md:px-8 md:py-10">
         <div className="flex flex-col" style={{ gap: 14 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Deal Room</div>

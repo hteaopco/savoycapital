@@ -38,10 +38,11 @@ export const PREFIX = {
   /** Rodney and Jett. Everything the fund holds about itself. */
   management: "management/",
   /**
-   * Reserved, and NOT served by any route today. Investor access needs an
-   * authorization layer this app does not have — `src/proxy.ts` asks only
-   * whether somebody is signed in, which is sufficient only while the population
-   * is two people who both see everything (DECISIONS 2026-08-24).
+   * Reserved, and NOT served by any route today — but no longer for want of an
+   * authorization layer. That landed on 2026-08-24 (`src/lib/authz.ts`), and it
+   * already scopes an investor to their own fund. What is missing is narrower:
+   * nothing UPLOADS to this prefix (the API refuses the audience) and no route
+   * reads it, so there is nothing here to serve.
    *
    * When it lands, `funds/<fundId>/` inside this prefix is the boundary: an
    * investor belongs to a fund and may read that fund's investor-facing

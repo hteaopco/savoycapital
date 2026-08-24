@@ -72,6 +72,8 @@ type NavItem = {
 type NavSection = {
   title: string;
   Icon: typeof PieChart;
+  /** Hidden from investors. Not a control — see `PortalShellProps.isManagement`. */
+  managementOnly?: boolean;
   items: NavItem[];
 };
 
@@ -98,6 +100,7 @@ const NAV: NavSection[] = [
   {
     title: "Admin",
     Icon: Shield,
+    managementOnly: true,
     items: [
       { href: "/deal-room", label: "Deal Room", Icon: Handshake },
       { href: "/fund-users", label: "Fund & Users", Icon: IdCard },
@@ -255,10 +258,22 @@ const sectionTitle: React.CSSProperties = {
   letterSpacing: "-0.01em",
 };
 
-function NavBody({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+function NavBody({
+  pathname,
+  isManagement,
+  onNavigate,
+}: {
+  pathname: string;
+  isManagement: boolean;
+  onNavigate?: () => void;
+}) {
+  // The rule between groups is drawn on the section rather than as a sibling,
+  // so dropping a section drops its rule with it and the remaining group does
+  // not open with a stray hairline.
+  const sections = NAV.filter((s) => isManagement || !s.managementOnly);
   return (
     <nav className="flex flex-col" style={{ padding: "8px 8px" }}>
-      {NAV.map((section, sectionIndex) => (
+      {sections.map((section, sectionIndex) => (
         <div key={section.title} className="flex flex-col">
           {/* The rule the owner asked for, between the groups rather than around
               each one — so it reads as one separator, not a boxed list. Drawn on
@@ -342,10 +357,24 @@ function NavBody({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
 export type PortalShellProps = {
   /** Screen name, shown in the mobile top bar where there is no sidebar. */
   title: string;
+  /**
+   * Hides the Admin section for anyone who is not management.
+   *
+   * **Hiding a link is not a control**, and nothing here should be read as one:
+   * every page and every route behind these links guards itself, because a nav
+   * that only hides its own entries leaves the URL open to anyone who types it.
+   * This is so an investor is not shown two destinations that would bounce them
+   * straight back.
+   *
+   * Defaults to true so a caller that forgets to pass it shows MORE chrome
+   * rather than less — the failure is then visible on screen instead of being a
+   * screen somebody quietly cannot find.
+   */
+  isManagement?: boolean;
   children: React.ReactNode;
 };
 
-export function PortalShell({ title, children }: PortalShellProps) {
+export function PortalShell({ title, isManagement = true, children }: PortalShellProps) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -396,7 +425,7 @@ export function PortalShell({ title, children }: PortalShellProps) {
         <div style={{ padding: "18px 18px 14px", borderBottom: `1px solid ${C.border}` }}>
           <div style={wordmark}>Investor Portal</div>
         </div>
-        <NavBody pathname={pathname} />
+        <NavBody pathname={pathname} isManagement={isManagement} />
         <AccountBlock />
       </aside>
 
@@ -467,7 +496,7 @@ export function PortalShell({ title, children }: PortalShellProps) {
                 </button>
               </div>
               {/* Same NAV array as the sidebar — § 2's "one source of truth". */}
-              <NavBody pathname={pathname} onNavigate={closeDrawer} />
+              <NavBody pathname={pathname} isManagement={isManagement} onNavigate={closeDrawer} />
               <AccountBlock />
             </div>
           </div>

@@ -73,10 +73,18 @@ financial. **Nothing here can move a dollar.** Do not import theAPlink's money-s
 its posting gates, or its urgency language — none of the mechanisms exist.
 
 **The risk that IS real here runs the other way: disclosure.** `/portal` serves the fund's
-size and position-level amounts, and the entire access boundary is **Clerk's
-`sign_up.mode: "restricted"` — a dashboard toggle that nothing in this repo re-checks.** If it
-ever returns to `public`, anyone who signs up reaches the fund's numbers and no code here will
-notice. `/portal` shipped open for a day in August 2026 for a related reason.
+size and position-level amounts. **Authentication** is still Clerk's
+`sign_up.mode: "restricted"` — a dashboard toggle that nothing in this repo re-checks.
+`/portal` shipped open for a day in August 2026 for a related reason.
+
+**Authorization now exists, and it changes that risk rather than removing it**
+(`src/lib/authz.ts`, 2026-08-24). A signed-in account with no role assignment sees **nothing**
+— so if sign-up ever returned to `public`, a stranger who signed up would land unassigned and
+reach no figures, where before they reached all of them. That is a real narrowing, and it is
+**not** a reason to relax about the Dashboard toggle: it holds only while at least one
+assignment exists. With the table empty the bootstrap valve treats everyone as management,
+deliberately, because the alternative locks the owners out of their own portal with no way in
+from here. `authz.ts`'s header is the full argument.
 
 So the failure to be careful about is **a number reaching someone who should not see it** —
 a route added outside `isPublicRoute`'s allowlist, a `noindex` dropped, a real figure moved

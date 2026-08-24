@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getR2, isServableKey } from "@/lib/r2";
+import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
  * The fund's document store — download and delete one object.
@@ -42,8 +42,16 @@ async function resolveKey({ params }: Params): Promise<string | null> {
 }
 
 export async function GET(_request: Request, ctx: Params) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const r2 = getR2();
   if (!r2) return NextResponse.json({ error: "File storage is not configured." }, { status: 503 });

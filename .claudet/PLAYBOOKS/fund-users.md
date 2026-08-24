@@ -2,7 +2,8 @@
 
 The roster: funds, and the people recorded against them.
 
-Subsystem status: **built, and it grants nothing.** Read § 1 before assuming otherwise.
+Subsystem status: **built, and enforced as of 2026-08-24.** Read § 1a for what a role now decides,
+and the bootstrap valve that keeps an empty table from locking everyone out.
 
 ---
 
@@ -28,17 +29,36 @@ create an identity and belongs to the Clerk seat.
 **So accounts are still invited from the Clerk Dashboard.** This app decides what those
 accounts can see — or will, once § 1a is true.
 
-### 1a. Nothing enforces the role yet
+### 1a. The role IS enforced, as of 2026-08-24
 
-Assigning a fund and role writes a `UserRole` row and changes nothing else. Everyone signed
-in still sees everything. **Enforcement is a separate change**, sequenced after this one on
-the owner's call (2026-08-24) so the assignments exist before anything depends on them — the
-alternative risks a deploy where nobody has a row and the portal locks its own owners out,
-with no way to reach Postgres from a sandbox to undo it.
+`src/lib/authz.ts` is the layer. It is read by **pages and route handlers**, never by
+`src/proxy.ts` — middleware runs on the edge, where Prisma's driver adapter does not go, and
+that file belongs to the Clerk seat. The proxy still answers one question, "is somebody signed
+in"; what they may see is decided a layer in.
 
-When it lands, the agreed scope is: **an investor sees the investor-facing documents for
-their fund, and that fund's portfolio** — fund size, allocation, positions. Not the Deal
-Room, not management-facing files, not another fund.
+| Viewer | Sees |
+|---|---|
+| `MANAGEMENT` | Everything, every fund |
+| `INVESTOR` | Their own fund's portfolio. Not the Deal Room, not Fund & Users, not another fund |
+| Assigned nothing | **Nothing.** Fails closed |
+| Bootstrap (no assignments exist at all) | Everything, with a banner saying why |
+
+**The bootstrap valve is the part to understand before touching it.** With ZERO rows in
+`UserRole`, everyone signed in is treated as management. Without that, the first deploy of
+`authz.ts` would have locked the portal's owners out — a fail-closed check against an empty
+table denies everybody — and nothing in this repo can reach Railway's Postgres to undo it. It
+closes the moment one assignment exists, and the Portfolio screen shows an amber banner while
+it is holding, so "why can everyone see everything" has a visible answer.
+
+**Hiding a nav link is not a control.** `PortalShell` drops the Admin section for investors,
+and every page and route behind it guards itself anyway. A nav that only hid its own entries
+would leave the URL open to anyone who typed it. `PortalShell`'s `isManagement` prop defaults
+to `true` on purpose: a caller that forgets shows MORE chrome, so the mistake is visible on
+screen rather than being a screen somebody quietly cannot find.
+
+**Investor-facing DOCUMENTS are still not served.** The authorization layer exists and scopes
+by fund, but nothing uploads to the `investors/` prefix — the upload API refuses that
+audience — and no route reads it. There is nothing there to show yet.
 
 ## 2. Shape
 
@@ -110,7 +130,8 @@ mount. Re-adding a `useEffect` that fetches will fail `npm run lint`.
 
 ## 4. Deliberately not built
 
-- **Enforcement.** § 1a — next change, scope already agreed.
+- **Serving investor-facing documents.** § 1a — the layer is there, the files are not.
+
 - **Inviting or creating accounts.** § 1 — the instance is phone-first and Clerk's invitations
   are email-only. Changing that is the Clerk seat's call.
 - **Renaming or deleting a fund.** Create only.

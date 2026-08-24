@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { listClerkAccounts } from "@/lib/clerk-users";
+import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
  * The people list — **Clerk's accounts**, joined to this app's role assignments.
@@ -31,8 +31,16 @@ import { listClerkAccounts } from "@/lib/clerk-users";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const db = getDb();
   const directory = await listClerkAccounts();

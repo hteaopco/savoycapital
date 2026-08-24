@@ -55,7 +55,12 @@ export default clerkMiddleware(async (auth, request) => {
     `${request.nextUrl.pathname}${request.nextUrl.search}`,
   );
 
-  // Authentication only. There is no authorization layer behind this: the
+  // Authentication only, and that is still all this file does — but there IS an
+  // authorization layer behind it now (`src/lib/authz.ts`, 2026-08-24), read by
+  // pages and route handlers rather than here. It cannot live in this file:
+  // middleware runs on the edge, where Prisma's driver adapter does not go.
+  //
+  // The original note, still accurate about THIS file: the
   // Clerk instance is set to restricted sign-up, so an account cannot come
   // into existence unless a principal made it and "signed in" is the whole
   // test. Accounts are created in the Dashboard rather than invited (owner,

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getDb } from "@/lib/db";
 import { getR2 } from "@/lib/r2";
+import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
  * One document: move it between folders, or delete it.
@@ -38,8 +38,16 @@ export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ id: string; docId: string }> };
 
 export async function PATCH(request: Request, { params }: Params) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const db = getDb();
   if (!db) {
@@ -126,8 +134,16 @@ export async function PATCH(request: Request, { params }: Params) {
  * be enough to delete something out of a deal you did not name.
  */
 export async function DELETE(_request: Request, { params }: Params) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const db = getDb();
   if (!db) {

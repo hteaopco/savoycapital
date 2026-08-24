@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getDb } from "@/lib/db";
 import { MAX_UPLOAD_BYTES, documentKey, getR2, safeFilename } from "@/lib/r2";
+import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
  * Upload one document into a deal. `multipart/form-data`: `file`, `description`,
@@ -43,8 +43,16 @@ export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, { params }: Params) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const db = getDb();
   const r2 = getR2();
@@ -145,7 +153,7 @@ export async function POST(request: Request, { params }: Params) {
       folder,
       sizeBytes: body.byteLength,
       contentType,
-      uploadedBy: userId,
+      uploadedBy: viewer.clerkUserId,
     },
   });
 
