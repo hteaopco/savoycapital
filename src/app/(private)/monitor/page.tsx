@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { checkAccess } from "@/lib/auth";
+import { currentUser } from "@clerk/nextjs/server";
 import { C } from "@/components/palette";
 
 export const metadata: Metadata = {
@@ -10,15 +10,17 @@ export const metadata: Metadata = {
 /**
  * The shell of the private surface, and deliberately nothing more.
  *
- * It exists so the auth boundary has something behind it: middleware that
- * protects no route and an allowlist that gates no page are both untestable
- * claims. What the monitor actually shows waits on a decision that is blocked
- * on a person — what an equity position holds versus a debt position — which
- * `.claudet/STATE.md` records. Guessing that schema here would be inventing
- * the product's core model to fill a page.
+ * It exists so the auth boundary has something behind it: a proxy that protects
+ * no route is an untestable claim. What the monitor actually shows waits on a
+ * decision that is blocked on a person — what an equity position holds versus a
+ * debt position — which `.claudet/STATE.md` records. Guessing that schema here
+ * would be inventing the product's core model to fill a page.
  */
 export default async function MonitorPage() {
-  const access = await checkAccess();
+  const user = await currentUser();
+  // Phone-first instance, so there may be no email to fall back to; the first
+  // name is what Clerk collects and the greeting degrades quietly without it.
+  const greeting = user?.firstName?.trim();
 
   return (
     <div className="flex flex-col" style={{ gap: 14 }}>
@@ -31,10 +33,8 @@ export default async function MonitorPage() {
             Portfolio Monitor
           </div>
           <div style={{ fontSize: 13, color: C.textMuted, maxWidth: 640 }}>
-            {access.allowed
-              ? `Signed in as ${access.greeting}.`
-              : "Signed in."}{" "}
-            This surface is private to Savoy Capital.
+            {greeting ? `Signed in as ${greeting}. ` : ""}This surface is
+            private to Savoy Capital.
           </div>
         </div>
       </div>

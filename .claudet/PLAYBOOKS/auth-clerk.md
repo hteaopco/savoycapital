@@ -8,39 +8,42 @@ see § Bring-up. Until those are done the private surface refuses everyone, by d
 
 ---
 
-## 1. How it works — two layers, on purpose
+## 1. How it works — one boundary, and where it actually lives
 
-Authentication and authorization are separate here, and conflating them is the mistake this
-design exists to prevent.
+**The boundary is the Clerk instance's sign-up mode, not code in this repo.**
 
-| Layer | File | Question it answers | Failure mode it closes |
-|---|---|---|---|
-| Authentication | `src/proxy.ts` | Is *somebody* signed in? | Anonymous internet traffic |
-| Authorization | `src/lib/auth.ts` + `src/app/(private)/layout.tsx` | Is the signed-in person one of *ours*? | A stranger who signed themselves up |
+`sign_up.mode` is set to **`restricted`**, so a Clerk account cannot come into existence
+unless one of the principals invited it. On that instance "signed in" and "allowed in" are
+the same statement, which is why `src/proxy.ts` — which only asks whether *somebody* is
+signed in — is sufficient on its own.
 
-**The allowlist matches PHONE NUMBERS** (`SAVOY_ALLOWED_PHONES`), not emails — see GOTCHA 9.
-
-**Why the second layer exists.** Clerk answers only the first question. Whether a stranger
-can create an account is a **setting in the Clerk Dashboard** — not a fact anybody can
-verify by reading this repo. Code that treats "signed in" as "allowed in" is therefore only
-as closed as a checkbox no reviewer here can see. `.claudet/DECISIONS.md` is explicit that
-two users is an argument against tenancy machinery and *never* against an auth boundary;
-`SAVOY_ALLOWED_EMAILS` is what makes "two users" true in code rather than in a dashboard.
+| Layer | File | Question it answers |
+|---|---|---|
+| Authentication | `src/proxy.ts` | Is somebody signed in? |
+| Authorization | *(none — see below)* | Answered by the invitation, in Clerk |
 
 **Route protection is deny-by-default.** `src/proxy.ts` holds an exhaustive list of PUBLIC
-routes; everything else requires a session. The inverse — list the private routes, leave
-the rest open — fails in the dangerous direction, because a new page under the monitor
-would ship public until someone remembered it.
+routes; everything else requires a session. The inverse — list the private routes, leave the
+rest open — fails in the dangerous direction, because a new page under the monitor would ship
+public until someone remembered it.
 
 **The private surface is a route group.** Everything under `src/app/(private)/` renders
-through `(private)/layout.tsx`, which runs the allowlist check once. A new private page
-inherits the check by being put in the group — it cannot be forgotten on a per-page basis.
-`(private)` is a Next.js route group, so it does **not** appear in the URL: the page at
-`src/app/(private)/monitor/page.tsx` serves `/monitor`.
+through `(private)/layout.tsx`. `(private)` is a Next.js route group, so it does **not**
+appear in the URL: the page at `src/app/(private)/monitor/page.tsx` serves `/monitor`.
 
-**Refusals are rendered, not redirected.** A signed-in but unauthorized person gets a page
-explaining which of the two failures happened, with a sign-out button. Redirecting them to
-sign-in instead would loop: they *are* signed in.
+### What was removed, and the risk that came with it
+
+An earlier revision carried a second lock — an env-var allowlist of the people permitted to
+open the monitor — because at first setup this instance had `sign_up.mode: "public"` and a
+stranger could have created their own account. Restricting sign-up removed that reason, and
+the owner dropped the allowlist (2026-08-24) rather than keep user identities in deploy
+config, where adding a person meant a redeploy.
+
+**The cost, stated plainly: if sign-up is ever set back to `public`, the portfolio monitor
+opens to anyone who signs up, and nothing in this repo will detect it.** There is no code
+path that reads the instance's sign-up mode. That setting IS the access control now, so
+treat changing it as a change to the security boundary rather than a Dashboard preference.
+GOTCHA 3 is how to check it.
 
 ---
 
@@ -51,15 +54,14 @@ refuses everyone, including the principals.
 
 1. **Create the Clerk application** and copy its API keys (Dashboard → API keys).
 2. **Restrict sign-up to invitation only.** Dashboard → Configure → **Restrictions** → set
-   sign-up mode to **Restricted**. Clerk's default allows anyone to create an account. The
-   allowlist in step 4 means an uninvited account still sees nothing, so this is
-   defence-in-depth rather than the only lock — but leaving open sign-up on is a standing
-   invitation to fill the user list with strangers.
+   sign-up mode to **Restricted**. Clerk's default allows anyone to create an account.
+   **This is the entire access boundary** — there is no second lock behind it. Done
+   2026-08-24; GOTCHA 3 says how to confirm it is still true.
 3. **Invite Rodney and Jett** (Dashboard → Users → Invite). There is deliberately no
-   `/sign-up` route in this app; see GOTCHA 4.
+   `/sign-up` route in this app; see GOTCHA 4. **The invitation is the authorization** —
+   there is no second list to add them to.
 4. **Set the environment variables** on the Railway service *and* in local `.env.local`.
-   `.env.example` documents all three. `SAVOY_ALLOWED_PHONES` must contain the same
-   numbers the invited users verify, **with country codes**.
+   `.env.example` documents both keys. There is no allowlist variable.
 5. **For a production instance (`pk_live_`), add Clerk's DNS records** on
    `savoycapital.io` — and set them **DNS only** if the zone is on Cloudflare. See
    GOTCHA 8; getting this wrong is silent until someone tries to sign in.
@@ -73,9 +75,8 @@ at `/coming-soon` deliberately.
 
 - Signed out, `/monitor` → 307 to `/sign-in?redirect_url=...` **on this domain**. A redirect
   to a `*.accounts.dev` host means GOTCHA 1 has regressed.
-- Signed in as an allowlisted user → the monitor shell renders with the user's name.
-- Signed in as anyone else → the red "cannot open" refusal, not the monitor.
-- With `SAVOY_ALLOWED_PHONES` unset → the amber "not configured" refusal, for everyone.
+- Signed in as an invited user → the monitor shell renders with the user's first name.
+- The instance still reports `"mode": "restricted"` (GOTCHA 3).
 
 ---
 
@@ -101,13 +102,19 @@ in code, it cannot.
 same rule means a mistyped URL redirects to sign-in rather than 404ing. That wart is the
 accepted cost of not leaking the private surface.
 
-**GOTCHA 3 — an unset allowlist locks out the owners.**
-*Symptom:* an invited, correctly signed-in principal sees "not configured yet".
-*Cause:* `SAVOY_ALLOWED_PHONES` is unset or empty on that deployment.
-*Fix:* set it. It is **fail-closed on purpose**: reading "unset" as "let any signed-in user
-through" would turn one forgotten deploy variable into an open door onto the fund's
-positions. The two failures are not equally bad, so the code picks the recoverable one and
-the refusal page names the variable.
+**GOTCHA 3 — sign-up mode IS the access control; verify it, do not assume it.**
+*Symptom:* none, ever, until a stranger is looking at the fund's positions. This failure is
+completely silent by construction.
+*Cause:* with the allowlist removed, anyone who can create a Clerk account can open
+`/monitor`. If `sign_up.mode` returns to `public` — someone testing, a Clerk default
+changing, a new instance — the door is open and no code here notices.
+*Check it* (no credentials needed, the environment endpoint is public):
+```
+curl -s "https://clerk.savoycapital.io/v1/environment?__clerk_api_version=2025-04-10&_clerk_js_version=5.0.0" \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['user_settings']['sign_up']['mode'])"
+```
+Expect `restricted`. Anything else means the private surface is public.
+*Fix:* Dashboard → Configure → Restrictions → Restricted.
 
 **GOTCHA 4 — there is no sign-up route, and adding one is a decision.**
 *Symptom:* someone looks for `/sign-up` and finds nothing.
@@ -150,26 +157,16 @@ itself are unaffected and may stay proxied.
 *Observed 2026-08-24* on `clerk.` and `accounts.` — this is not theoretical, it is what the
 first production DNS attempt produced.
 
-**GOTCHA 9 — the allowlist matches phone numbers because the instance has no emails.**
-*Symptom:* an email-based allowlist rejects everyone, principals included, with no obvious
-cause. The refusal reads "not authorized" while the truth is "there is nothing to match".
-*Cause:* this Clerk instance is configured phone-first —
+**GOTCHA 9 — this instance identifies users by PHONE, not email.**
+*Symptom:* code or docs that reach for `user.emailAddresses` find nothing, and any check
+built on a verified email rejects everyone including the principals.
+*Cause:* the instance is configured phone-first —
 `identification_strategies: ["phone_number"]`, `email_address: off`,
-`email_address_verification_strategies: []` — so accounts carry no *verified* email.
-Confirmed by reading `https://clerk.savoycapital.io/v1/environment` directly, 2026-08-24.
-*Fix:* the allowlist reads verified **phone numbers** via `SAVOY_ALLOWED_PHONES`.
-`checkAccess` distinguishes `no-verified-phone` from `not-allowlisted` precisely so this
-class of misconfiguration is not mistaken for a permissions problem again.
-*If the instance ever switches to email*, this module changes with it — the identifier is
-not a detail, it is the boundary.
-
-**GOTCHA 10 — the country code is required in `SAVOY_ALLOWED_PHONES`.**
-*Symptom:* a correct-looking number is refused.
-*Cause:* comparison strips spaces, dashes, parens and `+`, but does not assume a country.
-`5551234567` and `+15551234567` are different strings, and treating them as equal would make
-the allowlist guess at identity.
-*Fix:* write numbers with the country code. A 10-digit entry raises an explicit hint on the
-refusal page rather than failing silently.
+`email_address_verification_strategies: []`. Read from the live instance, 2026-08-24.
+*Consequence:* `firstName` is the only reliable display value; there is no email to greet
+someone by or to key anything on. An earlier allowlist keyed on email had to be rewritten for
+phones before being dropped entirely — the identifier is not a detail, so check it before
+building anything that depends on one.
 
 ---
 
@@ -177,7 +174,10 @@ refusal page rather than failing silently.
 
 - **A `/sign-up` route** — GOTCHA 4.
 - **Organizations / roles / permissions.** Clerk has them; two people with identical access
-  do not need them. Revisit only if a third kind of user appears.
+  do not need them. Revisit only if a third kind of user appears — that is also the point at
+  which "everyone invited sees everything" stops being an acceptable model.
+- **An in-app allowlist.** Removed 2026-08-24; see § 1. If one ever comes back, put it in
+  Clerk `privateMetadata` rather than an env var, so adding a person is not a redeploy.
 - **Webhooks (`/api/webhooks/clerk`).** There is no local user table to sync into — no
   Prisma schema exists yet. Build this when there is something to keep in sync, not before.
 - **Tests.** The repo has no test framework. The allowlist decision logic *was* verified

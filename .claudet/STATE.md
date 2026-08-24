@@ -32,15 +32,22 @@ controls). The other nine content files are byte-identical, verified. If you are
 `design/` against theAPlink, **that difference is expected — do not "restore" it.** The file's
 own banner, `design/README.md`'s divergence table and `DECISIONS.md` all say so.
 
-**Clerk is wired up but not live.** The auth boundary is built and verified: `src/proxy.ts`
-protects everything except an enumerated public list, `/sign-in` is styled to the palette,
-and the `(private)` route group gates `/monitor` behind a **phone-number** allowlist
-(`SAVOY_ALLOWED_PHONES`) rather than behind "is signed in" — because whether a stranger can
-create a Clerk account is a Dashboard setting nobody can verify from this repo. It **fails
-closed**: with no allowlist set, nobody gets in, the principals included.
-`PLAYBOOKS/auth-clerk.md` is the reference; DECISIONS carries the why.
-`/monitor` is deliberately an empty shell — it exists so the boundary has something behind
-it, and what it displays waits on the position-model call below.
+**Clerk is wired up.** `src/proxy.ts` protects everything except an enumerated public list,
+`/sign-in` is styled to the palette, and the `(private)` route group holds `/monitor`.
+Production instance `ins_3IL2OO8W1HTVwmTMHtleVAjH2AV` on `clerk.savoycapital.io`, keys set on
+Railway, `clerk.` DNS serving real Clerk JSON. `accounts.` still returns a Cloudflare
+interstitial, consistent with that record still being proxied — it should be **DNS only**
+(`PLAYBOOKS/auth-clerk.md` GOTCHA 8).
+
+**The access boundary is Clerk's `sign_up.mode: "restricted"` — nothing in this repo.** The
+earlier env-var allowlist was removed by the owner (2026-08-24) once sign-up was restricted;
+DECISIONS carries why and what it costs. The short version: **if that setting ever returns to
+`public`, `/monitor` opens to anyone who signs up and no code here will notice.** GOTCHA 3 is
+a one-line check worth running before anyone trusts the surface.
+
+The instance identifies users **by phone**, not email — `firstName` is the only reliable
+display value. `/monitor` is deliberately an empty shell; it exists so the boundary has
+something behind it, and what it displays waits on the position-model call below.
 
 **Deliberately still absent:** Prisma (no schema yet, so no client to generate), a `/sign-up`
 route (two users, invited from the Dashboard), Clerk webhooks (nothing to sync into yet),
@@ -60,10 +67,10 @@ interstitial, consistent with that record still being proxied — it should be *
 Sign-up mode is **`restricted`** (owner, 2026-08-24, verified against the live instance) —
 it was `public` on first setup, which would have let anyone create an account.
 
-**Blocked on the Clerk Dashboard** (`PLAYBOOKS/auth-clerk.md` § 2): invite Rodney and Jett,
-and set `SAVOY_ALLOWED_PHONES` on Railway — **it is not set, so `/monitor` refuses everyone**,
-which is the intended fail-closed behaviour, not a bug. Their verified numbers, with country
-codes, are the one thing still missing before the monitor opens. `next build` passes without them, so the deploy will not break before they land —
+**Blocked on the Clerk Dashboard** (`PLAYBOOKS/auth-clerk.md` § 2): invite Rodney and Jett.
+That invitation is now the whole authorization step — there is no list to add them to. Also
+still outstanding: flip the `accounts.` DNS record to DNS-only, and point the public nav's
+"Investor login" at `/sign-in` when the owner wants it discoverable. `next build` passes without them, so the deploy will not break before they land —
 but the monitor refuses everyone until they do. Separately, the public nav's "Investor
 login" still points at `/coming-soon`; pointing it at `/sign-in` is a one-line owner call,
 left alone on purpose.

@@ -23,9 +23,10 @@ belongs in `STATE.md` or `LOG.md` instead.
    the first schema; retrofitting history onto a current-value model is expensive.
 
 **The authenticated user population is two people.** Not a growth curve — two. What scales
-is the **number of investments**, and modestly. This is enforced in code, not just assumed:
-the private surface is gated by an email allowlist (`SAVOY_ALLOWED_EMAILS`) on top of Clerk,
-and there is no self-service sign-up route. See `PLAYBOOKS/auth-clerk.md`.
+is the **number of investments**, and modestly. It is enforced by Clerk being set to
+**restricted sign-up** — an account cannot exist without an invitation — and by there being
+no self-service sign-up route. That setting is the boundary; nothing in this repo re-checks
+it. See `PLAYBOOKS/auth-clerk.md`.
 
 ## Not theAPlink — what does NOT carry over
 

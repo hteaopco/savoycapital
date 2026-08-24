@@ -6,6 +6,28 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The in-app allowlist is removed; restricted sign-up is the whole boundary (owner,
+  2026-08-24).** `SAVOY_ALLOWED_PHONES` and `src/lib/auth.ts` are deleted. The Clerk instance
+  is set to `sign_up.mode: "restricted"`, so an account cannot exist unless a principal
+  invited it, and on that instance "signed in" and "allowed in" are the same statement.
+  `src/proxy.ts` enforcing the first therefore enforces both.
+  - **This supersedes the three allowlist decisions below.** They are kept rather than deleted
+    because the reasoning that produced them was correct *at the time*: the instance was
+    `sign_up.mode: "public"` when the boundary was designed, and with open sign-up a session
+    genuinely proved nothing. Restricting sign-up removed the premise, not the logic.
+  - **Why it was dropped rather than kept as defence-in-depth.** An env-var allowlist puts
+    user identity in deploy config: adding or revoking a person means a redeploy, and the
+    list drifts from the invitations it is supposed to mirror. The owner judged the
+    redundancy not worth that, which is a reasonable call for two people on a restricted
+    instance.
+  - **The cost, stated plainly: the security boundary now lives in a Dashboard toggle, and
+    nothing in this repo can see it.** If `sign_up.mode` returns to `public` — someone
+    testing, a new instance, a Clerk default changing — the portfolio monitor opens to anyone
+    who signs up, silently. Treat that setting as code. `PLAYBOOKS/auth-clerk.md` GOTCHA 3
+    carries a one-line check.
+  - **If a second lock is ever wanted again, it goes in Clerk `privateMetadata`**, not an env
+    var — same protection, no redeploy to add a person.
+
 - **The allowlist matches phone numbers, not email addresses (owner, 2026-08-24).** The
   Clerk instance identifies users by phone — `identification_strategies: ["phone_number"]`,
   email off, no email verification strategies at all, read from the live instance rather than
