@@ -8,6 +8,20 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Post-login redirect sent users to `localhost:8080`** (2026-08-24). Caught by sweeping the
+  live site immediately after the first deploy of the auth boundary, not by a report. The
+  boundary itself was correct — `/portfolio` closed, public routes untouched — but the
+  proxy built `redirect_url` from `request.url`, which behind Railway is the container's
+  internal address. A user who signed in successfully would have been dropped at
+  `https://localhost:8080/portfolio`.
+  Fixed by making the return path **relative**, which removes the need to reconstruct the
+  public origin at all. The other available fix — reading `X-Forwarded-Host` — was rejected:
+  that header is attacker-controlled unless the proxy overwrites it, and putting it in a
+  redirect target is how open redirects get built. GOTCHA 11, with the general rule that
+  `request.url` must never end up in anything that outlives the redirect.
+  Also cleaned up a comment in `src/proxy.ts` still describing `checkAccess()`, which was
+  deleted with the allowlist — a stale comment about an auth check is worse than none.
+
 - **`/portfolio` is closed; the auth work rebased onto it** (2026-08-24). The Clerk branch was
   built against a repo whose private surface did not exist yet, so it carried a placeholder
   `/monitor` behind a `(private)` route group. `#9` and `#10` landed the real thing —

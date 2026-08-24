@@ -173,6 +173,23 @@ someone by or to key anything on. An earlier allowlist keyed on email had to be 
 phones before being dropped entirely — the identifier is not a detail, so check it before
 building anything that depends on one.
 
+**GOTCHA 11 — `request.url` is the INTERNAL address behind Railway.**
+*Symptom:* sign-in works, and then dumps the user at
+`https://localhost:8080/portfolio`. Invisible locally, where internal and public origins are
+the same thing; only reproduces on a deployed host.
+*Cause:* Railway terminates TLS and forwards to the container, so in the proxy
+`request.url` is `https://localhost:8080/...`. The redirect's own `Location` header survives
+this — Next rebuilds its host from the forwarded headers — but a URL you put in a **query
+string** is opaque to that rewriting and ships the internal origin verbatim.
+*Fix (in place):* `src/proxy.ts` sets `redirect_url` to a **relative** path
+(`${request.nextUrl.pathname}${request.nextUrl.search}`). Nothing has to reconstruct the
+public origin, so nothing can get it wrong.
+*Why not `X-Forwarded-Host`:* it is the other fix and it works, but that header is
+attacker-controlled unless the proxy is known to overwrite it, and feeding it into a redirect
+target is how open redirects are built. A relative path has no such surface.
+*General rule:* never put `request.url` into anything that survives past the redirect.
+Observed in production 2026-08-24, minutes after the first deploy.
+
 ---
 
 ## 4. Deliberately not built
