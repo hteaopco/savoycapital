@@ -646,17 +646,6 @@ export function FundAllocation({
                   >
                     {s.label}
                   </span>
-                  {/*
-                    Empty twin of the holding rows' action column. Without it a
-                    bucket's amount sits 104px right of a holding's and the two
-                    money columns do not line up — which is the whole reason the
-                    button was moved out of the end of the row.
-                  */}
-                  <span
-                    aria-hidden
-                    className="hidden md:block md:w-[104px]"
-                    style={{ flexShrink: 0 }}
-                  />
                   <span
                     style={{
                       fontSize: 13,
@@ -678,6 +667,19 @@ export function FundAllocation({
                   >
                     {pct(s.amountCents, fundSizeCents)}
                   </span>
+                  {/*
+                    Empty twin of the holding rows' action column, and it moved
+                    to AFTER the percentage with them (owner, 2026-08-24). The
+                    twin is what keeps a bucket's money and share in the same
+                    columns as a holding's; the pair has to move together or the
+                    table stops lining up, which is the defect that put the
+                    button in a fixed column in the first place.
+                  */}
+                  <span
+                    aria-hidden
+                    className="hidden md:block md:w-[104px]"
+                    style={{ flexShrink: 0 }}
+                  />
                 </button>
 
                 {isOpen ? (
@@ -733,57 +735,6 @@ export function FundAllocation({
                               {h.name}
                             </span>
 
-                            {/*
-                              A fixed column, not the end of the row (owner,
-                              2026-08-24). Sitting last, the button pushed this
-                              row's money left of every bucket's; in a column of
-                              its own the amounts and percentages line up down
-                              the whole table.
-
-                              It only fits as a column from md up. At 390px the
-                              tray gives ~260px and the four cells want ~354, so
-                              below md the slot goes full-width and orders last —
-                              the button drops to its own line rather than
-                              squeezing the name to nothing. § 0.7 lets a name
-                              truncate but never a money value.
-
-                              Only a position we actually hold terms for gets a
-                              button, so the control cannot open an empty box.
-                              § 7's floor lands on the button now that it is what
-                              a thumb hits: 44px on touch, the tray's density
-                              from md up.
-                            */}
-                            <span
-                              className="order-last w-full md:order-none md:w-[104px] flex justify-end"
-                              style={{ flexShrink: 0 }}
-                            >
-                              {hasDetail ? (
-                                <button
-                                  onClick={() =>
-                                    openHoldingDetail(
-                                      isDetailOpen ? null : key,
-                                      s.id,
-                                    )
-                                  }
-                                  aria-expanded={isDetailOpen}
-                                  className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
-                                  style={{
-                                    padding: "4px 10px",
-                                    borderRadius: 6,
-                                    border: `1px solid ${isDetailOpen ? C.accent : C.border}`,
-                                    background: isDetailOpen ? C.accent : C.bg,
-                                    color: isDetailOpen ? C.onSolid : C.accent,
-                                    fontSize: 11,
-                                    fontWeight: 600,
-                                    fontFamily: "inherit",
-                                    whiteSpace: "nowrap",
-                                    transition: `background ${TRANSITION}, color ${TRANSITION}, border-color ${TRANSITION}`,
-                                  }}
-                                >
-                                  View Details
-                                </button>
-                              ) : null}
-                            </span>
                             <span
                               style={{
                                 fontSize: 11,
@@ -804,6 +755,73 @@ export function FundAllocation({
                               }}
                             >
                               {pct(h.amountCents, fundSizeCents)}
+                            </span>
+                            {/*
+                              A fixed column, and since 2026-08-24 it sits AFTER
+                              the percentage (owner: "move the view details to
+                              the right side of the % column").
+
+                              It is still a fixed column rather than a loose last
+                              child, and that is load-bearing: the bucket rows
+                              carry an empty twin of it, moved in the same change,
+                              because without one a bucket's money sits 104px off
+                              a holding's. That misalignment is the defect that
+                              made this a column originally — the position
+                              changed, the reason for the column did not.
+
+                              It only fits as a column from md up. At 390px the
+                              tray gives ~260px and the four cells want ~354, so
+                              below md the slot goes full-width and wraps to its
+                              own line — § 0.7 lets a name truncate but never a
+                              money value.
+
+                              Only a position we actually hold terms for gets a
+                              button, so the control cannot open an empty box.
+                              § 7's floor lands on the button now that it is what
+                              a thumb hits: 44px on touch, the tray's density
+                              from md up.
+                            */}
+                            <span
+                              className="w-full md:w-[104px] flex justify-end"
+                              style={{ flexShrink: 0 }}
+                            >
+                              {hasDetail ? (
+                                <button
+                                  onClick={() =>
+                                    openHoldingDetail(
+                                      isDetailOpen ? null : key,
+                                      s.id,
+                                    )
+                                  }
+                                  aria-expanded={isDetailOpen}
+                                  className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+                                  style={{
+                                    padding: "4px 10px",
+                                    borderRadius: 6,
+                                    // OPEN is a tint, not a solid fill (owner,
+                                    // 2026-08-24: "make the link less heavy").
+                                    // This is the canon's own alternative to a
+                                    // solid tone — DESIGN_SYSTEM.md § 4 calls it
+                                    // "subtle tint + colored text" and reserves
+                                    // solid fills for a narrow set this is not
+                                    // in. The row already carries the state
+                                    // twice over: the panel is on screen and the
+                                    // donut has swung to this bucket, so the
+                                    // button does not have to shout it a third
+                                    // time.
+                                    border: `1px solid ${isDetailOpen ? C.accentBorder : C.border}`,
+                                    background: isDetailOpen ? C.accentBg : C.bg,
+                                    color: C.accent,
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    fontFamily: "inherit",
+                                    whiteSpace: "nowrap",
+                                    transition: `background ${TRANSITION}, color ${TRANSITION}, border-color ${TRANSITION}`,
+                                  }}
+                                >
+                                  View Details
+                                </button>
+                              ) : null}
                             </span>
                           </div>
 
