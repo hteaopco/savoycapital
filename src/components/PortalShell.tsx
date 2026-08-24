@@ -6,8 +6,6 @@ import { usePathname } from "next/navigation";
 import { SignOutButton, useClerk, useUser } from "@clerk/nextjs";
 import {
   Handshake,
-  History,
-  Home,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -29,7 +27,7 @@ import { C } from "./palette";
  *
  * **What is deliberately not built: the bottom tab bar.** § 2 describes one for
  * "the feature-gated daily drivers", and then says the drawer is the complete
- * nav and anything else living there is fine. With four destinations across two
+ * nav and anything else living there is fine. With two destinations across two
  * groups a tab bar would duplicate the whole menu rather than shortcut part of
  * it — and it has no way to express the grouping. Add one when there are enough
  * screens for the shortcut to mean something.
@@ -59,12 +57,12 @@ const TRANSITION = "160ms ease";
 type NavItem = {
   href: string;
   label: string;
-  Icon: typeof Home;
+  Icon: typeof PieChart;
 };
 
 type NavSection = {
   title: string;
-  Icon: typeof Home;
+  Icon: typeof PieChart;
   items: NavItem[];
 };
 
@@ -97,14 +95,16 @@ const NAV: NavSection[] = [
     title: "Portal Home",
     Icon: LayoutDashboard,
     items: [
-      // `/home`, not `/portal` (owner, 2026-08-24). `/portal` still redirects to
-      // Portfolio, which is deliberate: `signInFallbackRedirectUrl` in
-      // src/app/layout.tsx lands there after sign-in, that prop is the Clerk
-      // seat's, and dropping a user onto a coming-soon page after they sign in
-      // would be worse than landing them on the real screen.
-      { href: "/home", label: "Home", Icon: Home },
+      // Home and Historical were REMOVED on 2026-08-24 (owner: "lets just delete
+      // home and historical links for now...until we have something to put
+      // here"). Their pages went with them rather than being left reachable by
+      // URL and linked from nowhere — the `/coming-soon` situation this repo
+      // already carries as a known wart. `git revert` brings both back whole.
+      //
+      // `/portal` still redirects to Portfolio, which matters more now, not
+      // less: `signInFallbackRedirectUrl` in src/app/layout.tsx lands there
+      // after sign-in, and Portfolio is the only portal screen left to land on.
       { href: "/portal/portfolio", label: "Portfolio", Icon: PieChart },
-      { href: "/portal/historical", label: "Historical", Icon: History },
     ],
   },
 ];

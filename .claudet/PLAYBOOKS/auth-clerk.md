@@ -43,10 +43,11 @@ public until someone remembered it.
 
 **The private surface is the whole `/portal` section**, not a single page. `/portal`
 itself (`src/app/portal/page.tsx`) is a redirect; the fund allocation and its position-level
-amounts live at `/portal/portfolio` (`src/app/portal/portfolio/page.tsx`), and
-`/portal/historical` is an empty shell waiting on the position schema. Each is protected by
-being **absent from the public list above**, not by anything on the page itself. There is no
-marker in any of those files that makes them private, which is the deny-by-default trade:
+amounts live at `/portal/portfolio` (`src/app/portal/portfolio/page.tsx`), which since
+2026-08-24 is the only screen in the section — `/portal/historical` and `/home` were deleted
+with their nav links (owner). Each remaining route is protected by being **absent from the
+public list above**, not by anything on the page itself. There is no marker in those files
+that makes them private, which is the deny-by-default trade:
 adding a route is safe, and adding one to the public list is the dangerous edit. Review
 changes to that list the way you would review a change to a permission.
 
@@ -108,7 +109,7 @@ route, but nothing links to it any more.
 
 - Signed out, `/portal` → 307 to `/sign-in?redirect_url=...` **on this domain**. A redirect
   to a `*.accounts.dev` host means GOTCHA 1 has regressed. Check `/portal/portfolio` and
-  `/portal/historical` too: each is protected on its own, not by the section prefix.
+  `/deal-room` too: each is protected on its own, not by a section prefix.
 - Signed in as a provisioned user → `/portal` redirects to `/portal/portfolio`, which renders
   the allocation. Sign-out is in **`PortalShell`'s own account block at the foot of the
   sidebar** — not Clerk's `<UserButton />`, which the owner replaced on 2026-08-24. The
@@ -280,8 +281,9 @@ for every private route, and it is defense-in-depth worth having regardless.
 *Symptom:* a user clicks Sign Out, is not redirected, and keeps navigating the portal. Reads
 exactly like a broken session boundary. Reported by the owner, 2026-08-24.
 *Cause — the part that is structural and permanent:* **every portal route is statically
-prerendered.** `next build` reports `○` for `/portal`, `/portal/portfolio`,
-`/portal/historical`, `/home` and `/deal-room`; only `/sign-in` and the API routes are `ƒ`.
+prerendered.** `next build` reports `○` for `/portal` and `/portal/portfolio`; `/deal-room`
+is `ƒ` because it queries Postgres, and so are `/sign-in` and the API routes. (`/home` and
+`/portal/historical` were deleted on 2026-08-24 and are no longer in that list.)
 The sidebar's `next/link` entries prefetch those routes into the browser's router cache, so
 moving between them is a client-side swap that **never reaches the server** — which means
 `src/proxy.ts` never runs and cannot 307 anyone out mid-session. Cached pages keep rendering
