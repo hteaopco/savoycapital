@@ -6,6 +6,29 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The roster is a RECORD, not an access list, and the screen says so (owner, 2026-08-24).**
+  "Fund & Users" adds `Fund.inceptionDate` and a `User` table — first name, last name, phone,
+  fund, role. **None of it grants anything.**
+  - **Why this needed deciding rather than just building.** A table of people beside a `Role`
+    column is indistinguishable from a permissions system at a glance, and the failure it
+    invites is silent: somebody removes a row, believes that person is out, and they are not.
+    Access is still Clerk's restricted sign-up plus a Dashboard invitation — this table is read
+    by nothing. The warning is repeated in the schema, in both API routes, **on the screen
+    itself** and in `PLAYBOOKS/fund-users.md`, because a doc alone does not reach the person
+    clicking Remove.
+  - **`Role` mirrors `Audience`** (`MANAGEMENT` / `INVESTOR`) so the eventual authorization
+    layer has a column to read and the two vocabularies agree. Today the two values carry
+    identical power.
+  - **`phone` is unique and stored exactly as typed.** It is the join to a Clerk identity —
+    that instance identifies people by phone, not email — so two rows on one number cannot
+    both be that account. No normalisation: guessing a country code wrong on the one field
+    that has to match Clerk is worse than storing what was entered.
+  - **`inceptionDate` is nullable.** Fund 1 predates the column and this repo may not invent a
+    fund figure; a default would have written a date nobody supplied onto the fund every deal
+    belongs to. A `DATE`, not a timestamp, so a timezone cannot move it across midnight.
+  - **No fund delete.** `Deal.fundId` and `User.fundId` are both `Restrict`, so it would fail
+    at the database; a button that cannot work is worse than none.
+
 - **The Deal Room brings Postgres, and deals carry a `fundId` (owner, 2026-08-24).**
   > "Add a database" · "FundID - will denote the fund (if we grow later) / DealID - deal
   > within the fund ... investors would be identified by fundID, and they would have access

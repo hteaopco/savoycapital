@@ -28,6 +28,11 @@ investors needs an authorization layer that does not exist, because "signed in" 
 test today. `PLAYBOOKS/storage-r2.md` is the operational detail, and its GOTCHA 1 is the one
 that matters — the bucket's privacy is two dashboard toggles, not code.
 
+**A roster of funds and people exists in Postgres as of 2026-08-24** (`Fund`, `User`), and it
+is a RECORD ONLY — it creates no accounts, grants no access, and is read by nothing. Do not
+read the paragraph below as softened by it: the number of people who can actually sign in is
+still governed entirely by Clerk. `PLAYBOOKS/fund-users.md` § 1.
+
 **The authenticated user population is two people.** Not a growth curve — two. What scales
 is the **number of investments**, and modestly. It is enforced by Clerk being set to
 **restricted sign-up** — an account cannot come into existence unless a principal made it —

@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Globe,
   Handshake,
+  IdCard,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -29,9 +30,9 @@ import { C } from "./palette";
  *
  * **What is deliberately not built: the bottom tab bar.** § 2 describes one for
  * "the feature-gated daily drivers", and then says the drawer is the complete
- * nav and anything else living there is fine. With three destinations across
- * two groups — one of which leaves the portal — a tab bar would duplicate the
- * whole menu rather than shortcut part of it — and it has no way to express the grouping. Add one when there are enough
+ * nav and anything else living there is fine. With four destinations across two
+ * groups — one of which leaves the portal — a tab bar would duplicate the whole
+ * menu rather than shortcut part of it — and it has no way to express the grouping. Add one when there are enough
  * screens for the shortcut to mean something.
  *
  * There is no entity switcher under the title. theAPlink has one because it
@@ -97,7 +98,10 @@ const NAV: NavSection[] = [
   {
     title: "Admin",
     Icon: Shield,
-    items: [{ href: "/deal-room", label: "Deal Room", Icon: Handshake }],
+    items: [
+      { href: "/deal-room", label: "Deal Room", Icon: Handshake },
+      { href: "/fund-users", label: "Fund & Users", Icon: IdCard },
+    ],
   },
   {
     title: "Portal Home",

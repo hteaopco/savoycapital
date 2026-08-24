@@ -54,9 +54,75 @@ model Fund {
   id   Int    @id @default(autoincrement())
   name String
 
+  /// When the fund started (owner, 2026-08-24: "name of fund + inception date").
+  ///
+  /// NULLABLE, and that is not laziness. Fund 1 already exists and this repo is
+  /// not allowed to invent a fund figure — an inception date is one. A default
+  /// here would write a date nobody supplied into the fund every deal belongs
+  /// to. It reads as "not set" until a person sets it.
+  ///
+  /// A date, not a timestamp: an inception is a calendar day, and storing it
+  /// with a time invites a timezone to shift it across midnight.
+  inceptionDate DateTime? @db.Date
+
   createdAt DateTime @default(now())
 
   deals Deal[]
+  users User[]
+}
+
+/// What a person IS on this fund. **It grants nothing.**
+///
+/// Mirrors `Audience` deliberately — an INVESTOR should see investor-facing
+/// documents and a MANAGEMENT user everything — but nothing reads this column
+/// to decide anything yet. `src/proxy.ts` still asks one question, "is somebody
+/// signed in", and that is the whole authorization model (DECISIONS 2026-08-24).
+enum Role {
+  MANAGEMENT
+  INVESTOR
+}
+
+/// A person on a fund — a RECORD, not an account.
+///
+/// ## This table does not grant access, and nothing here checks it
+///
+/// Creating a row does NOT create a Clerk account, does not send an invitation,
+/// and does not let anyone sign in. Access is still exactly what it was: Clerk's
+/// restricted sign-up plus an invitation sent from the Clerk Dashboard. Deleting
+/// a row does not revoke anything either — the Clerk account outlives it.
+///
+/// It is a roster the owner keeps, and the shape the eventual authorization
+/// layer will read from. Saying that plainly is the whole reason this comment is
+/// long: a `User` table beside a `Role` column looks exactly like a permissions
+/// system, and acting as though it were one is how somebody ends up believing a
+/// person was removed when they were not.
+model User {
+  id Int @id @default(autoincrement())
+
+  firstName String
+  lastName  String
+
+  /// The Clerk instance identifies people by PHONE, not email
+  /// (`PLAYBOOKS/auth-clerk.md` GOTCHA 9), so this is the field that would join
+  /// a roster row to a real account.
+  ///
+  /// UNIQUE for that reason: two rows on one phone cannot both be that account,
+  /// and the ambiguity would land on whoever builds the join. Stored as typed —
+  /// no normalisation, so "+1 555 000 1111" and "5550001111" are two rows. The
+  /// API answers a collision with 409 and a message rather than a stack trace.
+  phone String @unique
+
+  fundId Int
+  fund   Fund @relation(fields: [fundId], references: [id], onDelete: Restrict)
+
+  role Role @default(INVESTOR)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  /// Clerk user id of whoever added the row. Same reasoning as `Deal.createdBy`.
+  createdBy String
+
+  @@index([fundId, role])
 }
 
 /// One deal, inside a fund. The unit the owner creates and uploads into.
@@ -101,7 +167,7 @@ model DealDocument {
   key String @unique
 
   /// The sanitised filename, as stored in the key's last segment.
-  filename String
+  filename    String
   /// What the owner typed. The reason this table exists at all.
   description String
 
