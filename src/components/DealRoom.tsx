@@ -908,8 +908,21 @@ function DocumentRow({
   };
 
   return (
+    /*
+      `flex-wrap` so the actions drop to their own line on a phone.
+      The three controls plus the row's padding are ~256px of fixed width; a
+      375px viewport leaves the row ~333px, so the description was being squeezed
+      to ~77px — ~53px on an indented row — and wrapping into a narrow column.
+      Nothing tore (the description carries `min-w-0 flex-1`), which is why this
+      is an ergonomics fix rather than a breakage one.
+
+      Desktop is untouched: the card is up to 900px wide, everything fits on one
+      line, and a flex row only wraps when it must. The action group below takes
+      `w-full` under `md:` and `md:w-auto` above it, so the split is deterministic
+      on a phone rather than depending on how long a filename happens to be.
+    */
     <div
-      className="flex items-center justify-between"
+      className="flex flex-wrap items-center justify-between"
       style={{
         gap: 12,
         padding: "12px 16px",
@@ -970,7 +983,10 @@ function DocumentRow({
         // Armed. The other actions are replaced rather than sitting alongside,
         // so the row asks one question and "Delete?" cannot be answered by
         // clicking something else.
-        <div className="flex items-center" style={{ gap: 6, flexShrink: 0 }}>
+        <div
+          className="flex w-full items-center justify-end md:w-auto"
+          style={{ gap: 6, flexShrink: 0 }}
+        >
           <span style={{ fontSize: 12, fontWeight: 600, color: C.red }}>Delete?</span>
           <button
             onClick={() => void remove()}
@@ -998,7 +1014,10 @@ function DocumentRow({
           </button>
         </div>
       ) : (
-        <>
+        <div
+          className="flex w-full items-center justify-end md:w-auto"
+          style={{ gap: 6 }}
+        >
           {!editing ? (
             <button
               onClick={() => setEditing(true)}
@@ -1039,7 +1058,7 @@ function DocumentRow({
           >
             <Trash2 size={13} />
           </button>
-        </>
+        </div>
       )}
     </div>
   );

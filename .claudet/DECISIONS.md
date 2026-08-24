@@ -6,6 +6,31 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The mobile tap-target floor is global for form controls and per-component for buttons
+  (2026-08-24).** `src/app/globals.css` gains its first `@media (max-width: 767px)` block,
+  flooring `input` / `select` / `textarea` to **44px**. `button` is deliberately **not** in it.
+  - **Why a global block at all.** `design/MOBILE_REFERENCE.md` § 6 assumed one existed and
+    told readers "you usually need no per-component work." It did not exist, so nothing was
+    floored. Measured in Chromium at a 375px viewport before the fix: text input **37px**,
+    date **39px**, select **34px**, one folder-edit input **28px** — every form control on the
+    new Deal Room and Fund & Users screens was under the rule, and no lint, typecheck or build
+    here would ever have said so.
+  - **Why `button` is excluded, which is the load-bearing half.** § 0.8's carve-out lets a
+    *spaced secondary* control sit at 36×36px (owner, 2026-08-23) and the carousel arrows ship
+    at `h-9 w-9` on exactly that grant. A blanket `button { min-height: 44px }` would have
+    silently overruled an owner decision — the failure mode where a global "fix" quietly
+    deletes a considered exception. Buttons keep `min-h-[44px] md:min-h-0` at the call site,
+    where the exception is readable. Verified after the change: arrows still measure 36px.
+  - **44, not theAPlink's 40/42.** `DESIGN_SYSTEM.md` § 0.8 / § 9 put the floor at ≥44×44px;
+    40 is upstream's own softening and did not carry here.
+  - **The cost, stated plainly.** A global rule is invisible at the call site: a future
+    component gets a 44px input without asking, and someone sizing a control tightly on
+    purpose will be overridden without a diff to read. That is the trade for controls nobody
+    has written yet being right by default. It is also why the exclusion list is narrow and
+    documented rather than convenient.
+  - **What is still floored by nothing:** a clickable `<div>` or `<span>`, and `<a>`. Those
+    remain per-component, unchecked. A `lint:mobile` would catch them; it does not exist.
+
 - **Role is enforced, and an empty roster opens the portal rather than closing it (2026-08-24).**
   The layer is `src/lib/authz.ts`, read by pages and route handlers.
   - **Not in `src/proxy.ts`, and not only because of ownership.** Middleware runs on the edge,

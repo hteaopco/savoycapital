@@ -29,3 +29,37 @@
     cursor: pointer;
   }
 }
+
+/*
+ * Touch-target floors for form controls. ≤767px only.
+ *
+ * `design/MOBILE_REFERENCE.md` § 6 assumes a block like this already exists and
+ * says "you usually need no per-component work". In this repo it did NOT exist,
+ * so nothing was floored and every control shipped at whatever its padding
+ * produced — measured in Chromium at 375px: text 37px, date 39px, select 34px,
+ * and one folder-edit input at 28px, against a 44px rule. That is the gap this
+ * closes, and it closes it for controls nobody has written yet.
+ *
+ * 44, not theAPlink's 40/42. `DESIGN_SYSTEM.md` § 0.8 and § 9 put the floor at
+ * ≥44×44px; 40 is upstream's own softening and it did not carry here. See
+ * `design/MOBILE_REFERENCE.md`'s divergence banner.
+ *
+ * FORM CONTROLS ONLY — deliberately not `button`.
+ * § 0.8's carve-out lets a *spaced secondary* control sit at 36×36px (owner,
+ * 2026-08-23), and the carousel arrows are `h-9 w-9` on exactly that grant. A
+ * blanket `button` floor here would silently overrule an owner decision. The
+ * carve-out explicitly excludes form controls, so inputs and selects take the
+ * full 44 — and buttons keep carrying `min-h-[44px] md:min-h-0` at their own
+ * call sites, where the exception can be read.
+ *
+ * `min-height` beats an inline `height`, so this floors a control on touch
+ * without any component changing. Desktop is untouched by construction: the
+ * query cannot match at ≥768px.
+ */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,
+  textarea {
+    min-height: 44px;
+  }
+}

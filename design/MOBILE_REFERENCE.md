@@ -13,7 +13,7 @@
 > | header, § 2 | Desktop is frozen; mobile is an additive layer | **Mobile-first.** Neither surface is frozen — both are authored at once, at 375px first (`DESIGN_SYSTEM.md` § 1.1) |
 > | § 1 | Exactly one breakpoint; `sm:` / `lg:` / `min-width` rejected by lint | `md:` (the 767/768 line) is the primary boundary. **A second breakpoint is allowed** when it is derived from arithmetic and shown at the call site |
 > | § 1, § 3, § 4 | `useIsMobile()`, `MobileCard`, `sheetCard`, `.ap-chip-strip` | **None of these exist here.** Branching is CSS-only (`md:`), SSR-safe by construction. The *patterns* still apply; the named modules do not exist to import |
-> | § 6 | `globals.css` floors `button` to 40px on mobile, so "you usually need no per-component work" | **No global floor exists.** The floor is **44px** (`DESIGN_SYSTEM.md` § 0.8 / § 9), written per component as `min-h-[44px] md:min-h-0` |
+> | § 6 | `globals.css` floors `button` to 40px on mobile, so "you usually need no per-component work" | **A global floor now exists, for FORM CONTROLS only, at 44px** (2026-08-24). `input` / `select` / `textarea` are floored by a `@media (max-width:767px)` block in `globals.css`. **`button` is deliberately NOT floored** — § 0.8's 36px carve-out is live on the carousel arrows and a blanket rule would overrule it — so buttons still carry `min-h-[44px] md:min-h-0` at their call sites |
 > | § 8, § 9 | `npm run lint:mobile` ratchet; coverage tables reading zero | **No gate exists.** Those tables are theAPlink's numbers. Coverage here is **unmeasured** |
 >
 > **§ 6 is the one that bites.** Trusting it ships under-sized controls, and nothing in this
@@ -288,12 +288,22 @@ per-component work:
 | `input` (non-checkbox/radio), `select`, `textarea` | `min-height: 42px` |
 | `input[type=checkbox|radio]` | `20 × 20px` |
 
-> ### ⚠️ savoycapital: none of that is true here. Read this before sizing any control.
+> ### ⚠️ savoycapital: half of that is now true. Read this before sizing any control.
 >
-> **`src/app/globals.css` has no `@media (max-width: 767px)` block.** Nothing is
-> auto-floored. The sentence above — "you usually need no per-component work" — is the most
-> dangerous line in this file for this repo: believed, it ships under-sized controls, and no
-> lint, type-check or build here will say a word.
+> **`src/app/globals.css` has a `@media (max-width: 767px)` block as of 2026-08-24, and it
+> floors FORM CONTROLS only** — `input`, `select`, `textarea` — at **44px**. For those, the
+> sentence above is finally accurate here: you need no per-component work.
+>
+> **`button` is deliberately excluded and still needs per-component work.** § 0.8's carve-out
+> lets a spaced secondary control sit at 36×36px (owner, 2026-08-23) and the carousel arrows
+> are `h-9 w-9` on exactly that grant; a blanket `button` floor would silently overrule an
+> owner decision. Buttons carry `min-h-[44px] md:min-h-0` at the call site, where the
+> exception can be read. **A new clickable `<div>` or `<span>` is floored by nothing at all.**
+>
+> How the gap was found, so the next person trusts the number: measured in Chromium, not
+> inferred. Before the block, at a 375px viewport — text input **37px**, date **39px**,
+> select **34px**, one folder-edit input **28px**, against a 44px rule. After: all **44px**,
+> desktop byte-identical, arrows still 36.
 >
 > **The floor is 44px, not 40.** `DESIGN_SYSTEM.md` § 0.8 and § 9 put ≥44×44px on "every
 > interactive element a thumb hits"; 40px is theAPlink's own softening of that and it did
@@ -322,8 +332,9 @@ per-component work:
   without touching desktop. `min-height` beats `height`, so an inline `height: 22` on a
   `<button>` still renders 40px tall on a phone — **but only on a `<button>`/`[role=button]`/`<a>`.**
   A clickable `<div>`/`<span>` is not floored; give it padding or a ≥40px height. The lint
-  checks exactly this. **savoycapital: no floor and no lint — every element carries its own
-  `min-h-[44px]`, `<button>` and `<div>` alike, and nothing checks that you did.**
+  checks exactly this. **savoycapital: form controls are floored globally at 44 (2026-08-24);
+  `<button>`, `<a>`, and clickable `<div>`/`<span>` are not, and no lint checks that you
+  floored them.**
 - **No hard pixel width above ~347px** (375px phone − 14px shell padding each side). Use
   `min(Npx, 100%)`, a flex basis, or `maxWidth`. Gated at zero.
 - Mobile `<main>` padding is `14px`; bottom padding `84px` to clear the tab bar.
