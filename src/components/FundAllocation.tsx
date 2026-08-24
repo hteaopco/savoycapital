@@ -514,9 +514,27 @@ export function FundAllocation({
           </div>
         </div>
 
+        {/*
+          The 280px basis is what makes this column sit BESIDE the donut on a wide
+          card and wrap under it on a narrow one. Its `min-width` is what stopped it
+          being squeezed to nothing before it wrapped — but a min-width is a floor the
+          flexbox cannot go under, so once wrapped it kept demanding 280 inside a card
+          that had less: measured 280px wide inside a 242px card at a 320px viewport
+          (content spilling 38px past the card's own border), and exactly 0px of slack
+          at 360px, which is a very common phone width.
+
+          So the floor now applies only from `md:` up, where it does its job. Below it
+          the column is full-width under the donut anyway and has nothing to be
+          squeezed by, so releasing it costs nothing and the card contains its contents
+          at every width. The basis is untouched, so the wrap point does not move.
+
+          `min-width` must NOT go back in the style prop: an inline value beats the
+          Tailwind class and this would silently revert while reading as fixed — the
+          same trap the carousel dots carry a comment about.
+        */}
         <div
-          className="flex flex-col"
-          style={{ flex: "1 1 280px", minWidth: 280 }}
+          className="flex flex-col min-w-0 md:min-w-[280px]"
+          style={{ flex: "1 1 280px" }}
         >
           {segments.map((s) => {
             const isOpen = openId === s.id && s.holdings.length > 0;

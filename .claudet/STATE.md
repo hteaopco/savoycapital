@@ -58,6 +58,26 @@ rather than one-tenth**; that cost is recorded and accepted. **Anyone building t
 machinery — a `useIsMobile()` hook, `mobile-cards.tsx`, a `@media (max-width:767px)` block, a
 mobile lint — falsifies a row in those banners and must update them in the same PR.**
 
+**Mobile has been measured for the first time (2026-08-24).** Every page rendered in Chromium
+at 320–767px: 4 of 4 horizontally clean, one element bursting its container fixed
+(`FundAllocation`'s legend column, which demanded 280px inside a 242px card at 320px and had
+**zero** slack at 360px), and sub-44px controls down from 5 to 2. `MOBILE_REFERENCE.md` § 9
+carries the numbers and § 9a the method — including the two traps that made the first run of
+this sweep report a false clean: the sandbox proxy intercepting `localhost` so the browser
+measured the proxy's error page, and the fact that an unstyled page never overflows, so
+"clean" and "broken measurement" are indistinguishable without asserting the stylesheet
+applied.
+
+**The two remaining sub-floor controls are the owner's call, not the seat's:** the carousel
+arrows at 36×36 (inside the § 9 carve-out, legitimately) and the carousel dots at 24×44 — a
+deliberate earlier fix up from 6px that clears WCAG 2.2 AA but not the house floor on width.
+Closing it visibly spreads the dot row, which is a design decision.
+
+**Blocking for anyone who wants to run the app locally: it will not boot without a Clerk
+publishable key** — every route 500s, `/api/health` included, because the proxy initialises
+before any route handler. That is the Clerk seat's surface, noted here because it stops any
+seat from looking at the site in a browser.
+
 **The site is live on Railway** (owner-confirmed 2026-08-23). Next.js 16 + React 19 +
 TypeScript + Tailwind (layout only), the public landing page at `/`, and a dependency-free
 healthcheck at `/api/health`. Deploy shape: Nixpacks, `npm run build`, `npm run start`,
