@@ -13,6 +13,12 @@ Subsystem status: **built, management-only.** Investor-facing upload is refused 
 | **Postgres** (Prisma) | Deal name, document description, filename, size, uploader, timestamps | Neither a name nor a description is a byte, and R2's list call returns keys and sizes but **not** custom metadata — a listing built on object metadata costs one request per file |
 | **R2** | The bytes | It is an object store |
 
+`Fund → Deal → DealDocument`. A document may sit in a **folder** — a nullable free-text
+column on `DealDocument`, not a table (owner, 2026-08-24). A folder here has no properties of
+its own: no owner, no description, no permissions, no nesting. A table would be a join that
+buys nothing, and an empty folder is not a state worth representing. `NULL` means the top
+level of the deal.
+
 `Fund → Deal → DealDocument`. Every deal is `fundId` 1 today (owner: *"every deal id right
 now = fundid 1"*), and deal ids are sequential integers because the owner asked for "a deal
 id that we can pull from later and work off of".
@@ -119,6 +125,20 @@ Nothing serves the `investors/` prefix. A file written there is readable by nobo
 screen that looks like investors have access. The audience becomes an input when the
 authorization layer lands — see DECISIONS 2026-08-24.
 
+**GOTCHA 8a — folders are matched by exact string, so "UCC" and "UCC " are two folders.**
+There is no normalisation beyond a `trim()`, and no rename. The mitigation is a `<datalist>`
+of the deal's existing folder names on every folder input, so picking beats typing. If two
+spellings do appear, the fix today is moving each document with the row's folder control —
+which is also why that control exists.
+
+**GOTCHA 8b — the multi-file upload is still ONE REQUEST PER FILE.**
+The client posts sequentially and keeps going past a failure. Both halves are deliberate:
+eight concurrent multipart posts is a self-inflicted thundering herd against one container,
+and a batch that aborts on file three leaves the owner guessing which of eight landed. Every
+row ends up done or carrying its own reason, and only failures stay staged. Do not "optimise"
+this into one request carrying eight files — that reintroduces both problems and puts eight
+files against a per-file 25MB ceiling.
+
 **GOTCHA 8 — uploads are buffered and capped at 25MB.**
 `MAX_UPLOAD_BYTES`. The size is checked before *and* after buffering, because `File.size` is
 the client's declaration rather than a fact about the bytes that arrived. Raising it
@@ -130,6 +150,9 @@ meaningfully means `@aws-sdk/lib-storage`'s multipart `Upload`, not a bigger num
 
 - **Investor access.** The blocker is authorization, not storage. `src/proxy.ts` asks only
   whether somebody is signed in.
+- **Folder rename.** Renaming one means updating every document carrying that string. It is a
+  small route when someone wants it; until then the row control moves documents one at a time.
+- **Nested folders.** One level only. Nothing has asked for a tree.
 - **Delete.** No route removes a deal or a document. Fund records are not a thing to make
   easy to destroy; add it when there is a real need and decide then whether it is a soft
   delete.
