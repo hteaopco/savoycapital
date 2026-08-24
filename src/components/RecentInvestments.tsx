@@ -31,9 +31,17 @@ type Investment = {
     width: number;
     height: number;
     /**
-     * "logo" sits centered inside the slide's padding; "photo" fills the frame
-     * edge to edge. The supplied assets are not the same kind of image (see
-     * uploads/README.md), so the slide adapts rather than pretending they match.
+     * "logo" sits centered inside the slide's padding; "photo" runs edge to
+     * edge with no padding. The supplied assets are not the same kind of image
+     * (see uploads/README.md), so the slide adapts rather than pretending they
+     * match.
+     *
+     * **Neither one crops any more** (owner, 2026-08-24: "the other photos look
+     * good, but this one is still clipped"). "photo" used `cover`, which fills
+     * the frame by scaling up and slicing off whatever does not fit — on a
+     * 900x412 image in a ~478x280 frame that took the left third away,
+     * including the text baked into it. The difference between the two
+     * treatments is now padding alone.
      */
     treatment: "logo" | "photo";
   };
@@ -285,7 +293,16 @@ export function RecentInvestments() {
                       alt={investment.name}
                       fill
                       sizes="(max-width: 768px) 100vw, 520px"
-                      style={{ objectFit: "cover" }}
+                      priority={i === 0}
+                      // `contain`, not `cover`. Cover fills the frame by
+                      // scaling up and cropping the overflow, which on a
+                      // 900x412 photo in a ~478x280 frame cut off the left
+                      // third — text included. Contain shows the whole image
+                      // and letterboxes it against the card instead.
+                      //
+                      // Edge to edge still means something: a photo carries no
+                      // padding, a logo does. That is now the only difference.
+                      style={{ objectFit: "contain" }}
                     />
                   ) : (
                     /*

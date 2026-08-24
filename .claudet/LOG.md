@@ -8,6 +8,16 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **The Marucci photo was still cropped; `cover` is gone from the carousel** (owner,
+  2026-08-24). The previous fix changed the LOGO branch only. The photo branch still used
+  `objectFit: cover`, which fills a frame by scaling up and slicing off whatever does not
+  fit — on a 900x412 image in a ~478x280 frame that removed the left third, text baked into
+  the photo included. Now `contain`, like the logos.
+  **The two treatments still differ, and the difference is now padding alone:** a logo sits
+  inside `inset-5`/`md:inset-8`, a photo runs edge to edge. Nothing in the carousel crops.
+  The type's own comment said "photo fills the frame edge to edge", which was the sentence
+  that made cropping sound like the intent; it now says what the code does.
+
 - **Logos were clipped and off-centre; the frame is now `fill` + `contain`** (owner,
   2026-08-24). The logo branch sized the image from its intrinsic 520x360 and relied on
   `max-height: 100%` to clamp it — a percentage that has to resolve through a stretched grid
