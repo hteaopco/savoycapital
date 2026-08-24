@@ -259,6 +259,32 @@ handler — is what the resource-based model looks like, so that pair is the mig
 for every private route, and it is defense-in-depth worth having regardless.
 *Do not* silence the warning by pinning older, or by reaching for a deprecated shim.
 
+**GOTCHA 14 — "I can still click around the portal" is NOT evidence the session survived.**
+*Symptom:* a user clicks Sign Out, is not redirected, and keeps navigating the portal. Reads
+exactly like a broken session boundary. Reported by the owner, 2026-08-24.
+*Cause — the part that is structural and permanent:* **every portal route is statically
+prerendered.** `next build` reports `○` for `/portal`, `/portal/portfolio`,
+`/portal/historical`, `/home` and `/deal-room`; only `/sign-in` and the API routes are `ƒ`.
+The sidebar's `next/link` entries prefetch those routes into the browser's router cache, so
+moving between them is a client-side swap that **never reaches the server** — which means
+`src/proxy.ts` never runs and cannot 307 anyone out mid-session. Cached pages keep rendering
+until the tab does a real request. This is inherent to static prerendering plus prefetch, not
+a bug to fix, and it does **not** expose anything to a different person or a different device.
+*Cause — the part that was situational:* Railway auto-deploys on every merge to `main` and
+several seats merge daily, so a tab held open across a deploy references chunk hashes the
+server no longer has. A client in that state can have dead handlers — including Sign Out —
+while still rendering fine from cache. **Inferred, not observed**: the owner's later attempt
+from a fresh load signed out correctly and a deep link 307'd, which fits, but nobody captured
+the failing client.
+*The check that actually distinguishes the two states, and it takes five seconds:* **hard-
+reload the private route, or open it in a fresh tab.**
+- 307 to `/sign-in` → the session is gone; what was seen was cache, and the boundary is fine.
+- The portal renders → the session is genuinely alive and sign-out failed. That one is real.
+*The rule worth carrying:* this seat's standing principle is that a check which cannot fail
+proves nothing. Client-side navigation is exactly such a check — it succeeds whether or not a
+session exists. **Judge the boundary only on a fresh request.** Verified 2026-08-24: signed
+out, a deep link to `/deal-room` returned 307 and the full anonymous route sweep was clean.
+
 ---
 
 ## 4. Deliberately not built
