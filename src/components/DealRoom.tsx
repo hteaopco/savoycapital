@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { C } from "./palette";
-import { centsToDollarInput, formatCents } from "@/lib/money";
+import { centsToDollarInput, formatCents, groupDollarInput } from "@/lib/money";
 
 /**
  * Deal Room — create a deal, then upload its documents (owner, 2026-08-24).
@@ -48,8 +48,19 @@ export type Deal = {
   amountCents: number | null;
   /** `YYYY-MM-DD`, or `null`. */
   investmentDate: string | null;
+  /** Which Portfolio bucket this deal joins. `null` until set. */
+  instrument: Instrument | null;
   createdAt: string;
   documentCount: number;
+};
+
+/** Matches the schema's enum, and the two buckets the Portfolio chart draws. */
+export type Instrument = "PRIVATE_EQUITY" | "PRIVATE_CREDIT";
+
+/** Display names, in one place so the two screens cannot disagree. */
+export const INSTRUMENT_LABEL: Record<Instrument, string> = {
+  PRIVATE_EQUITY: "Private Equity",
+  PRIVATE_CREDIT: "Private Credit",
 };
 
 /** Just enough of a fund to populate the picker. */
@@ -86,7 +97,11 @@ type Staged = {
   error?: string;
 };
 
-type DealDetail = Omit<Deal, "documentCount"> & { documents: DealDocument[] };
+type DealDetail = Omit<Deal, "documentCount"> & {
+  terms: string | null;
+  fees: string | null;
+  documents: DealDocument[];
+};
 
 /** Bytes to something a person reads. Not money, so no cents rule applies. */
 function formatSize(bytes: number): string {
@@ -362,7 +377,9 @@ export function DealRoom({
                   row is a <button>, and a form control nested inside one is
                   invalid HTML that browsers resolve in their own ways.
                 */}
-                {deal.amountCents === null || deal.investmentDate === null ? (
+                {deal.amountCents === null ||
+                deal.investmentDate === null ||
+                deal.instrument === null ? (
                   <span
                     style={{
                       padding: "3px 8px",
@@ -537,15 +554,24 @@ function DealDetailView({
  * own ways. The row flags what is missing; this edits it.
  */
 function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void }) {
-  const needsBackfill = deal.amountCents === null || deal.investmentDate === null;
+  // The instrument is part of "needs values" because the Portfolio chart cannot
+  // plot a deal without one — an amount with no bucket has no arc to join.
+  const needsBackfill =
+    deal.amountCents === null || deal.investmentDate === null || deal.instrument === null;
   const [open, setOpen] = useState(needsBackfill);
   const [amount, setAmount] = useState(centsToDollarInput(deal.amountCents));
   const [date, setDate] = useState(deal.investmentDate ?? "");
+  const [instrument, setInstrument] = useState<Instrument | "">(deal.instrument ?? "");
+  const [terms, setTerms] = useState(deal.terms ?? "");
+  const [fees, setFees] = useState(deal.fees ?? "");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const amountId = useId();
   const dateId = useId();
+  const instrumentId = useId();
+  const termsId = useId();
+  const feesId = useId();
 
   const save = async () => {
     if (busy) return;
@@ -559,7 +585,13 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
         // Both keys always sent: the route treats an absent key as "leave
         // alone" and an empty string as "clear", so the form says exactly what
         // it shows rather than blanking the field it did not touch.
-        body: JSON.stringify({ amountCents: amount, investmentDate: date }),
+        body: JSON.stringify({
+          amountCents: amount,
+          investmentDate: date,
+          instrument,
+          terms,
+          fees,
+        }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body?.error ?? "Could not save.");
@@ -609,6 +641,7 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
             }}
           >
             {formatCents(deal.amountCents)}
+            {deal.instrument ? ` · ${INSTRUMENT_LABEL[deal.instrument]}` : ""}
             {deal.investmentDate ? ` · ${deal.investmentDate}` : ""}
           </span>
         ) : null}
@@ -633,6 +666,11 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
                 inputMode="numeric"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                // Grouped on blur, not on every keystroke. Reformatting mid-word
+                // moves the caret, so live grouping makes typing a long figure
+                // feel possessed; `groupDollarInput` leaves anything it cannot
+                // parse exactly as entered.
+                onBlur={(e) => setAmount(groupDollarInput(e.target.value))}
                 placeholder="1,500,000"
                 style={{ ...input, fontVariantNumeric: "tabular-nums" }}
               />
@@ -649,6 +687,68 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
                 style={input}
               />
             </div>
+            <div className="flex flex-col md:w-[190px]" style={{ gap: 6 }}>
+              <label htmlFor={instrumentId} style={label}>
+                Instrument
+              </label>
+              {/*
+                This is what puts the deal in a Portfolio bucket. Without it the
+                chart has no arc to add the amount to, so the deal is listed as
+                not shown rather than plotted somewhere plausible.
+              */}
+              <select
+                id={instrumentId}
+                value={instrument}
+                onChange={(e) => setInstrument(e.target.value as Instrument | "")}
+                style={input}
+              >
+                <option value="">— Not set —</option>
+                {(Object.keys(INSTRUMENT_LABEL) as Instrument[]).map((i) => (
+                  <option key={i} value={i}>
+                    {INSTRUMENT_LABEL[i]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/*
+            Free text, and shown in the Portfolio drill-down exactly as typed.
+            What a position actually holds — rate, term, amortisation for debt;
+            ownership and basis for equity — is still the decision blocked on a
+            person, so these stay prose rather than a schema that would have to
+            be undone.
+          */}
+          <div className="flex flex-col gap-3 md:flex-row">
+            <div className="flex min-w-0 flex-1 flex-col" style={{ gap: 6 }}>
+              <label htmlFor={termsId} style={label}>
+                Terms
+              </label>
+              <input
+                id={termsId}
+                type="text"
+                value={terms}
+                onChange={(e) => setTerms(e.target.value)}
+                placeholder="10% Rate, 1 Yr Balloon / 10 Yr Amort"
+                style={input}
+              />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col" style={{ gap: 6 }}>
+              <label htmlFor={feesId} style={label}>
+                Fees
+              </label>
+              <input
+                id={feesId}
+                type="text"
+                value={fees}
+                onChange={(e) => setFees(e.target.value)}
+                placeholder="1% fee on funding, 1% on renewal"
+                style={input}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center" style={{ gap: 12 }}>
             <button
               onClick={() => void save()}
               disabled={busy}
@@ -657,9 +757,10 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
             >
               {busy ? "Saving…" : saved ? "Saved" : "Save"}
             </button>
-          </div>
-          <div style={{ fontSize: 11, color: C.textMuted }}>
-            Dollars, stored as cents. Clearing a field removes the value.
+            <div style={{ fontSize: 11, color: C.textMuted }}>
+              Dollars, stored as cents. Clearing a field removes the value. These
+              figures are what the Portfolio chart draws.
+            </div>
           </div>
         </div>
       ) : null}

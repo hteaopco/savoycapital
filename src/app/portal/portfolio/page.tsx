@@ -2,11 +2,8 @@ import type { Metadata } from "next";
 import { C } from "@/components/palette";
 import { FundAllocation } from "@/components/FundAllocation";
 import { PortalShell } from "@/components/PortalShell";
-import {
-  FUND_AS_OF,
-  FUND_BUCKETS,
-  FUND_SIZE_CENTS,
-} from "@/content/fund-allocation";
+import { FUND_AS_OF } from "@/content/fund-allocation";
+import { loadPortfolio } from "@/lib/portfolio";
 import { canSeeFund, getViewer } from "@/lib/authz";
 import { DEFAULT_FUND_ID } from "@/lib/db";
 
@@ -38,21 +35,52 @@ export const metadata: Metadata = {
  */
 export const dynamic = "force-dynamic";
 
+/** The dashed empty card — DESIGN_SYSTEM § 2's radius-10 step for this state. */
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        maxWidth: 780,
+        padding: 24,
+        borderRadius: 10,
+        border: `1px dashed ${C.borderStrong}`,
+        background: C.bgAlt,
+        color: C.textMuted,
+        fontSize: 13,
+        textAlign: "center",
+        lineHeight: 1.6,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default async function Portfolio() {
   const { viewer, bootstrapping } = await getViewer();
 
   /*
-    An investor sees their OWN fund's portfolio and no other (owner,
-    2026-08-24). Management sees every fund.
+    Which fund's portfolio this is. An investor sees their OWN and no other
+    (owner, 2026-08-24); management sees the fund it is assigned to, falling
+    back to fund 1.
 
-    The figures below are static content for fund 1 — `src/content/fund-allocation.ts`
-    — not a per-fund query, because positions and marks are still the decision
-    STATE.md records as blocked on a person. So the honest check is against the
-    fund this content describes: an investor assigned to fund 1 sees it, and an
-    investor assigned to a fund whose numbers do not exist yet is told that
-    rather than shown fund 1's.
+    The figures are now READ FROM THE DATABASE rather than from
+    `src/content/fund-allocation.ts` (owner: "lets tie the portfolio values to
+    the values in fund and investments"). Before this, editing a fund's size in
+    Fund & Users changed nothing here — two sources for one figure, and the
+    screen rendered the one nobody could edit.
   */
-  const permitted = canSeeFund(viewer, DEFAULT_FUND_ID);
+  const fundId =
+    viewer.kind === "investor"
+      ? viewer.fundId
+      : (viewer.kind === "management" ? viewer.fundId : null) ?? DEFAULT_FUND_ID;
+
+  const permitted = canSeeFund(viewer, fundId);
+
+  // Loaded only once the viewer is permitted — a denied viewer should not cause
+  // a query for figures they may not see, even one whose result is discarded.
+  const result = permitted ? await loadPortfolio(fundId) : null;
+  const portfolio = result?.kind === "ok" ? result.data : null;
 
   if (!permitted) {
     return (
@@ -113,13 +141,67 @@ export default async function Portfolio() {
             </div>
           ) : null}
 
-          <div style={{ maxWidth: 780 }}>
-            <FundAllocation
-              fundSizeCents={FUND_SIZE_CENTS}
-              buckets={FUND_BUCKETS}
-              asOf={FUND_AS_OF}
-            />
-          </div>
+          {/*
+            Four states, kept apart on purpose. "No database" is a broken deploy,
+            "no such fund" is a database that works and has nothing in it, "no
+            fund size" is a figure nobody has entered, and "no plottable deals"
+            is a chart with nothing to draw. Each sends you somewhere different,
+            so collapsing them would send somebody to fix the wrong thing —
+            "the database is not configured" on a working database being the
+            worst of the four.
+          */}
+          {result === null || result.kind === "no-database" ? (
+            <EmptyState>
+              The database is not configured, so the portfolio cannot be read.
+            </EmptyState>
+          ) : result.kind === "no-fund" ? (
+            <EmptyState>
+              There is no fund <strong>#{result.fundId}</strong> yet. Create one under
+              Fund &amp; Users and its deals appear here.
+            </EmptyState>
+          ) : result.data.fundSizeCents === null ? (
+            <EmptyState>
+              <strong>{result.data.fundName}</strong> has no fund size set, and every share
+              on this chart is a share of it. Set it under Fund &amp; Users.
+            </EmptyState>
+          ) : result.data.buckets.length === 0 ? (
+            <EmptyState>
+              No deals in <strong>{result.data.fundName}</strong> have both an investment
+              size and an instrument yet. Set them in the Deal Room and they appear here.
+            </EmptyState>
+          ) : (
+            <div style={{ maxWidth: 780 }}>
+              <FundAllocation
+                fundSizeCents={result.data.fundSizeCents}
+                buckets={result.data.buckets}
+                asOf={FUND_AS_OF}
+              />
+            </div>
+          )}
+
+          {/*
+            Named, not dropped. A chart of a fund's money is the last place to
+            omit a row quietly — if a deal is missing from the arcs, the screen
+            says which and what it needs.
+          */}
+          {portfolio && portfolio.excluded.length > 0 ? (
+            <div
+              style={{
+                maxWidth: 780,
+                padding: "10px 12px",
+                borderRadius: 8,
+                border: `1px solid ${C.amberBorder}`,
+                background: C.amberBg,
+                color: C.amber,
+                fontSize: 12,
+                lineHeight: 1.6,
+              }}
+            >
+              <strong>Not shown on the chart:</strong>{" "}
+              {portfolio.excluded.map((e) => `${e.name} (no ${e.missing})`).join(", ")}.
+              Set the missing values in the Deal Room.
+            </div>
+          ) : null}
         </div>
       </div>
     </PortalShell>

@@ -60,6 +60,15 @@ export async function GET(_request: Request, { params }: Params) {
     id: deal.id,
     fundId: deal.fundId,
     name: deal.name,
+    // BigInt does not survive JSON; cents stay exact as a Number to about $90
+    // trillion, so the width lives in the column and not on the wire.
+    amountCents: deal.amountCents === null ? null : Number(deal.amountCents),
+    investmentDate: deal.investmentDate
+      ? deal.investmentDate.toISOString().slice(0, 10)
+      : null,
+    instrument: deal.instrument,
+    terms: deal.terms,
+    fees: deal.fees,
     createdAt: deal.createdAt.toISOString(),
     documents: deal.documents.map((doc) => ({
       id: doc.id,
@@ -81,10 +90,11 @@ export async function GET(_request: Request, { params }: Params) {
  * before these columns has neither, and the screen opens its editor for exactly
  * that reason.
  *
- * **Only those two fields are mutable.** Not the name, not `fundId` — moving a
- * deal between funds would strand every R2 key already written under
- * `.../funds/<fundId>/deals/<dealId>/`, and the key is what the read boundary
- * guards on. A deal in the wrong fund is re-created, not moved.
+ * Mutable: investment size, investment date, instrument, terms and fees — the
+ * five things the Portfolio chart is built from. **Not the name, and not
+ * `fundId`**: moving a deal between funds would strand every R2 key already
+ * written under `.../funds/<fundId>/deals/<dealId>/`, and the key is what the
+ * read boundary guards on. A deal in the wrong fund is re-created, not moved.
  *
  * An explicit `null` clears a value; an absent key leaves it alone. That
  * distinction is why this reads keys off the body rather than spreading it.
@@ -119,7 +129,13 @@ export async function PATCH(request: Request, { params }: Params) {
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const data: { amountCents?: bigint | null; investmentDate?: Date | null } = {};
+  const data: {
+    amountCents?: bigint | null;
+    investmentDate?: Date | null;
+    instrument?: "PRIVATE_EQUITY" | "PRIVATE_CREDIT" | null;
+    terms?: string | null;
+    fees?: string | null;
+  } = {};
 
   if ("amountCents" in (body ?? {})) {
     const raw = typeof body?.amountCents === "string" ? body.amountCents.trim() : "";
@@ -144,6 +160,29 @@ export async function PATCH(request: Request, { params }: Params) {
     data.investmentDate = parsed ?? null;
   }
 
+  if ("instrument" in (body ?? {})) {
+    const raw = typeof body?.instrument === "string" ? body.instrument : "";
+    if (!raw) {
+      data.instrument = null;
+    } else if (raw === "PRIVATE_EQUITY" || raw === "PRIVATE_CREDIT") {
+      data.instrument = raw;
+    } else {
+      return NextResponse.json({ error: "Unknown instrument." }, { status: 400 });
+    }
+  }
+
+  // Free text, length-capped. These are unbounded TEXT columns feeding a
+  // drill-down panel, not a place to paste a credit agreement.
+  for (const key of ["terms", "fees"] as const) {
+    if (key in (body ?? {})) {
+      const raw = typeof body?.[key] === "string" ? (body[key] as string).trim() : "";
+      if (raw.length > 500) {
+        return NextResponse.json({ error: `That ${key} entry is too long (500 max).` }, { status: 400 });
+      }
+      data[key] = raw || null;
+    }
+  }
+
   const saved = await db.deal.update({ where: { id: dealId }, data });
 
   return NextResponse.json({
@@ -152,5 +191,8 @@ export async function PATCH(request: Request, { params }: Params) {
     investmentDate: saved.investmentDate
       ? saved.investmentDate.toISOString().slice(0, 10)
       : null,
+    instrument: saved.instrument,
+    terms: saved.terms,
+    fees: saved.fees,
   });
 }
