@@ -50,8 +50,9 @@ The first is strictly better. Do not "clean this up" by reordering it.
 2. **`DATABASE_URL` must be set on the APP service**, not only on the Postgres service —
    Railway does not share variables between services automatically. Use a **reference**,
    `DATABASE_URL=${{Postgres.DATABASE_URL}}`, so a rotated password does not go stale.
-3. **The migration runs on deploy.** `railway.json`'s `startCommand` runs
-   `prisma migrate deploy` **only when `DATABASE_URL` is present**, then starts the server.
+3. **The migration runs on deploy**, from `scripts/start.sh` — `railway.json`'s
+   `startCommand` is just `bash scripts/start.sh`. It runs `prisma migrate deploy` **only
+   when `DATABASE_URL` is present**, then execs the server.
 4. **The four `R2_*` variables** — see `PLAYBOOKS/storage-r2.md`.
 
 ### Verifying
@@ -81,7 +82,22 @@ on a repo that is fine.
 **GOTCHA 3 — the migrate step is guarded on `DATABASE_URL` for a reason.**
 Ungated, a deploy without the variable fails `prisma migrate deploy`, fails the healthcheck,
 and takes the **live site** down — including the public landing page, which needs no
-database at all. The guard is what makes the database optional to boot.
+database at all. The guard is what makes the database optional to boot. Note the asymmetry:
+a *missing* variable skips the migration, but a *failing* migration is fatal by design
+(`set -e`) — a half-migrated schema serving traffic is worse than a failed deploy, and
+Railway keeps the last good container.
+
+**GOTCHA 3a — `prisma` is a RUNTIME dependency, not a dev one, and must stay that way.**
+`scripts/start.sh` runs `prisma migrate deploy` at boot. As a devDependency it is not
+guaranteed to survive a production prune, and the failure mode is not a missing migration —
+it is the start command exiting non-zero, the healthcheck failing, and the whole site going
+down. Moving it back to `devDependencies` to tidy the runtime image is the change that looks
+harmless and is not.
+
+**GOTCHA 3b — migrations cannot run at BUILD time.**
+The database is on Railway's private network (`postgres.railway.internal`), which build
+containers cannot reach. Boot is the only moment that has both the schema and a route to the
+database. Do not "optimise" this into the build command.
 
 **GOTCHA 4 — the fund seed fixes the SERIAL sequence, and must.**
 `INSERT INTO "Fund" ("id") VALUES (1)` does **not** advance the id sequence, so the first
