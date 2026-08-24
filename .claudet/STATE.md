@@ -110,10 +110,23 @@ arrows at 36×36 (inside the § 9 carve-out, legitimately) and the carousel dots
 deliberate earlier fix up from 6px that clears WCAG 2.2 AA but not the house floor on width.
 Closing it visibly spreads the dot row, which is a design decision.
 
-**Blocking for anyone who wants to run the app locally: it will not boot without a Clerk
-publishable key** — every route 500s, `/api/health` included, because the proxy initialises
-before any route handler. That is the Clerk seat's surface, noted here because it stops any
-seat from looking at the site in a browser.
+**To run the app locally you need Clerk keys from the owner — the fix is keys, not code.**
+Without them every route 500s, `/api/health` included. Root cause confirmed by stack trace
+(2026-08-24): the thrower is **`src/proxy.ts`**, not `<ClerkProvider>` — `clerkMiddleware`
+calls `assertKey` inside `DevServer.runMiddleware`, ahead of any handler, which is why a
+route with no layout above it dies too. Worth stating because the plausible-sounding
+diagnosis (the provider wraps the root layout, so it takes everything down) does not explain
+`/api/health` and is wrong here.
+
+**Gating Clerk on key-presence to boot without them was considered and declined (owner,
+2026-08-24).** It would make `next dev` serve `/portal/portfolio` — real fund figures —
+unauthenticated. Fail-closed is worth more than local convenience. Do not re-propose it
+without reading `PLAYBOOKS/auth-clerk.md`.
+
+**With keys, local and production agree route-for-route** (both swept 2026-08-24): public
+four at 200, every `/portal/**` and `/api/files/**` path at 307 to an on-domain `/sign-in`
+with a relative `redirect_url`, unknown paths 307 too (deny-by-default). **The signed-in
+landing is still unverified by anything automated** — it needs an SMS code to a real handset.
 
 **The site is live on Railway** (owner-confirmed 2026-08-23). Next.js 16 + React 19 +
 TypeScript + Tailwind (layout only), the public landing page at `/`, and a dependency-free
@@ -164,29 +177,46 @@ homepage as "Investor login", serving fund size and position-level amounts to an
 the URL. Verified reachable at HTTP 200 before this change and 307-to-sign-in after it.
 
 **Deliberately still absent:** a `/sign-up`
-route (two users, invited from the Dashboard), Clerk webhooks (nothing to sync into yet), and
+route (two users, created in the Dashboard; owner reaffirmed "no sign up needed"
+2026-08-24 — `/sign-up` 307s to `/sign-in` like any unknown path, verified), Clerk webhooks
+(nothing to sync into yet), and
 a test runner. **`prisma/` is no longer empty** — schema and the first migration landed
-2026-08-24; `docs/` still is. **`.github/workflows` and
+2026-08-24 with the Deal Room; `docs/` still is. **`.github/workflows` and
 `scripts/` are not** — CI landed in #15, and `scripts/` now holds `design-lint.mjs`.
 
 **Blocked on a person:** what an equity vs. debt position holds — the decision the portfolio
 monitor's schema is built on. And the securities-marketing question in `FACTS.md`, which
 gates what the *public* page may say, not whether it may exist.
 
-**Clerk instance is live and its DNS is half-fixed.** Production instance
+**Clerk instance is live and its DNS is still half-fixed.** Production instance
 `ins_3IL2OO8W1HTVwmTMHtleVAjH2AV` on `clerk.savoycapital.io`, keys set on Railway (owner,
-2026-08-24). `clerk.` now serves real Clerk JSON; `accounts.` still returns a Cloudflare
-interstitial, consistent with that record still being proxied — it should be **DNS only**
-(GOTCHA 8).
+2026-08-24). The instance id came from the Dashboard and is **not exposed on the public
+environment endpoint**, so this seat cannot re-verify it from here — do not burn time trying.
+
+`clerk.` serves real Clerk JSON (re-verified 2026-08-24). **`accounts.` is still proxied**:
+it returns **HTTP 403 with Cloudflare's "Just a moment..." challenge page** — re-checked
+2026-08-24, still outstanding. Note the symptom differs from GOTCHA 8's recorded one (Error
+1000 / "DNS points to prohibited IP"); same root cause, different Cloudflare response, so
+match on *"Cloudflare HTML instead of Clerk JSON"* rather than on the exact error. It should
+be **DNS only**. This has not blocked sign-in — the app never routes anyone to the hosted
+Account Portal, because `src/proxy.ts` passes an explicit `unauthenticatedUrl` (GOTCHA 1) —
+but Clerk's own `display_config.sign_in_url` still points at
+`https://accounts.savoycapital.io/sign-in`, so anything that follows Clerk's hosted URLs
+would hit the challenge.
 
 Sign-up mode is **`restricted`** (owner, 2026-08-24, verified against the live instance) —
 it was `public` on first setup, which would have let anyone create an account.
 
-**Blocked on the Clerk Dashboard** (`PLAYBOOKS/auth-clerk.md` § 2): invite Rodney and Jett.
-That invitation is now the whole authorization step — there is no list to add them to. Also
-still outstanding: flip the `accounts.` DNS record to DNS-only. `next build` passes without
-them, so the deploy will not break before they land — but the monitor refuses everyone until
-they do.
+**Accounts exist and the round trip works — this is no longer blocked.** The owner signed in
+and used the portal on 2026-08-24 (sign-out redirected to the public page, and a deep link
+to a portal route reached `/sign-in`). Creating the account IS the authorization step; there
+is no list to add anyone to. **Still outstanding on the Dashboard:** flip the `accounts.`
+DNS record to DNS-only (above).
+
+**What no automated check covers, and why:** signing in needs an SMS code to a real handset,
+so the *landing* after sign-in is owner-verified only. Everything anonymous — the route
+sweep, the redirect target, `sign_up.mode` — this seat verifies directly and did, last on
+2026-08-24 after `#28`.
 
 **The public nav is NOT outstanding, and this file said twice that it was.** It renders
 "Investor Portal" → `/portal`; `/portal` is protected, so the login is already discoverable

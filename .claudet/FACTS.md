@@ -30,9 +30,16 @@ that matters — the bucket's privacy is two dashboard toggles, not code.
 
 **The authenticated user population is two people.** Not a growth curve — two. What scales
 is the **number of investments**, and modestly. It is enforced by Clerk being set to
-**restricted sign-up** — an account cannot exist without an invitation — and by there being
-no self-service sign-up route. That setting is the boundary; nothing in this repo re-checks
-it. See `PLAYBOOKS/auth-clerk.md`.
+**restricted sign-up** — an account cannot come into existence unless a principal made it —
+and by there being no self-service sign-up route. That setting is the boundary; nothing in
+this repo re-checks it. See `PLAYBOOKS/auth-clerk.md`.
+
+**Accounts are created directly in the Clerk Dashboard, not invited** (owner, 2026-08-24),
+with a phone number and a name and no password — the instance has passwords disabled, so
+signing in is an SMS code. The distinction does not move the boundary: `restricted` blocks a
+*stranger* from creating an account and does not care which admin gesture created a real one.
+**There is no sign-up route and none is wanted** ("no sign up needed" — owner, 2026-08-24);
+a new person is provisioned in the Dashboard and signs in at `/sign-in`.
 
 ## Not theAPlink — what does NOT carry over
 

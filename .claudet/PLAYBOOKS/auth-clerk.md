@@ -2,9 +2,12 @@
 
 How the auth boundary works, how to bring it up, and what has already bitten someone.
 
-Subsystem status: **code complete, not yet live.** Every code-side piece is built and
-verified. Bringing it up needs four things only a person with the Clerk Dashboard can do —
-see § Bring-up. Until those are done the private surface refuses everyone, by design.
+Subsystem status: **live and verified in production (2026-08-24).** The instance
+`clerk.savoycapital.io` serves, sign-up reads `restricted`, and every private route 307s to
+an on-domain `/sign-in` with a relative `redirect_url`. Verified by route sweep against
+`savoycapital.io` and against a local `next dev` with production keys — the two agree
+route-for-route. **Still unverified by anything automated: the signed-in landing.** It needs
+an SMS code to a real handset, so no check here completes the round trip.
 
 ---
 
@@ -13,14 +16,25 @@ see § Bring-up. Until those are done the private surface refuses everyone, by d
 **The boundary is the Clerk instance's sign-up mode, not code in this repo.**
 
 `sign_up.mode` is set to **`restricted`**, so a Clerk account cannot come into existence
-unless one of the principals invited it. On that instance "signed in" and "allowed in" are
+unless one of the principals made it. On that instance "signed in" and "allowed in" are
 the same statement, which is why `src/proxy.ts` — which only asks whether *somebody* is
 signed in — is sufficient on its own.
+
+**Accounts are created directly in the Dashboard, not invited (owner, 2026-08-24).** This
+does not move the boundary and the distinction is worth being precise about, because the
+earlier wording here said "invited" and would now read as false. The property that matters
+is whether a *stranger* can cause an account to exist; `restricted` answers no, and it does
+not care which admin gesture created the account. Invitation and direct creation are
+equivalent under it.
+
+**What is NOT equivalent: setting `sign_up.mode` back to `public` to make account creation
+easier.** Direct creation works fine under `restricted`. Flipping the mode is the one change
+that opens the door, and it is silent — GOTCHA 3.
 
 | Layer | File | Question it answers |
 |---|---|---|
 | Authentication | `src/proxy.ts` | Is somebody signed in? |
-| Authorization | *(none — see below)* | Answered by the invitation, in Clerk |
+| Authorization | *(none — see below)* | Answered by the account existing, in Clerk |
 
 **Route protection is deny-by-default.** `src/proxy.ts` holds an exhaustive list of PUBLIC
 routes; everything else requires a session. The inverse — list the private routes, leave the
@@ -52,19 +66,30 @@ GOTCHA 3 is how to check it.
 
 ---
 
-## 2. Bring-up — the four steps only a person can do
+## 2. Bring-up — the five steps only a person can do
 
-Nothing below can be done from this repo. Until all four are complete, `/monitor` correctly
-refuses everyone, including the principals.
+**Status: done. Steps 1–4 are complete and the owner has signed in (2026-08-24); step 5 is
+half-done — `clerk.` is correct, `accounts.` is still proxied.** Kept as the runbook for a
+rebuild or a second instance, not as an outstanding checklist.
+
+Nothing below can be done from this repo. Until they are complete, `/portal` correctly
+refuses everyone, including the principals. (This said `/monitor` until 2026-08-24 — a route
+name that has been `/monitor` → `/portfolio` → `/portal`. GOTCHA 12 is the rename checklist.)
 
 1. **Create the Clerk application** and copy its API keys (Dashboard → API keys).
-2. **Restrict sign-up to invitation only.** Dashboard → Configure → **Restrictions** → set
-   sign-up mode to **Restricted**. Clerk's default allows anyone to create an account.
+2. **Restrict sign-up.** Dashboard → Configure → **Restrictions** → set sign-up mode to
+   **Restricted**. Clerk's default allows anyone to create an account; `restricted` stops
+   self-serve sign-up outright. Clerk's UI frames this as invitation-only, but an admin
+   creating a user directly works just as well under it — see § 1.
    **This is the entire access boundary** — there is no second lock behind it. Done
    2026-08-24; GOTCHA 3 says how to confirm it is still true.
-3. **Invite Rodney and Jett** (Dashboard → Users → Invite). There is deliberately no
-   `/sign-up` route in this app; see GOTCHA 4. **The invitation is the authorization** —
-   there is no second list to add them to.
+3. **Create Rodney's and Jett's accounts** (Dashboard → Users → Create user). Phone number
+   and name; **no password** — the instance has passwords disabled outright, so sign-in is
+   an SMS code and there is nothing to set. There is deliberately no `/sign-up` route in
+   this app; see GOTCHA 4. **Creating the account IS the authorization** — there is no
+   second list to add them to. (Invitations also work and were the original plan; the owner
+   moved to direct creation on 2026-08-24 for a two-person site. See § 1 — the boundary is
+   the same either way.)
 4. **Set the environment variables** on the Railway service *and* in local `.env.local`.
    `.env.example` documents both keys. There is no allowlist variable.
 5. **For a production instance (`pk_live_`), add Clerk's DNS records** on
@@ -83,7 +108,7 @@ route, but nothing links to it any more.
 - Signed out, `/portal` → 307 to `/sign-in?redirect_url=...` **on this domain**. A redirect
   to a `*.accounts.dev` host means GOTCHA 1 has regressed. Check `/portal/portfolio` and
   `/portal/historical` too: each is protected on its own, not by the section prefix.
-- Signed in as an invited user → `/portal` redirects to `/portal/portfolio`, which renders
+- Signed in as a provisioned user → `/portal` redirects to `/portal/portfolio`, which renders
   the allocation. Sign-out is in **`PortalShell`'s own account block at the foot of the
   sidebar** — not Clerk's `<UserButton />`, which the owner replaced on 2026-08-24. The
   portal does not render `SiteNav` at all.
@@ -130,8 +155,8 @@ amounts — is readable by anyone who signs up.
 
 **GOTCHA 4 — there is no sign-up route, and adding one is a decision.**
 *Symptom:* someone looks for `/sign-up` and finds nothing.
-*Cause:* deliberate. The authenticated population is two named people, provisioned by
-invitation. `<ClerkProvider>` is configured without `signUpUrl` to match.
+*Cause:* deliberate. The authenticated population is two named people, provisioned by the
+owner in the Clerk Dashboard. `<ClerkProvider>` is configured without `signUpUrl` to match.
 *Fix:* none needed. Adding self-service sign-up to a private fund's portfolio monitor is an
 owner decision, not a gap to fill.
 
@@ -180,6 +205,18 @@ someone by or to key anything on. An earlier allowlist keyed on email had to be 
 phones before being dropped entirely — the identifier is not a detail, so check it before
 building anything that depends on one.
 
+*And there is no password.* Read from the same response, 2026-08-24:
+`password.enabled: false`, `first_factors: ["phone_code", "ticket"]`,
+`second_factors: ["phone_code"]`, `first_name`/`last_name` enabled but not required.
+**An SMS code is the only way in**, which is why creating an account needs nothing but a
+phone number and a name. Two things follow that are easy to get wrong:
+- **Do not build anything that assumes a password exists** — no "change password" affordance,
+  no password-strength copy, no `password` field in a user-creation flow.
+- **Turning on Clerk's 2FA buys nothing today.** The only second factor available is
+  `phone_code` — the same channel as the first — so it would ask for a second code from the
+  same handset. A real second factor means enabling `authenticator_app`, which is a Dashboard
+  change and an owner call. Accepted as-is (DECISIONS, 2026-08-24).
+
 **GOTCHA 11 — `request.url` is the INTERNAL address behind Railway.**
 *Symptom:* sign-in works, and then dumps the user at
 `https://localhost:8080/portfolio`. Invisible locally, where internal and public origins are
@@ -212,6 +249,49 @@ renamed route would ship **public** until someone remembered it.
 Then verify on the deployed host that the new path 307s and that signing in lands somewhere
 real. `/portfolio` -> `/portal`, 2026-08-24.
 
+**GOTCHA 13 — `createRouteMatcher` is deprecated and goes away in `@clerk/nextjs` v8.**
+*Symptom:* a deprecation warning on every dev boot, and eventually a hard break on a major
+bump. Nothing is wrong today.
+*Cause:* Clerk is moving away from middleware path-matching toward resource-based checks
+"in each page, layout, API route, or Server Function that accesses protected data." Their
+stated reason is worth reading carefully rather than dismissing: **path matching can diverge
+from how Next.js routes requests and leave protected resources reachable.** That is a claim
+about this repo's entire boundary mechanism.
+*Status:* **no action this cycle (owner, 2026-08-24 — "default to you").** We are pinned
+`^7.8.0`, the mechanism is verified working by route sweep against production, and migrating
+now would rewrite the boundary for no present gain.
+*What to do at the v8 bump:* treat it as boundary work, not a dependency bump. The pattern
+`/api/files/**` already uses — proxy protection **plus** an `auth()` assertion inside each
+handler — is what the resource-based model looks like, so that pair is the migration target
+for every private route, and it is defense-in-depth worth having regardless.
+*Do not* silence the warning by pinning older, or by reaching for a deprecated shim.
+
+**GOTCHA 14 — "I can still click around the portal" is NOT evidence the session survived.**
+*Symptom:* a user clicks Sign Out, is not redirected, and keeps navigating the portal. Reads
+exactly like a broken session boundary. Reported by the owner, 2026-08-24.
+*Cause — the part that is structural and permanent:* **every portal route is statically
+prerendered.** `next build` reports `○` for `/portal`, `/portal/portfolio`,
+`/portal/historical`, `/home` and `/deal-room`; only `/sign-in` and the API routes are `ƒ`.
+The sidebar's `next/link` entries prefetch those routes into the browser's router cache, so
+moving between them is a client-side swap that **never reaches the server** — which means
+`src/proxy.ts` never runs and cannot 307 anyone out mid-session. Cached pages keep rendering
+until the tab does a real request. This is inherent to static prerendering plus prefetch, not
+a bug to fix, and it does **not** expose anything to a different person or a different device.
+*Cause — the part that was situational:* Railway auto-deploys on every merge to `main` and
+several seats merge daily, so a tab held open across a deploy references chunk hashes the
+server no longer has. A client in that state can have dead handlers — including Sign Out —
+while still rendering fine from cache. **Inferred, not observed**: the owner's later attempt
+from a fresh load signed out correctly and a deep link 307'd, which fits, but nobody captured
+the failing client.
+*The check that actually distinguishes the two states, and it takes five seconds:* **hard-
+reload the private route, or open it in a fresh tab.**
+- 307 to `/sign-in` → the session is gone; what was seen was cache, and the boundary is fine.
+- The portal renders → the session is genuinely alive and sign-out failed. That one is real.
+*The rule worth carrying:* this seat's standing principle is that a check which cannot fail
+proves nothing. Client-side navigation is exactly such a check — it succeeds whether or not a
+session exists. **Judge the boundary only on a fresh request.** Verified 2026-08-24: signed
+out, a deep link to `/deal-room` returned 307 and the full anonymous route sweep was clean.
+
 ---
 
 ## 4. Deliberately not built
@@ -219,7 +299,7 @@ real. `/portfolio` -> `/portal`, 2026-08-24.
 - **A `/sign-up` route** — GOTCHA 4.
 - **Organizations / roles / permissions.** Clerk has them; two people with identical access
   do not need them. Revisit only if a third kind of user appears — that is also the point at
-  which "everyone invited sees everything" stops being an acceptable model.
+  which "everyone with an account sees everything" stops being an acceptable model.
 - **An in-app allowlist.** Removed 2026-08-24; see § 1. If one ever comes back, put it in
   Clerk `privateMetadata` rather than an env var, so adding a person is not a redeploy.
 - **Webhooks (`/api/webhooks/clerk`).** There is no local user table to sync into — no

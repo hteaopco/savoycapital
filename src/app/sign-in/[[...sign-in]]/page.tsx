@@ -49,8 +49,8 @@ export default function SignInPage() {
               textAlign: "center",
             }}
           >
-            Access is by invitation. If you should have an account and
-            don&rsquo;t, contact Savoy Capital directly.
+            Accounts are created by Savoy Capital. If you should have access
+            and don&rsquo;t, contact us directly.
           </div>
         </div>
 

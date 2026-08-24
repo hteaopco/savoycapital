@@ -36,6 +36,40 @@ Newest first.
     on a screen that looks like investors have access. The audience becomes an input the day
     the authorization layer lands.
 
+- **Accounts are created directly in Clerk, not invited; and an SMS code stays the only
+  sign-in factor (owner, 2026-08-24).**
+  > "we will not invite users for now. i will just create them inside clerk... easier just to
+  > create the accounts by phone and name, no pw, and let them login once account is created"
+  >
+  > "simplicity over security until sensitive info arrives"
+
+  - **Direct creation does not move the boundary.** The property that matters is whether a
+    *stranger* can cause an account to exist. `sign_up.mode: restricted` answers no, and it
+    does not care which admin gesture created the account — invitation and Dashboard creation
+    are equivalent under it. The docs previously said an account "cannot exist unless a
+    principal **invited** it," which this made false; `PLAYBOOKS/auth-clerk.md` § 1 and
+    `.env.example` are corrected, and `/sign-in`'s copy no longer says "by invitation."
+  - **What would move it: flipping `sign_up.mode` to `public`.** Direct creation works fine
+    under `restricted`, so there is never a reason to. That flip is the silent failure in
+    GOTCHA 3 and it is the whole access boundary.
+  - **"No password" was already true.** Verified on the live instance the same day:
+    `password.enabled: false`, `first_factors: ["phone_code", "ticket"]`. Nothing was
+    changed to enable this — it is the instance's existing shape, so the decision costs
+    nothing to implement and there is no password affordance to build.
+  - **The cost, recorded once so it is not rediscovered as a surprise.** An SMS code is the
+    sole factor, so whoever controls the phone number reaches everything behind the gate.
+    Clerk's 2FA would add nothing today — the only second factor available is `phone_code`,
+    the same channel. A real second factor means enabling `authenticator_app` (Dashboard,
+    owner call).
+  - **The stated trigger — "until sensitive info arrives" — deserves a flag, not a
+    re-litigation.** The owner made this call in "build mode," and the seat's read is that
+    the trigger has arguably already fired: `/portal/portfolio` serves a $10M fund size,
+    named positions with amounts, and deal terms today, and `#26` put the management document
+    store behind the same single gate. **The decision stands as the owner's** — it is
+    defensible for two principals on a boundary that has been verified holding. This bullet
+    exists so the next agent re-reads the trigger against what the portal actually serves
+    rather than assuming the surface is still empty.
+
 - **The document store is Cloudflare R2, management-only, with bytes served through the app
   (owner, 2026-08-24).** The owner created the bucket and asked what it needed. Four calls
   were made; these are the ones someone would otherwise re-litigate.

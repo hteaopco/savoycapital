@@ -96,10 +96,20 @@ value. Design for that, and never build tenancy machinery for a product that has
 - **Derive, never key in.** Any figure computable from another is computed, so two copies
   can never disagree.
 - **Say what you did not verify, in the same breath as what you did.** A caveat buried under
-  a success claim is worse than no claim. Clerk now wraps every route, so no page renders in
+  a success claim is worse than no claim. Clerk gates every route, so no page renders in
   a browser here without real credentials — measurements come from the real server HTML and
   real built CSS with scripts stripped, which is faithful for static layout and exercises no
   hydration. Say so rather than implying more.
+
+  **Two corrections from the Clerk seat, 2026-08-24 (its lane, this file's claim).** The
+  thrower is **`src/proxy.ts`**, not `<ClerkProvider>` — `clerkMiddleware` calls `assertKey`
+  inside `runMiddleware`, ahead of any handler, which is why `/api/health` 500s too despite
+  having no layout above it. And **keys alone are not the whole unblock**: with keys set,
+  `/`, `/coming-soon` and `/sign-in` render normally in a browser, but every `/portal/**`
+  route still 307s until you hold a *session*, and getting one needs an SMS code to the
+  owner's handset. So the scripts-stripped harness stays the tool for portal screens
+  specifically, not for the public surface. Ask the Clerk seat for keys rather than gating
+  Clerk off — that was proposed and declined (`PLAYBOOKS/auth-clerk.md`, `STATE.md`).
 - **Flag the cost once, then build what was asked.** When a request trades away an
   accessibility floor, a design-system rule, or public exposure of the fund's numbers, say
   it plainly in a sentence and build it. The owner decides; the job is that they decide
