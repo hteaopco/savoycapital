@@ -292,7 +292,17 @@ export function FundAllocation({
   asOf,
 }: FundAllocationProps) {
   const hatchId = useId();
-  const [openId, setOpenId] = useState<string | null>(buckets[0]?.id ?? null);
+  /**
+   * Every bucket with holdings starts EXPANDED (owner, 2026-08-24: "when you land
+   * on portfolio...i want it to expand all private equity and private credit").
+   *
+   * A Set rather than the single `openId` this used to be: an accordion that
+   * closes one bucket to open another cannot show them all at once, which is the
+   * thing being asked for.
+   */
+  const [openIds, setOpenIds] = useState<Set<string>>(
+    () => new Set(buckets.filter((b) => b.holdings.length > 0).map((b) => b.id)),
+  );
   const [pickedId, setPickedId] = useState<string | null>(null);
   /** `bucketId:holdingName` — scoped by bucket so two buckets may share a name. */
   const [openHolding, setOpenHolding] = useState<string | null>(null);
@@ -326,12 +336,36 @@ export function FundAllocation({
 
   const picked = segments.find((s) => s.id === pickedId) ?? null;
 
-  const toggle = (id: string) => {
-    setOpenId((prev) => (prev === id ? null : id));
-    setPickedId((prev) => (prev === id ? null : id));
+  /**
+   * Expand or collapse a bucket. **Expansion and the donut are separate now**
+   * (owner, 2026-08-24) — this used to set `pickedId` too, so collapsing a bucket
+   * also changed what the donut read, which is the coupling being removed.
+   */
+  const toggleBucket = (id: string) => {
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
     // Collapsing a bucket unmounts its rows; leaving a holding marked open
     // would spring its panel back the next time that bucket is expanded.
     setOpenHolding(null);
+  };
+
+  /**
+   * Open a position's terms AND point the donut at the bucket it sits in
+   * (owner, 2026-08-24: "when i click on 'view details' within a certain bucket
+   * is when it would make the doughnut interactive").
+   *
+   * The two move together deliberately: the donut reads the bucket you are
+   * drilling into, and closing the panel returns it to the whole fund. Clicking
+   * an arc still picks that segment directly — the chart selects itself — but
+   * nothing about EXPANSION touches it any more.
+   */
+  const openHoldingDetail = (key: string | null, bucketId: string) => {
+    setOpenHolding(key);
+    setPickedId(key ? bucketId : null);
   };
 
   let cursor = 0;
@@ -457,7 +491,11 @@ export function FundAllocation({
                     strokeDasharray={arc.dash}
                     strokeDashoffset={arc.offset}
                     opacity={!pickedId || pickedId === arc.id ? 1 : 0.35}
-                    onClick={() => toggle(arc.id)}
+                    // Picks, never expands. An arc is the chart selecting
+                    // itself; expansion belongs to the legend rows.
+                    onClick={() =>
+                      setPickedId((prev) => (prev === arc.id ? null : arc.id))
+                    }
                     // design-ok: <circle> is not covered by the global cursor rule.
                     // A wedge is a pointer convenience, never the only way in: the
                     // legend rows below are real buttons carrying the same action,
@@ -537,7 +575,7 @@ export function FundAllocation({
           style={{ flex: "1 1 280px" }}
         >
           {segments.map((s) => {
-            const isOpen = openId === s.id && s.holdings.length > 0;
+            const isOpen = openIds.has(s.id) && s.holdings.length > 0;
             const isPicked = pickedId === s.id;
             return (
               <div key={s.id} className="flex flex-col">
@@ -551,7 +589,7 @@ export function FundAllocation({
                   lives in the className, theming in the style prop.
                 */}
                 <button
-                  onClick={() => toggle(s.id)}
+                  onClick={() => toggleBucket(s.id)}
                   aria-expanded={s.holdings.length > 0 ? isOpen : undefined}
                   className="flex items-center min-h-[44px] md:min-h-0"
                   style={{
@@ -722,7 +760,10 @@ export function FundAllocation({
                               {hasDetail ? (
                                 <button
                                   onClick={() =>
-                                    setOpenHolding(isDetailOpen ? null : key)
+                                    openHoldingDetail(
+                                      isDetailOpen ? null : key,
+                                      s.id,
+                                    )
                                   }
                                   aria-expanded={isDetailOpen}
                                   className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"

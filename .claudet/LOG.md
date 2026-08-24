@@ -8,6 +8,25 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Portfolio: every bucket expands on landing, and the donut is driven by View Details**
+  (owner, 2026-08-24). Two behaviours that used to be one click are now separate.
+  `openId: string | null` becomes `openIds: Set<string>` seeded with every bucket that has
+  holdings — an accordion that closes one bucket to open another cannot show them all at
+  once, which was the ask. The bucket row now toggles expansion **only**; it used to set
+  `pickedId` as well, so collapsing a bucket silently changed what the donut read.
+  A holding's **View Details** now opens its terms *and* points the donut at the parent
+  bucket, returning to the whole fund when closed. Read from the owner's own quoting of
+  "view details" — the only element carrying that label is the holding-row button, so this
+  uses the existing control rather than adding a second one with the same name doing
+  something different. A donut arc still picks that segment directly; the chart selects
+  itself, but nothing about expansion touches it now.
+  Verified off the prerendered HTML: both buckets `aria-expanded="true"`, all three holdings
+  mounted, the donut centre reading `$10M` with no "% of fund" line — the signal that nothing
+  is picked on load — and the only three accent-filled elements on the page being the nav's
+  active row, the account avatar and the "% DEPLOYED" badge, i.e. no legend row is picked.
+  **Not verified in a browser:** the transition when a bucket collapses, and how three
+  expanded buckets read at ≤767px.
+
 - **The Deal Room, and the first database in this repo** (2026-08-24). Create a deal, upload
   management-facing PDFs/Excel with a description each, download them back with View.
   Postgres holds deal names and descriptions, R2 holds bytes, and the write order is R2 first
