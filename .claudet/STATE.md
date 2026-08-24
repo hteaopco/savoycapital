@@ -32,10 +32,49 @@ controls). The other nine content files are byte-identical, verified. If you are
 `design/` against theAPlink, **that difference is expected — do not "restore" it.** The file's
 own banner, `design/README.md`'s divergence table and `DECISIONS.md` all say so.
 
-**Deliberately still absent:** Prisma (no schema yet, so no client to generate), Clerk, any
-authenticated surface, tests, and CI. `prisma/`, `scripts/`, `docs/`, `.github/workflows`
-and `src/lib` are still empty by intent.
+**Clerk is wired up.** `src/proxy.ts` protects everything except an enumerated public list,
+`/sign-in` is styled to the palette, and **`/portal` — the fund allocation — is behind it**.
+Production instance `ins_3IL2OO8W1HTVwmTMHtleVAjH2AV` on `clerk.savoycapital.io`, keys set on
+Railway, `clerk.` DNS serving real Clerk JSON. `accounts.` still returns a Cloudflare
+interstitial, consistent with that record still being proxied — it should be **DNS only**
+(`PLAYBOOKS/auth-clerk.md` GOTCHA 8).
+
+**The access boundary is Clerk's `sign_up.mode: "restricted"` — nothing in this repo.** The
+earlier env-var allowlist was removed by the owner (2026-08-24) once sign-up was restricted;
+DECISIONS carries why and what it costs. The short version: **if that setting ever returns to
+`public`, `/portal` opens to anyone who signs up and no code here will notice.** GOTCHA 3 is
+a one-line check worth running before anyone trusts the surface.
+
+The instance identifies users **by phone**, not email — `firstName` is the only reliable
+display value.
+
+**The open-portfolio window is closed.** `/portal` shipped unauthenticated on 2026-08-23
+(a deliberate owner call, recorded in that page's own header), linked from the public
+homepage as "Investor login", serving fund size and position-level amounts to anyone with
+the URL. Verified reachable at HTTP 200 before this change and 307-to-sign-in after it.
+
+**Deliberately still absent:** Prisma (no schema yet, so no client to generate), a `/sign-up`
+route (two users, invited from the Dashboard), Clerk webhooks (nothing to sync into yet),
+tests, and CI. `prisma/`, `scripts/`, `docs/` and `.github/workflows` are still empty by
+intent.
 
 **Blocked on a person:** what an equity vs. debt position holds — the decision the portfolio
 monitor's schema is built on. And the securities-marketing question in `FACTS.md`, which
 gates what the *public* page may say, not whether it may exist.
+
+**Clerk instance is live and its DNS is half-fixed.** Production instance
+`ins_3IL2OO8W1HTVwmTMHtleVAjH2AV` on `clerk.savoycapital.io`, keys set on Railway (owner,
+2026-08-24). `clerk.` now serves real Clerk JSON; `accounts.` still returns a Cloudflare
+interstitial, consistent with that record still being proxied — it should be **DNS only**
+(GOTCHA 8).
+
+Sign-up mode is **`restricted`** (owner, 2026-08-24, verified against the live instance) —
+it was `public` on first setup, which would have let anyone create an account.
+
+**Blocked on the Clerk Dashboard** (`PLAYBOOKS/auth-clerk.md` § 2): invite Rodney and Jett.
+That invitation is now the whole authorization step — there is no list to add them to. Also
+still outstanding: flip the `accounts.` DNS record to DNS-only, and point the public nav's
+"Investor login" at `/sign-in` when the owner wants it discoverable. `next build` passes without them, so the deploy will not break before they land —
+but the monitor refuses everyone until they do. Separately, the public nav's "Investor
+login" still points at `/coming-soon`; pointing it at `/sign-in` is a one-line owner call,
+left alone on purpose.

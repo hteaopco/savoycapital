@@ -11,14 +11,18 @@ import {
 /**
  * Portfolio — how the fund's capital is split, and what sits inside each split.
  *
- * **This route is not authenticated.** There is no auth in the repo yet; the
- * owner's call was to ship it open on the grounds that nobody is visiting the
- * site during the window before auth lands. People, maybe — crawlers arrive on
- * their own and an indexed page outlives the window, so the page is `noindex,
- * nofollow`. That is a mitigation, not a substitute: anyone with the URL can
- * read the fund's size and its position-level amounts. Put this behind the auth
- * boundary before the site is promoted anywhere, and drop the robots block at
- * the same time.
+ * This is the page that was at `/portfolio`, then briefly at `/portal`. It sits
+ * one level deeper now that the portal is a section with its own sidebar, and
+ * `next.config.mjs` keeps a 308 from the original path so the link that was
+ * shared before any of this still resolves.
+ *
+ * **Authenticated.** `src/proxy.ts` requires a session for every route not on
+ * its short public list, so protection comes from this path being ABSENT from
+ * that list — not from anything on this page. Do not add it there. The window
+ * where this shipped open, reachable by anyone holding the URL, is closed.
+ *
+ * `noindex` stays. It is no longer load-bearing now that a crawler cannot reach
+ * the page at all, but a private surface has no business in an index either way.
  */
 export const metadata: Metadata = {
   title: "Portfolio — Savoy Capital",

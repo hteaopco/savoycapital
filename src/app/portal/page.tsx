@@ -4,11 +4,17 @@ import { PortalShell } from "@/components/PortalShell";
 
 /**
  * The portal's landing page. Deliberately an empty shell (owner, 2026-08-24):
- * it exists so the nav has somewhere to land, and what it opens on has not been
- * decided. Filling it with invented tiles would be guessing at the product.
+ * it exists so the sidebar's first link lands somewhere real, and what it opens
+ * on has not been decided. Filling it with invented tiles would be guessing at
+ * the product.
  *
- * Not authenticated — see the note on the portfolio page. `noindex` for the
- * same reason, and it comes off when auth goes on.
+ * `signInFallbackRedirectUrl` in src/app/layout.tsx points here, so this is the
+ * page a successful sign-in arrives on — which is the other reason it cannot be
+ * a dead route.
+ *
+ * **Authenticated.** `src/proxy.ts` requires a session for every route not on
+ * its short public list, so protection comes from this path being ABSENT from
+ * that list. Do not add it there.
  */
 export const metadata: Metadata = {
   title: "Home — Savoy Capital",

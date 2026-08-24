@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { UserButton } from "@clerk/nextjs";
 import { History, Home, Menu, PieChart, X } from "lucide-react";
 import { C } from "./palette";
 
@@ -24,6 +25,14 @@ import { C } from "./palette";
  * There is no entity switcher under the title. theAPlink has one because it
  * serves many companies; `FACTS.md` is explicit that Savoy is one fund, and a
  * chevron there would advertise a structure the product does not have.
+ *
+ * **This shell renders Clerk's `UserButton` itself, and that is deliberate.**
+ * `SiteNav` takes it as a `trailing` slot so the public bar keeps knowing
+ * nothing about authentication — right for a component the marketing page also
+ * uses. This one is different: it is the portal's shell, every page behind it
+ * is authenticated, and the button is the only way to sign out. A slot here
+ * would mean each new portal page has to remember to pass it, and the cost of
+ * forgetting is a user who cannot log out.
  */
 
 const SIDEBAR_W = 240;
@@ -110,8 +119,12 @@ export function PortalShell({ title, children }: PortalShellProps) {
           height: "100vh",
         }}
       >
-        <div style={{ padding: "18px 18px 14px", borderBottom: `1px solid ${C.border}` }}>
+        <div
+          className="flex items-center justify-between"
+          style={{ gap: 10, padding: "14px 14px 14px 18px", borderBottom: `1px solid ${C.border}` }}
+        >
           <div style={wordmark}>Investor Portal</div>
+          <UserButton />
         </div>
         <NavBody pathname={pathname} />
       </aside>
@@ -144,7 +157,8 @@ export function PortalShell({ title, children }: PortalShellProps) {
           >
             <Menu size={18} />
           </button>
-          <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{title}</div>
+          <div style={{ flex: 1, fontSize: 14, fontWeight: 800, color: C.text }}>{title}</div>
+          <UserButton />
         </div>
 
         {drawerOpen ? (

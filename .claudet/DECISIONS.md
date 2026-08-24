@@ -6,6 +6,98 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The in-app allowlist is removed; restricted sign-up is the whole boundary (owner,
+  2026-08-24).** `SAVOY_ALLOWED_PHONES` and `src/lib/auth.ts` are deleted. The Clerk instance
+  is set to `sign_up.mode: "restricted"`, so an account cannot exist unless a principal
+  invited it, and on that instance "signed in" and "allowed in" are the same statement.
+  `src/proxy.ts` enforcing the first therefore enforces both.
+  - **This supersedes the three allowlist decisions below.** They are kept rather than deleted
+    because the reasoning that produced them was correct *at the time*: the instance was
+    `sign_up.mode: "public"` when the boundary was designed, and with open sign-up a session
+    genuinely proved nothing. Restricting sign-up removed the premise, not the logic.
+  - **Why it was dropped rather than kept as defence-in-depth.** An env-var allowlist puts
+    user identity in deploy config: adding or revoking a person means a redeploy, and the
+    list drifts from the invitations it is supposed to mirror. The owner judged the
+    redundancy not worth that, which is a reasonable call for two people on a restricted
+    instance.
+  - **The cost, stated plainly: the security boundary now lives in a Dashboard toggle, and
+    nothing in this repo can see it.** If `sign_up.mode` returns to `public` — someone
+    testing, a new instance, a Clerk default changing — the portfolio monitor opens to anyone
+    who signs up, silently. Treat that setting as code. `PLAYBOOKS/auth-clerk.md` GOTCHA 3
+    carries a one-line check.
+  - **If a second lock is ever wanted again, it goes in Clerk `privateMetadata`**, not an env
+    var — same protection, no redeploy to add a person.
+
+- **The allowlist matches phone numbers, not email addresses (owner, 2026-08-24).** The
+  Clerk instance identifies users by phone — `identification_strategies: ["phone_number"]`,
+  email off, no email verification strategies at all, read from the live instance rather than
+  assumed. An email allowlist against that instance rejects **everyone**, principals included,
+  because there is no verified email to match. `SAVOY_ALLOWED_PHONES` replaces
+  `SAVOY_ALLOWED_EMAILS`.
+  - **The identifier is the boundary, not a detail.** If the instance ever moves to email,
+    `src/lib/auth.ts` moves with it. The two must not drift, and the failure when they do is
+    silent — which is why `checkAccess` reports `no-verified-phone` separately from
+    `not-allowlisted`: a configuration mismatch should never read as a permissions verdict.
+  - **The cost, stated plainly.** A phone number is a weaker business identifier than an
+    email: it changes with carriers and handsets, it is awkward to keep straight for two
+    people, and it ties fund access to a SIM. Email was the recommendation for those reasons;
+    phone is what the instance is built on and the owner chose to keep it.
+  - **Country codes are required.** Comparison strips spaces, dashes, parens and `+`, but does
+    not infer a country — a 10-digit entry would make the allowlist guess at identity. A
+    likely-truncated entry raises an explicit hint instead of failing silently.
+
+- **The private surface is gated by an explicit email allowlist, not by "is signed in"
+  (2026-08-23).** `SAVOY_ALLOWED_EMAILS` names the people who may open the portfolio
+  monitor; `src/lib/auth.ts` checks it server-side against the **verified** addresses on the
+  Clerk account, and `src/app/(private)/layout.tsx` runs that check for every page in the
+  group.
+  - **Why "signed in" is not enough.** Clerk answers authentication only. Whether a stranger
+    can create an account is a **setting in the Clerk Dashboard** — not a fact anyone can
+    check by reading this repo — so an app that trusts the session alone is exactly as closed
+    as a checkbox no reviewer here can see. This is the concrete form of the standing rule
+    that two users is an argument against tenancy machinery and never against an auth
+    boundary.
+  - **It fails closed, and that cost is real.** An unset or empty allowlist admits nobody,
+    the principals included. The alternative — treating "unset" as "any signed-in user" —
+    converts one forgotten deploy variable into an open door onto the fund's positions. The
+    two failure modes are not equally bad, so the code takes the recoverable one; the refusal
+    page names the variable to set so the fix is a deploy setting, not a debugging session.
+  - **Verified addresses only, and all of them** — not just the primary. Matching the primary
+    alone locks out an owner who later adds and promotes an address; accepting unverified
+    ones would let anyone claim an allowlisted address they do not control.
+
+- **Route protection is deny-by-default: the PUBLIC routes are the list (2026-08-23).**
+  `src/proxy.ts` enumerates `/`, `/coming-soon`, `/sign-in(.*)` and `/api/health`; everything
+  else requires a session. The inverse — enumerate the private routes — fails in the
+  dangerous direction, because a new page under the monitor ships public until someone
+  remembers to add it.
+  - **The cost, stated plainly:** an unknown or mistyped URL redirects a signed-out visitor
+    to the login instead of 404ing, and a new marketing page will ask for a login until it is
+    added to the list. Both are loud, harmless and instantly visible. Serving fund positions
+    to the internet is none of those things.
+
+- **There is no sign-up route, and the login is not linked from the public site yet
+  (2026-08-23).** The authenticated population is two named people, provisioned by
+  invitation from the Clerk Dashboard; `<ClerkProvider>` is configured without a `signUpUrl`
+  to match. The public nav's "Investor login" still points at `/coming-soon`, not `/sign-in`.
+  - **Why the link was left alone.** Pointing the public site at a live login is what makes
+    it discoverable, and it should happen when the owner has invited the users and set the
+    keys — not as a side effect of wiring the library up. It is a one-line change in
+    `src/app/page.tsx` when they want it.
+
+- **Clerk's redirect target is set in code, not by env var (2026-08-23).** `src/proxy.ts`
+  passes an explicit `unauthenticatedUrl` to `auth.protect()`. Without it Clerk sends
+  signed-out visitors to its hosted Account Portal on a `*.accounts.dev` domain — observed on
+  the first smoke test, not theorised — which is off-brand, off-domain, and makes
+  `src/app/sign-in/` dead code. The documented alternative, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`,
+  was rejected because a forgotten deploy variable would silently restore that behaviour.
+
+- **The proxy file is `src/proxy.ts`, not `src/middleware.ts` (2026-08-23).** Next.js 16.3
+  deprecates the `middleware` file convention in favour of `proxy` and warns on every build
+  under the old name. Clerk's own docs still say `middleware.ts`; `clerkMiddleware` works
+  unchanged under the new name, verified by running it rather than assumed. Do not rename it
+  back to match Clerk's documentation.
+
 - **A spaced secondary control may sit at 36×36px (owner, 2026-08-23).** § 0.8 and § 9's
   blanket ≥44×44px tap-target floor now carves out a control that is *all* of: secondary, at
   least 8px clear of its neighbours, and not repeated in a dense list. The carousel arrows are
