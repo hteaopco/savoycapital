@@ -12,6 +12,17 @@ learning that). Keep this to a paragraph. Edit it only when the answer actually 
 site**, which belongs to other seats. Charter in `AGENTS/CLERK.md`; if you are here to change
 a feature, that agent is not your agent.
 
+**Mobile has an owner now.** The mobile design seat is commissioned (owner, 2026-08-24) — how
+every screen behaves at ≤767px, across both the public site and the portal. Charter in
+`AGENTS/MOBILE.md`. Its § "What I inherited vs. what is true here" is the part to read before
+trusting a mobile doc: **`design/MOBILE_REFERENCE.md` and `MOBILE_AUDIT_PLAYBOOK.md` are
+carried from theAPlink and describe machinery this repo does not have** — no `lint:mobile`, no
+`useIsMobile()`, no `mobile-cards.tsx`, and **no `@media (max-width:767px)` block in
+`globals.css`, so nothing is auto-floored to a tap-target size.** Their coverage tables are
+theAPlink's numbers, not ours; mobile here is **unmeasured**. Where the two inherited docs
+disagree, `DESIGN_SYSTEM.md` wins (mobile-first, 44px floor, more than one breakpoint allowed)
+— which is what the code already does. Not yet an owner-recorded decision.
+
 **The site is live on Railway** (owner-confirmed 2026-08-23). Next.js 16 + React 19 +
 TypeScript + Tailwind (layout only), the public landing page at `/`, and a dependency-free
 healthcheck at `/api/health`. Deploy shape: Nixpacks, `npm run build`, `npm run start`,

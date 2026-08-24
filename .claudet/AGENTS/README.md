@@ -27,3 +27,4 @@ playbook → `.claudet/STATE.md` and the `DECISIONS.md` headers for the area you
 | File | Seat |
 |---|---|
 | `CLERK.md` | **Authentication.** The Clerk instance, the session boundary, the sign-in surface, and the configuration and DNS behind them. Not the site. |
+| `MOBILE.md` | **Mobile design.** How every screen behaves at ≤767px — layout, reflow, tap targets, drawers and sheets, and the breakpoints that switch between them. Both surfaces, public and portal. Not the data model or the auth boundary. |
