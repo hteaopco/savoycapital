@@ -185,8 +185,13 @@ a test runner. **`prisma/` is no longer empty** — schema and the first migrati
 `scripts/` are not** — CI landed in #15, and `scripts/` now holds `design-lint.mjs`.
 
 **Blocked on a person:** what an equity vs. debt position holds — the decision the portfolio
-monitor's schema is built on. And the securities-marketing question in `FACTS.md`, which
-gates what the *public* page may say, not whether it may exist.
+monitor's schema is built on. **Still open after 2026-08-24, and the shape of the stand-in
+matters:** the Portfolio chart now reads Postgres, and each deal carries `instrument` (a
+two-value enum) plus `terms` and `fees` as **free text**. That is deliberately not a schema
+for a position. When the real answer arrives it replaces those two columns; do not read them
+as the model.
+And the securities-marketing question in `FACTS.md`, which gates what the *public* page may
+say, not whether it may exist.
 
 **Clerk instance is live and its DNS is still half-fixed.** Production instance
 `ins_3IL2OO8W1HTVwmTMHtleVAjH2AV` on `clerk.savoycapital.io`, keys set on Railway (owner,

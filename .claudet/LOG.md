@@ -8,6 +8,48 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Portfolio reads the database, and amounts carry commas** (owner, 2026-08-24: *"lets tie
+  the porfolio values to the values in fund and investments"*, *"use the comma separator..IE
+  instead of 10000000 make it 10,000,000"*).
+  **The bug this closes was reported, not found:** *"it did not change the fund size when i
+  changed it here fyi."* The save had worked. Portfolio was rendering
+  `src/content/fund-allocation.ts` — a second copy of the same figure, and the copy nobody
+  could edit. One figure, two sources, and the screen drew the wrong one.
+  `src/lib/portfolio.ts` now builds the chart from `Fund.sizeCents` and each
+  `Deal.amountCents`, grouped by a new `Deal.instrument` enum. `fund-allocation.ts` keeps
+  **only** `FUND_AS_OF`, because there is nothing in the schema that date could honestly come
+  from — it is the date of the MARKS and there are no marks; `inceptionDate` and the latest
+  investment date each mean something else.
+  **What cannot be plotted is named on the screen, not dropped.** A deal needs an amount and
+  an instrument; missing either, it appears in an amber "Not shown on the chart" line by name
+  with what it needs. Silently omitting a row would make the chart quietly disagree with the
+  Deal Room, and this is a chart of a fund's money.
+  Four empty states kept apart on purpose — no database, no such fund, no fund size, no
+  plottable deals. Collapsing them would send somebody to fix the wrong thing, and
+  **"no such fund" is the one a fresh deploy actually hits**: a management viewer with no
+  assignment falls back to fund 1 and an empty database has no fund 1. Caught in review; the
+  first cut returned one `null` for that and for a missing `DATABASE_URL`, so a working
+  database would have reported itself unconfigured.
+  **Unallocated is still derived** and must stay that way: `FundAllocation` computes it as
+  fund size less everything deployed, so a split that fails to add up cannot render. The
+  figures this chart was first built from arrived $10,000 over.
+  `Deal.terms` and `Deal.fees` are **free text**, matching the drill-down panel they feed.
+  What a position actually holds is still the decision blocked on a person; modelling it now
+  to look thorough means the real schema starts by undoing it.
+  Commas: `centsToDollarInput` groups, `groupDollarInput` re-groups on **blur only** — never
+  per keystroke, because reformatting mid-word moves the caret. Anything that does not parse
+  is left exactly as typed for the person to fix. `parseDollarsToCents` already stripped
+  commas on both sides of the wire, so no route changed.
+  Migration `20260824210000_deal_instrument` hand-written, then diffed against
+  `prisma migrate diff --from-schema/--to-schema --script` and confirmed identical. Additive;
+  no existing row changes.
+  **Consequence worth stating: after this deploys the chart shows what is in Postgres, which
+  is not what it showed before.** The fund size and each deal's amount and instrument have to
+  be entered under Fund & Users and in the Deal Room. That is the point of the change, and
+  the screen names every missing value rather than leaving a blank.
+  **Not verified: nothing has been written to Postgres from here.** The migration has not run
+  anywhere this session can reach.
+
 - **Fund size, deal investment size and date, and a fund filter on the Deal Room** (owner,
   2026-08-24). Funds gain `sizeCents` alongside `inceptionDate`; deals gain `amountCents` and
   `investmentDate`; the Deal Room gets a fund picker defaulting to Savoy Capital.
@@ -27,9 +69,11 @@ Reverse-chronological log of notable changes.
   fetch became fund-scoped, which would have re-fetched the fund selected at mount forever;
   and `DealDetailView`'s `onUploaded` became false when a third thing could change the screen,
   so it is `onChanged`.
-  **`Portfolio` still reads the content module, not these columns** — the owner named
-  database-driven figures as a future phase. Two sources of the fund size now exist and only
-  one renders; the schema says so at the column.
+  **`Portfolio` still read the content module, not these columns** — the owner named
+  database-driven figures as a future phase, so two sources of the fund size existed and only
+  one rendered. **Corrected on the next change:** the owner hit exactly the failure that
+  implies ("it did not change the fund size when i changed it here"), and Portfolio now reads
+  Postgres. See the entry above.
   Money and date parsing exercised against 21 cases including `$50,000,000`, which is past
   `INTEGER`'s ceiling and would not have fit the column this change replaced.
   **Not verified: nothing has been written to Postgres.** The migration has not run anywhere.

@@ -281,9 +281,14 @@ for every private route, and it is defense-in-depth worth having regardless.
 *Symptom:* a user clicks Sign Out, is not redirected, and keeps navigating the portal. Reads
 exactly like a broken session boundary. Reported by the owner, 2026-08-24.
 *Cause — the part that is structural and permanent:* **every portal route is statically
-prerendered.** `next build` reports `○` for `/portal` and `/portal/portfolio`; `/deal-room`
-is `ƒ` because it queries Postgres, and so are `/sign-in` and the API routes. (`/home` and
-`/portal/historical` were deleted on 2026-08-24 and are no longer in that list.)
+prerendered.** (**Amended 2026-08-24:** `/portal/portfolio` is no longer among them.
+Enforcing roles made it `force-dynamic`, and reading the fund's figures from Postgres keeps
+it that way, so `next build` now reports `○` for `/portal` alone; `/portal/portfolio`,
+`/deal-room`, `/fund-users`, `/sign-in` and the API routes are all `ƒ`. **The gotcha still
+holds for `/portal`**, and for any statically prerendered route added later — the mechanism
+is prerendering plus prefetch, not that particular list. Recording the amendment rather than
+rewriting the entry, because the entry is what the owner reported and the list is what went
+stale under it.) (`/home` and `/portal/historical` were deleted on 2026-08-24.)
 The sidebar's `next/link` entries prefetch those routes into the browser's router cache, so
 moving between them is a client-side swap that **never reaches the server** — which means
 `src/proxy.ts` never runs and cannot 307 anyone out mid-session. Cached pages keep rendering
