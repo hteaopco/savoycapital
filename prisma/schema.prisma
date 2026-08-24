@@ -1,0 +1,115 @@
+// Savoy Capital — the first schema in this repo (owner, 2026-08-24).
+//
+// It exists because the Deal Room needs somewhere to put a deal's NAME and a
+// document's DESCRIPTION. R2 holds bytes and keys; neither of those is a byte,
+// and R2's list call returns keys and sizes but not custom metadata, so a
+// listing built on object metadata alone costs one request per file.
+//
+// Prisma 7: there is no `url` here. The connection string lives in
+// `prisma.config.ts` for migrate, and the runtime client takes a driver adapter
+// (`src/lib/db.ts`). That split is why codegen works in CI with no secrets.
+//
+// ## The fund dimension, and the FACTS.md contradiction it creates
+//
+// `FACTS.md` says Savoy Capital is ONE fund and that theAPlink's "what does
+// adding client #27 cost?" is the wrong question here. This schema nonetheless
+// carries a `Fund`, on the owner's explicit call (2026-08-24):
+//
+//   > "FundID - will denote the fund (if we grow later) / DealID - deal within
+//   > the fund ... investors would be identified by fundID, and they would have
+//   > access to all the deal info within the fundID"
+//
+// That is a deliberate override, not drift, and DECISIONS.md records it. The
+// reasoning: a fund id costs one column now and a data migration later, and it
+// is the natural authorization boundary for investors — the thing this product
+// does not have yet and will need. **It is NOT multi-tenancy.** There is no
+// tenancy extension, no per-model scoping middleware, and no `check:tenant-
+// scoping` ratchet. One column, one relation, nothing enforced by machinery.
+//
+// ## What is deliberately NOT modelled
+//
+// Positions, marks and valuations. What an equity vs. debt position holds is
+// the decision `STATE.md` records as blocked on a person, and guessing it here
+// to have a fuller schema would mean the real one starts by undoing this.
+// There is also no user table — Clerk owns identity, so `createdBy` and
+// `uploadedBy` are Clerk user ids with no foreign key to point at.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Who a document is meant for. The audience decides the R2 key's OUTERMOST
+/// segment, because that is what `src/lib/r2.ts`'s `isServableKey()` guards on.
+enum Audience {
+  MANAGEMENT
+  INVESTOR
+}
+
+/// A fund. There is exactly one today and every deal belongs to it.
+model Fund {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  createdAt DateTime @default(now())
+
+  deals Deal[]
+}
+
+/// One deal, inside a fund. The unit the owner creates and uploads into.
+model Deal {
+  /// Sequential and human-quotable, on the owner's ask for "a deal id that we
+  /// can pull from later and work off of". Enumerable ids are an acceptable
+  /// trade here because every route that serves one is behind Clerk, and the
+  /// eventual investor check is on `fundId`, not on guessing a deal number.
+  id Int @id @default(autoincrement())
+
+  fundId Int
+  fund   Fund @relation(fields: [fundId], references: [id], onDelete: Restrict)
+
+  /// Free text, as typed. Not unique: the same counterparty in two different
+  /// years is a real thing, and a uniqueness error on a name is a worse
+  /// experience than two rows the owner can tell apart.
+  name String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  /// Clerk user id. No FK — Clerk owns identity and there is no user table.
+  createdBy String
+
+  documents DealDocument[]
+
+  @@index([fundId, createdAt])
+}
+
+/// One uploaded file. The bytes live in R2 at `key`; this row is everything
+/// about the file that is not bytes.
+model DealDocument {
+  id     Int  @id @default(autoincrement())
+  dealId Int
+  deal   Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  audience Audience @default(MANAGEMENT)
+
+  /// The R2 object key:
+  ///   management/funds/<fundId>/deals/<dealId>/<uuid>/<filename>
+  /// Unique because two rows pointing at one object would make deleting either
+  /// one silently break the other.
+  key String @unique
+
+  /// The sanitised filename, as stored in the key's last segment.
+  filename String
+  /// What the owner typed. The reason this table exists at all.
+  description String
+  sizeBytes   Int
+  contentType String
+
+  uploadedAt DateTime @default(now())
+  /// Clerk user id. Same reasoning as `Deal.createdBy`.
+  uploadedBy String
+
+  @@index([dealId, audience])
+}

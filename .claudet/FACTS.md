@@ -50,6 +50,12 @@ exists to serve that. **Savoy Capital has one fund and two users.**
 - **Multi-tenancy is out of scope.** No `Group → Company → Store` hierarchy, no `companyId`
   scoping on every model, no tenancy Prisma extension, no `check:tenant-scoping` ratchet.
   Importing that apparatus would be building for a problem this product does not have.
+  - **The schema's `Fund` is not a reversal of this** (owner, 2026-08-24). Deals carry a
+    `fundId` because **investors will be scoped by fund** — "investors would be identified by
+    fundID, and they would have access to all the deal info within the fundID" — and today
+    every deal is fund 1. One column and one relation, added now because it is the
+    authorization boundary and retrofitting it onto stored R2 keys later is the expensive
+    version. Nothing enforces it by machinery. See DECISIONS 2026-08-24.
 - **"What does adding client #27 cost?"** — theAPlink's governing design test — **does not
   apply here.** Do not reach for it.
 - No QuickBooks integration is implied. theAPlink's QBO app, OAuth scope, and money-safety
@@ -67,8 +73,10 @@ exists to serve that. **Savoy Capital has one fund and two users.**
 - **Stack.** Following theAPlink. **Confirmed and built:** Next.js 16 (App Router), React 19,
   TypeScript strict, Tailwind for layout only, lucide, inline styles off the `C` palette,
   **Clerk** for auth, **Cloudflare R2** for documents (`@aws-sdk/client-s3`, S3-compatible),
-  hosted on Railway. **Still unconfirmed:** Prisma + PostgreSQL — the expectation, but no
-  schema exists, so nothing is scaffolded.
+  hosted on Railway. **Prisma 7 + PostgreSQL landed 2026-08-24** (owner: "Add a database") —
+  Railway Postgres, schema in `prisma/schema.prisma`, first migration
+  `20260824000000_deal_room`. It models the Deal Room only; positions and marks are still
+  blocked on a person.
 ~~- **Domain name** for the public site.~~ **Answered: `savoycapital.io`**, live on Railway
   behind Cloudflare (verified serving the app 2026-08-24). Clerk runs as a **production**
   instance keyed to `clerk.savoycapital.io`, which is why the Clerk DNS records exist and

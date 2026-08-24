@@ -30,8 +30,11 @@ but say which one you are doing.
 ## Session setup
 - `npm install` before editing/pushing — the sandbox starts with no `node_modules`, and a cold
   tree reports every import as TS2307. That is drift, not your diff.
-- **No Prisma.** There is no schema, so there is no `prisma generate` step. Do not add one to
-  a runbook out of habit.
+- **Prisma IS here as of 2026-08-24** (owner: "Add a database"), and `npm install` runs
+  `prisma generate` through `postinstall`. It needs **no database** — codegen reads the
+  schema only, which is what keeps CI green with no secrets set. Prisma **7**: there is no
+  `url` in `schema.prisma`; migrate reads `prisma.config.ts` and the runtime client takes a
+  driver adapter (`src/lib/db.ts`). Do not "fix" the missing `url` by adding one back.
 
 ## Pre-Push Gate
 Run **`npm run verify`** before every push: **typecheck + eslint + design-lint**
@@ -119,13 +122,25 @@ it there rather than taking it.** Charters in `.claudet/AGENTS/`.
 
 ## Tech stack
 Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind **for layout only** ·
-lucide-react · inline styles off the `C` palette · Clerk auth · Railway (Nixpacks,
-auto-deploy on push to `main`, healthcheck `/api/health`, Node pinned by `.nvmrc`).
+lucide-react · inline styles off the `C` palette · Clerk auth · **Prisma 7 + Postgres**
+(Railway) · **Cloudflare R2** for documents · Railway (Nixpacks, auto-deploy on push to
+`main`, healthcheck `/api/health`, Node pinned by `.nvmrc`).
 
-**Deliberately absent — do not scaffold these because theAPlink has them:** Prisma and a
-database, multi-tenancy (one fund, two users — `FACTS.md` is explicit that
-*"what does adding client #27 cost?"* does **not** apply here), QuickBooks, a test runner, a
-`/sign-up` route, Clerk webhooks, `useIsMobile()`, `mobile-cards.tsx`, and `lint:mobile`.
+**Both data stores are OPTIONAL to the build and boot.** `DATABASE_URL` and the four `R2_*`
+variables are read lazily; absent, the routes that need them answer **503** and every other
+page serves normally. That is deliberate and load-bearing: CI builds with **no secrets at
+all**, so a change that makes the build require one is a change worth noticing.
+
+**Deliberately absent — do not scaffold these because theAPlink has them:** multi-tenancy
+(one fund, two users — `FACTS.md` is explicit that *"what does adding client #27 cost?"* does
+**not** apply here), QuickBooks, a test runner, a `/sign-up` route, Clerk webhooks,
+`useIsMobile()`, `mobile-cards.tsx`, and `lint:mobile`.
+
+**`Fund` in the schema is NOT a retraction of that.** It carries a `fundId` on the owner's
+explicit call (2026-08-24) because investors will be scoped by fund, and it is one column and
+one relation — no tenancy extension, no per-model scoping middleware, no
+`check:tenant-scoping` ratchet. DECISIONS records why. Do not grow it into theAPlink's
+apparatus.
 
 ## Git
 - **Always rebase before starting work.** `git fetch origin main` and branch from

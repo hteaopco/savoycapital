@@ -6,6 +6,36 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The Deal Room brings Postgres, and deals carry a `fundId` (owner, 2026-08-24).**
+  > "Add a database" · "FundID - will denote the fund (if we grow later) / DealID - deal
+  > within the fund ... investors would be identified by fundID, and they would have access
+  > to all the deal info within the fundID" · "every deal id right now = fundid 1"
+
+  - **A database, chosen over the cheaper option and knowingly.** The seat's recommendation
+    was a sidecar manifest in R2 — no new infrastructure for what is, today, a deal name and
+    a description per file. The owner chose Postgres anyway. Recording that the trade was
+    stated and overruled, not missed: this is the right long-term home for deals, positions
+    and marks, and the cost is a second store to keep alive.
+  - **`Fund` is one column, and is NOT theAPlink's multi-tenancy.** `FACTS.md` says this is
+    one fund and that "what does adding client #27 cost?" is the wrong question here. A fund
+    id is carried anyway because **it is the authorization boundary for investors** — the
+    thing the product does not have and will need — and because retrofitting it onto object
+    keys that already exist is the expensive version of this change. No tenancy extension, no
+    per-model scoping, no ratchet. Do not grow it into one.
+  - **Deal ids are sequential integers, not cuids.** The owner asked for "a deal id we can
+    pull from later and work off of". Enumerable ids are acceptable because every route
+    serving one is behind Clerk and the eventual investor check is on `fundId`, not on the
+    difficulty of guessing a deal number.
+  - **Both stores are OPTIONAL to build and boot**, matching how R2 was already wired.
+    `DATABASE_URL` absent → the deal routes answer 503 and every other page serves. This is
+    load-bearing twice over: CI builds with no secrets, and an ungated `prisma migrate deploy`
+    in the start command would take the **public landing page** down over a database it does
+    not use.
+  - **Investor-facing upload is refused at the API, not merely disabled in the UI.** Nothing
+    serves the `investors/` prefix, so accepting one would write a file readable by nobody
+    on a screen that looks like investors have access. The audience becomes an input the day
+    the authorization layer lands.
+
 - **Accounts are created directly in Clerk, not invited; and an SMS code stays the only
   sign-in factor (owner, 2026-08-24).**
   > "we will not invite users for now. i will just create them inside clerk... easier just to
