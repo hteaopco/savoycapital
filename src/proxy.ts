@@ -34,13 +34,31 @@ export default clerkMiddleware(async (auth, request) => {
   // is the NEXT_PUBLIC_CLERK_SIGN_IN_URL env var; doing it here instead means
   // a missing deploy variable cannot silently restore that behaviour.
   const signInUrl = new URL("/sign-in", request.url);
-  signInUrl.searchParams.set("redirect_url", request.url);
 
-  // Authentication only — this establishes that SOMEBODY is signed in.
-  // Whether that someone may see the monitor is decided server-side by
-  // `checkAccess()` in src/lib/auth.ts, because the answer needs the user's
-  // verified email addresses and middleware should not be fetching those on
-  // every request.
+  // A RELATIVE return path, deliberately.
+  //
+  // Behind Railway the container is addressed internally, so `request.url` is
+  // `https://localhost:8080/...`, not the public URL. Passing it here shipped
+  // `redirect_url=https%3A%2F%2Flocalhost%3A8080%2Fportfolio` to production:
+  // the redirect itself was fine — Next rewrites the host of the Location
+  // header from the forwarded headers — but the query string is opaque to
+  // that, so a user who signed in successfully was sent to a dead address.
+  // Observed in production, not theorised.
+  //
+  // A relative path sidesteps the whole problem: nothing has to reconstruct
+  // the public origin, so nothing can get it wrong. It also avoids trusting
+  // `X-Forwarded-Host` — the other fix — which is attacker-controlled unless
+  // the proxy is known to overwrite it, and feeding that into a redirect is
+  // how open redirects are built.
+  signInUrl.searchParams.set(
+    "redirect_url",
+    `${request.nextUrl.pathname}${request.nextUrl.search}`,
+  );
+
+  // Authentication only. There is no authorization layer behind this: the
+  // Clerk instance is set to restricted sign-up, so an account cannot exist
+  // without an invitation and "signed in" is the whole test. See
+  // .claudet/PLAYBOOKS/auth-clerk.md § 1.
   await auth.protect(undefined, { unauthenticatedUrl: signInUrl.toString() });
 });
 
