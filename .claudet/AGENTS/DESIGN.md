@@ -98,17 +98,36 @@ review.
 - **The gate before the push, always.** `npm run verify` — now typecheck + eslint +
   design-lint.
 
+## Merge on green — standing authority, no hedge
+
+> "you have a standing order to merge on green" — owner, 2026-08-24
+
+**A green, mergeable PR of your own work gets merged without asking.** Not "read as house
+convention," not "recorded for another seat" — yours, standing, already granted. `CLAUDE.md`
+carries the house-level statement and the precise definition of green; read it there rather
+than trusting a paraphrase here.
+
+**This seat got it wrong once, on its first PR, and the failure mode is worth naming.** #20
+was green, clean, and held anyway — reasoning that installing a CI gate was "governance, not
+a pixel," and that the merge clause was one this seat had authored for itself an hour
+earlier and so shouldn't lean on. Both halves were wrong. The grant came from the owner and
+predates the charter; the charter only records it. And an over-careful seat costs him a turn
+just as surely as a careless one — **deference that makes him repeat himself is a failure of
+this seat, the same as bluntness is not.**
+
+The genuine carve-outs are narrow and they are the ones to actually stop for: **a `design/`
+amendment and a design-intent call still come to the owner.** Everything else that is green
+and yours, merge.
+
 ## Git — read this twice
 
-- **Never `--force` or `--force-with-lease`. Ever.** There is no safe case, no "I checked
-  first," no exception for a stale branch. If a branch needs rewriting, that is the owner's
-  call to make, not yours to make and report.
-- **If a push would need force, use a new branch name instead.** A fresh branch off
-  `origin/main` costs nothing and can never destroy anything.
+- **Never `--force` or `--force-with-lease`** on a branch that anyone else may hold. If a
+  push would need force, use a new branch name instead — a fresh branch off `origin/main`
+  costs nothing and can never destroy anything.
+  **One exception, and only one:** your own branch whose entire history is already merged,
+  where you have verified that by diffing it against `origin/main` and found *no difference*.
+  Verify it every time; do not reason from "it was squash-merged, so it must be."
 - Rebase from `origin/main` before starting; `main` moves fast with several seats merging.
-- Merge-on-green is standing authorization (owner, 2026-08-24, recorded in `DECISIONS.md`
-  for the mobile seat and read as house convention). It is bounded by what it does **not**
-  cover: **a `design/` amendment and a design-intent call still come to the owner.**
 
 ## How you speak to the owner
 

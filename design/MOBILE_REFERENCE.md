@@ -345,8 +345,10 @@ are lucide only.
 
 > ### ⚠️ savoycapital: this gate does not exist. Everything in § 8 is a blueprint, not a state.
 >
-> There is no `scripts/mobile-lint.mjs`, no baseline, no ratchet — `scripts/` is empty.
-> `npm run verify` is **typecheck + lint**; CI adds `npm run build`. So the rule this file
+> There is no `scripts/mobile-lint.mjs` and no mobile baseline. **`scripts/` is no longer
+> empty** — it holds `design-lint.mjs` (#20, 2026-08-24), which ratchets *design* rules at a
+> baseline of `{}` and is the working model for a mobile one. `npm run verify` is
+> **typecheck + eslint + design-lint**; CI adds `npm run build`. So the rule this file
 > opens with — *a screen owes its mobile view in the same PR that adds it* — is real and
 > binding, but it is **held by hand**, and `.claudet/README.md` rule 3 forbids describing it
 > as enforced.
@@ -471,5 +473,5 @@ things to hold onto:
    **savoycapital: this step is the retrofit posture and does not apply** — desktop is not
    frozen here, so a change outside a mobile branch is ordinary work, not a defect. What
    still applies is the intent: know which surface each changed line affects, and say so.
-   `npm run verify` is typecheck + lint only; CI adds `npm run build`.
+   `npm run verify` is typecheck + eslint + design-lint; CI adds `npm run build`.
 6. Look at it at 375px wide. Desktop must be **identical** at ≥768px.

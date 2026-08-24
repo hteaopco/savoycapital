@@ -21,8 +21,17 @@ A charter should carry:
 - the seat's instruments and access model
 - a standing instruction to keep the charter current
 
-Orientation order for any incoming agent: repo root conventions → your charter here → your
-playbook → `.claudet/STATE.md` and the `DECISIONS.md` headers for the area you're touching.
+Orientation order for any incoming agent: `CLAUDE.md` → your charter here → your playbook →
+`.claudet/STATE.md` and the `DECISIONS.md` headers for the area you're touching.
+
+**Every charter carries merge-on-green, and it is not optional boilerplate.** The owner
+granted it to every seat and should not have to grant it again — a green, mergeable PR of
+your own work gets merged without asking. `CLAUDE.md` holds the canonical statement and
+the precise definition of "green"; a charter may narrow it with that seat's real
+carve-outs (the design seat still brings a `design/` amendment to the owner; the Clerk
+seat still brings anything that changes who can reach what) but **may not hedge it**. A
+charter that leaves an agent unsure whether the grant applies to it has failed — that is
+not hypothetical, it happened on the design seat's first PR.
 
 | File | Seat |
 |---|---|

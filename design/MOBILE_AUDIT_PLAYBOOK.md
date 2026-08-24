@@ -10,7 +10,7 @@
 > |---|---|---|
 > | header, § 0.1 | Desktop frozen; every fix gated so desktop is byte-identical | **Mobile-first; neither surface frozen.** A change outside a mobile branch is ordinary work, not a defect |
 > | § 0.2 | Money-safety: never touch a cents value, a posting path, a QBO writer | **No money-writing surface exists.** The invariant that binds here is the **auth boundary** — never widen `src/proxy.ts`'s public list to make a layout easier |
-> | § 1.1, § 6 | Start from `--report`; `verify` runs seven gates; `prisma generate` for drift | **No gate, no Prisma.** A sweep starts from the diff. `npm run verify` is typecheck + lint; CI adds `npm run build` |
+> | § 1.1, § 6 | Start from `--report`; `verify` runs seven gates; `prisma generate` for drift | **One gate, no Prisma.** `npm run verify` is typecheck + eslint + **design-lint** (2026-08-24, #20) and CI adds `npm run build`. `lint:design --report` is a real starting point for a *design* sweep; there is still **no mobile lint**, so a mobile sweep starts from the diff |
 > | § 6 | Merge on green via an auto-merge cron | **Merge-on-green is standing authorization** (owner, 2026-08-24) — no cron; merge directly on `clean` |
 >
 > The audit surface is also different in kind: theAPlink is one internal portal, savoycapital
@@ -28,9 +28,11 @@
 > `design/MOBILE_REFERENCE.md` (the pattern library) — this doc is the *method*,
 > that doc is the *vocabulary*.
 
-> **savoycapital: `npm run lint:mobile` does not exist here** — `scripts/` is empty — so the
-> block below describes a gate we do not have. Read it as the spec to build to, and in the
-> meantime run the *whole* rubric in § 3 by eye rather than the half the gate cannot see.
+> **savoycapital: `npm run lint:mobile` does not exist here** — though `scripts/` is no
+> longer empty, it holds `design-lint.mjs` (#20, 2026-08-24) and not a mobile one — so the
+> block below describes a gate we do not have. Read it as the spec to build to; `design-lint`
+> is the nearest working example of the shape it should take. In the meantime run the *whole*
+> rubric in § 3 by eye rather than the half the gate cannot see.
 > The § 4 triage principle in the last paragraph of this block is the durable part, and it
 > holds with or without a linter.
 
@@ -115,11 +117,13 @@ Two invariants that override everything else:
    then `npm run verify` (typecheck + eslint + tenant-scoping + design-lint).
    **savoycapital: `npm install` still applies** — a cold sandbox reports every import as
    TS2307, which is drift, not your diff. **There is no Prisma**, so no `generate` step.
-   `npm run verify` is **typecheck + lint**; CI additionally runs `npm run build`, which is
-   not redundant — it is how this repo found its first two failures.
-7. **Commit** with the correct identity, **push** `--force-with-lease` (the branch
-   carries already-merged history from prior PRs), open a **PR**, **merge on green**
-   via the auto-merge cron.
+   `npm run verify` is **typecheck + eslint + design-lint** (#20); CI additionally runs
+   `npm run build`, which is not redundant — it is how this repo found its first two
+   failures — plus `lint:design --self-test` ahead of the gate.
+7. **Commit** with the correct identity, **push** (`--force-with-lease` only on your own
+   branch whose history is *verified* already-merged — diff it against `origin/main` and
+   find no difference first), open a **PR**, **merge on green**. No cron: merge directly on
+   `conclusion: success` + `mergeable_state: clean`. See `CLAUDE.md`.
    **savoycapital: merge-on-green is standing authorization** (owner, 2026-08-24) and there
    is no cron — merge directly once `verify` is green and `mergeable_state` is `clean`.
    `--force-with-lease` applies for the same reason given: the seat's branch is reset from
@@ -278,12 +282,14 @@ Guiding principles for the gray zone:
 
 ## 6. Verify & merge
 
-> **savoycapital: § 6 describes seven gates, a baseline and a cron. We have two gates and
-> none of the rest.** `npm run verify` = **typecheck + lint**. CI (`.github/workflows/ci.yml`)
-> runs that plus `npm run build`, deliberately with **no secrets set** — the build passes
-> without the Clerk keys, so a fork PR cannot leak them. There is no mobile-lint baseline to
-> update, no tenant-scoping ratchet (this is one fund, not a multi-tenant product —
-> `FACTS.md`), no design-lint, no tests, no Prisma and no auto-merge cron. Everything below
+> **savoycapital: § 6 describes seven gates, a baseline and a cron. We have three gates and
+> none of the rest.** `npm run verify` = **typecheck + eslint + design-lint** (#20, 2026-08-24).
+> CI (`.github/workflows/ci.yml`) runs that plus `npm run build`, deliberately with **no
+> secrets set** — the build passes without the Clerk keys, so a fork PR cannot leak them.
+> **`design-lint` has a real baseline at `{}` and `--update` behaves as § 6 describes**, so
+> the baseline discipline below is live for design and still a blueprint for mobile. There is
+> no mobile-lint baseline to update, no tenant-scoping ratchet (this is one fund, not a
+> multi-tenant product — `FACTS.md`), no tests, no Prisma and no auto-merge cron. Everything below
 > about baselines and `--update` is the blueprint for a gate we have not built. The
 > `mergeable_state` guidance **does** carry: `unstable` right after checks flip green is
 > GitHub lag — merge on `clean`, and treat `dirty` as a conflict to rebase out.

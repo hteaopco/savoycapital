@@ -53,7 +53,7 @@ mobile lint — falsifies a row in those banners and must update them in the sam
 TypeScript + Tailwind (layout only), the public landing page at `/`, and a dependency-free
 healthcheck at `/api/health`. Deploy shape: Nixpacks, `npm run build`, `npm run start`,
 healthcheck on `/api/health`, Node pinned to 22 via `.nvmrc`. `npm run verify` (typecheck +
-lint) and `npm run build` pass clean.
+eslint + design-lint) and `npm run build` pass clean.
 
 The public site is deliberately minimal: a nav, the **Our Portfolio** carousel (HTeaO
 Franchisee, Westfield Fluid Controls, Marucci Sports — in that order) and nothing else. The

@@ -77,13 +77,19 @@ appearing on a row, the exception has been misread.
 enforcement that doesn't execute). **Each of these is now flagged in the docs themselves, so
 a future agent hits the warning at the point of use rather than only here:**
 
-- **No `npm run lint:mobile`.** No `scripts/mobile-lint.mjs`, no baseline, no ratchet.
-  `scripts/` is empty. Every rubric item is caught by eye or not at all.
-- **No `npm run lint:design`** either — the palette mirror is a convention held by hand.
+- **No `npm run lint:mobile`.** No `scripts/mobile-lint.mjs`, no mobile baseline, no
+  ratchet. Every rubric item in § 3 is caught by eye or not at all.
+- **`npm run lint:design` DOES exist** as of #20 (2026-08-24) — `scripts/` is no longer
+  empty, and the palette mirror is a hard gate rather than a convention. Two of its rules
+  reach into this lane: `breakpoint-floor` fails any breakpoint below 768px, and
+  `tailwind-theme` fails a Tailwind color/radius/shadow class. **It is also the working
+  model for `mobile-lint.mjs`** — same masker, same baseline discipline, same `--self-test`
+  shape. Building that falsifies the row above; update it that day.
 - **No `useIsMobile()`.** `src/lib/` is empty. Mobile branching today is pure CSS
   (`md:` / `md:hidden`), which is SSR-safe by construction and has no hydration flash.
 - **No `mobile-cards.tsx`** — no `MobileCard`, `MobileCardList`, `sheetBackdrop`, `sheetCard`.
-- **No tests.** `npm run verify` is typecheck + lint, nothing more. CI adds `next build`.
+- **No tests.** `npm run verify` is typecheck + eslint + `design-lint` (#20). CI adds
+  `next build` and `lint:design --self-test`. Still no *mobile* lint.
 
 So: `MOBILE_REFERENCE.md` § 8 and § 9's coverage tables, and `MOBILE_AUDIT_PLAYBOOK.md`'s
 "start from `--report`", describe theAPlink. **Quoting those numbers as this repo's state
@@ -176,11 +182,14 @@ preamble. Tables for state, prose for judgment.
 - **Repo:** branch `claude/mobile-design-charter-mpf260`, PRs to `main`. **Merge-on-green is
   standing authorization** (owner, 2026-08-24): required checks passing, mergeable, no
   change-requested review, and I merge without asking. `mergeable_state: unstable` right
-  after checks flip green is GitHub lag — merge on `clean`. What that authorization does
+  after checks flip green is GitHub lag — merge on `clean`. `CLAUDE.md` holds the canonical
+  statement for every seat; read the definition of green there rather than from this line. What that authorization does
   *not* cover is the two things this seat must still bring to the owner: a `design/`
   amendment and a design-intent call.
-- **Gates:** `npm run verify` (typecheck + lint) locally; CI adds `npm run build`, which is
-  how this repo found its first two failures. No mobile lint, no design lint, no tests.
+- **Gates:** `npm run verify` (typecheck + eslint + design-lint) locally; CI adds
+  `npm run build` and `lint:design --self-test`. **A design lint exists as of #20** — its
+  `breakpoint-floor` rule fails any breakpoint below 768px, so it binds this seat directly.
+  Still no mobile lint and no tests.
 - **Browser:** Chromium in the session sandbox — the only way to make a measured claim.
   A real handset, keyboard overlap, and safe-area insets are the owner's to check.
 - **Subagents:** `Explore` for read-only audits when the surface outgrows one context.

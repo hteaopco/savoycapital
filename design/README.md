@@ -18,7 +18,7 @@ Seven of the ten content files are **byte-for-byte identical** to theAPlink's. T
 | `MOBILE_REFERENCE.md` | § 6 — **the tap-target floor is 44px, written per component** (`min-h-[44px] md:min-h-0`), against a 40px floor supplied globally by `globals.css`. **No `@media (max-width:767px)` block exists in this repo**, so nothing is auto-floored. | 2026-08-24, owner |
 | `MOBILE_REFERENCE.md` | § 1 / § 3 / § 4 / § 5, § 8, § 9 — **the named machinery does not exist here**: no `useIsMobile()`, `mobile-cards.tsx`, `.ap-chip-strip`, or `lint:mobile`. The coverage tables are theAPlink's numbers; ours is **unmeasured**. Patterns kept, claims corrected. | 2026-08-24, owner |
 | `MOBILE_AUDIT_PLAYBOOK.md` | header, § 0 — **both contract invariants replaced**: desktop is not frozen, and money-safety becomes the **auth boundary** (no money-writing surface exists; never widen `src/proxy.ts` for a layout). | 2026-08-24, owner |
-| `MOBILE_AUDIT_PLAYBOOK.md` | § 1, § 5, § 6 — **the loop is rewired to the gates that exist**: no `--report` to start from, no Prisma, no baseline, no cron. `verify` is typecheck + lint; CI adds `next build`; merge-on-green is standing authorization. | 2026-08-24, owner |
+| `MOBILE_AUDIT_PLAYBOOK.md` | § 1, § 5, § 6 — **the loop is rewired to the gates that exist**: no Prisma, no cron, and no *mobile* baseline. `verify` is typecheck + eslint + design-lint; CI adds `next build`; merge-on-green is standing authorization. | 2026-08-24, owner (§ 1.1/§ 6 rows re-corrected 2026-08-24 when `design-lint` landed) |
 
 **On "verified by checksum".** That phrase was carried from theAPlink and it overstates what
 is possible here: **there is no theAPlink checkout in this repo to checksum against**, so the
@@ -67,24 +67,22 @@ type-check they fail the build — which is exactly how this exclusion got added
 
 Read them. Copy patterns out of them. Never compile them.
 
-## Mirrors — not yet enforced
+## Mirrors — one pair enforced, two not yet
 
 In theAPlink nothing in the app imports from `design/`; the runtime holds its own copy, and
-three pairs are kept byte-identical by a hard gate (`npm run lint:design`, no baseline, no
-waiver). **That gate does not exist in this repo yet** — there is no app code to mirror
-into and no `scripts/` here.
+three pairs are kept byte-identical by a hard gate. **That gate exists here as of #20**
+(2026-08-24) — `npm run lint:design`, no baseline, no waiver — but it covers **one** pair,
+because only one is a real pair today:
 
-Treat this as the standing intent, to be made real when the app's component layer lands:
+| `design/` | app copy | Enforced? |
+|---|---|---|
+| `palette.ts` | `src/components/palette.ts` | **Yes — hard gate, byte-identical, no baseline and no waiver.** Breaking it fails CI. |
+| `globals-reset-snippet.css` | `src/app/globals.css` | **No, and deliberately not.** The app's file is a *documented partial port*: the snippet's `@apply border-border` / `bg-background` lines depend on a shadcn token layer this app does not have, so they are not carried. `globals.css`'s own header says which lines and why. A byte gate here would be wrong, not merely unbuilt. |
+| `inter-fonts.ts` | — | **No pair yet.** Nothing generates PDFs, so there is no app copy to mirror. Build one and this row becomes enforceable the same day. |
 
-| `design/` | app copy (when it exists) |
-|---|---|
-| `palette.ts` | the runtime palette module |
-| `globals-reset-snippet.css` | the app's global stylesheet |
-| `inter-fonts.ts` | the PDF font module |
-
-Until the gate is built, "source of truth" is a convention held by hand. Do not write it up
-anywhere as enforced — an unenforced rule described as enforced is worse than an
-acknowledged convention.
+**What that means for "source of truth."** For the palette it is now a computed fact, not a
+convention: the two files cannot drift without a red build. For the other two it remains a
+convention held by hand — say it that way, per `.claudet/README.md` rule 3.
 
 ## The gap this folder does not cover
 

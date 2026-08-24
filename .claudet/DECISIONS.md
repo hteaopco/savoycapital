@@ -6,6 +6,48 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **Merge-on-green is house-level standing authorization, stated in `CLAUDE.md`, and no
+  charter may hedge it (owner, 2026-08-24).**
+
+  > "you have a standing order to merge on green...make sure claude md has merge on green
+  > auto and every charter has merge on green auto"
+
+  - **A root `CLAUDE.md` now exists.** There was none — `.claude/rules/` and `scripts/` were
+    scaffolded empty in `a0c5e46` and nothing at the root pointed at either, so
+    `ui-governance.md` shipped with a banner admitting it was not reachable. `CLAUDE.md` is
+    now the one file every agent carries: the merge grant, the seats table, the verify
+    chain, the two rules that override convenience, and **pointers** to `.claudet/`,
+    `.claude/rules/` and `design/`. It deliberately repeats nothing from them — a second
+    copy is a copy that goes stale.
+  - **What "green" means lives in exactly one place now.** `conclusion: success` **and**
+    `mergeable_state: clean`, re-fetch `origin/main` first, your own PRs only. Three
+    charters each carried their own paraphrase; they now point at the canonical one.
+  - **The failure this fixes is over-caution, not recklessness.** The design seat held a
+    green, clean PR (#20) and asked instead — reasoning that a CI gate was "governance, not
+    a pixel," and that leaning on a merge clause it had authored for itself an hour earlier
+    was bootstrapping its own authority. Both halves were wrong: the grant came from the
+    owner and predates the charter, which only records it. **Deference that makes the owner
+    repeat himself costs him a turn exactly as much as carelessness does.** `DESIGN.md` now
+    carries that as a named failure mode rather than a general instruction to be bold.
+  - **Charters may narrow, never hedge.** The real carve-outs stand and are per-seat: a
+    `design/` amendment or design-intent call (design seat), anything changing who can reach
+    what (Clerk seat), anything widening public exposure of the fund's numbers.
+
+- **`design-lint` landing falsified nine written claims, and they were corrected in the same
+  PR (design seat, 2026-08-24).** `design/MOBILE_REFERENCE.md`, `MOBILE_AUDIT_PLAYBOOK.md`,
+  `design/README.md`, `AGENTS/MOBILE.md` and `STATE.md` all said `npm run verify` was
+  "typecheck + lint" and that `scripts/` was empty; `design/README.md` had a whole section
+  titled "Mirrors — not yet enforced". All true when written, all false the moment #20
+  merged.
+  - This is the rule the mobile amendment wrote down for itself — *anyone building the
+    missing machinery falsifies a row in those banners and must update them in the same PR*
+    — applied for the first time. It was missed on #20 and caught on the next pass.
+  - **The mirror row is now three rows with three different answers**, because only one of
+    the three pairs is a real pair: `palette.ts` is hard-gated, `globals-reset-snippet.css`
+    is a *deliberate* partial port that a byte gate would be wrong to enforce, and
+    `inter-fonts.ts` has no app copy because nothing generates PDFs. Collapsing those into
+    one "not yet enforced" line hid two different reasons behind one word.
+
 - **The design seat is commissioned, and design fidelity is now gated rather than trusted
   (owner, 2026-08-24).** `npm run lint:design` runs in `verify` and therefore in CI on every
   PR: nine ratcheted rules at a baseline of `{}`, plus a **hard, baseline-free mirror gate**

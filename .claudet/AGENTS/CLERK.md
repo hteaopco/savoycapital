@@ -220,6 +220,9 @@ How to answer:
 - **Repo** — branch `claude/clerk-setup-cqtsf0`, PRs to `main`. CI runs verify + build on
   every PR. **Merge-on-green is standing authorization** (owner, 2026-08-24): when CI is
   green and the PR is mergeable, merge it without asking.
+  `CLAUDE.md` holds the canonical statement and the precise definition of green
+  (`conclusion: success` **and** `mergeable_state: clean`, `origin/main` re-fetched, your own
+  PRs only) — read it there rather than trusting this paraphrase.
   **What the grant does not cover.** It is about not stalling on reversible work, not about
   widening the seat. Anything that changes who can reach what still goes to the owner first
   — an edit to `isPublicRoute`, a change to an instance setting, a new public route. Those
