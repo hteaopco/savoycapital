@@ -6,6 +6,29 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The carousel dots stay 24×44 on touch; they do not go to 44×44 (owner, 2026-08-24).**
+  > "Leave them."
+
+  The first mobile sweep (#23) found the dot buttons at 6px tall — the only control on either
+  surface that failed the tap-target floor outright — and floored the **height** to 44px. The
+  remaining question, put to the owner rather than decided in the seat, was whether to also
+  widen them to a full 44. The answer is no.
+  - **Why it was a question at all.** `DESIGN_SYSTEM.md` § 0.8 / § 9 put a ≥44×**44** floor on
+    "every interactive element a thumb hits", and the 36px carve-out does not cover these —
+    they are repeated in a row, which the carve-out explicitly excludes. So 24 wide is below
+    the stated floor and the deviation needed a person, not a rationalization.
+  - **Why the answer is defensible.** 24×44 clears **WCAG 2.2 AA (2.5.8), whose minimum is
+    24×24**. It fails the AAA/HIG comfort standard of 44, exactly as the repo's other
+    documented tap-target exception does. The cost lands on touch users first, and it is a
+    trade the owner made with that stated.
+  - **What it cost to widen, which is why it was declined.** Three dots plus two flanking
+    arrows at 44 each visibly spreads the row and pushes the arrows apart — a real change to a
+    surface the owner has already signed off, in exchange for width on a control whose
+    *height* was the actual defect.
+  - **This is settled. Do not re-raise it.** A later sweep will measure 24px against a 44px
+    floor and read it as a finding; it is not one. The call site says so too, at the point
+    where an agent would be tempted to "fix" it.
+
 - **The three `AP_DESIGN_REFERENCE.md` contradictions are resolved toward `DESIGN_SYSTEM.md`,
   and the code now matches (owner, 2026-08-24: "Fix everything").** The file labelled **READ
   FIRST** told every incoming agent the opposite of what ships, on three counts. Each now
