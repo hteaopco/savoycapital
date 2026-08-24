@@ -139,7 +139,9 @@ expect the same back.
 
   He said "merge" five times before granting it. He should not have to say it again: a
   green, conflict-free PR of your own work gets merged without asking, and asking anyway
-  spends his attention on a decision he has already made.
+  spends his attention on a decision he has already made. He has since made it house-level —
+  `CLAUDE.md` carries the canonical statement for every seat, and this section is the
+  longest-standing version of it.
 
   What "green" means, precisely, because this is the part that goes wrong: **read the check
   run's `conclusion` yourself.** A `check_suite.completed` event is not a pass — its own

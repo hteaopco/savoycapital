@@ -7,11 +7,11 @@ Owned by the design seat (`.claudet/AGENTS/DESIGN.md`). Mobile behaviour at ≤7
 owned by the mobile seat (`.claudet/AGENTS/MOBILE.md`) — this file governs the contract
 between them, not the inside of either lane.
 
-> **This file does not auto-load.** There is no root `CLAUDE.md` in this repo, so nothing
-> injects these rules into an agent's context the way `.claudet/README.md` conventions are
-> injected. Read it deliberately before UI work, and see § 6 for the open decision that
-> would change that. Said plainly per `.claudet/README.md` rule 3 — an unenforced rule
-> described as enforced is worse than an acknowledged convention.
+> **How this file reaches you.** `CLAUDE.md` at the repo root points at `.claude/rules/` and
+> is loaded into every agent's context, so the pointer is always in front of you — but the
+> pointer is not the file. **Read this one deliberately before UI work.** Said plainly per
+> `.claudet/README.md` rule 3: "it's in the rules folder" is not the same as "someone read
+> it," and describing it as automatic would be the kind of claim that folder forbids.
 
 ---
 
@@ -119,8 +119,6 @@ code is not an amendment — it is making the doc honest — but say which one y
 
 ## 6. Open
 
-- **No root `CLAUDE.md`**, so this file is not auto-loaded (see the banner). Creating one
-  is a house-wide decision affecting every seat, not the design seat's alone.
 - **No `lint:mobile`.** § 4's second bullet is held by review only.
 - **No off-scale value rules** (`spacing-scale`, `radius-scale`, `type-scale`) and no
   `inline-svg` rule. The first three need the scale contradictions in § 5 resolved before
