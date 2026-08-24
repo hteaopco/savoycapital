@@ -67,3 +67,38 @@ instance is fixed — say what would close it.
 
 **No open bugs outside the auth boundary are recorded here.** That is not a claim that none
 exist — this file is hand-maintained and only the Clerk seat has audited it (2026-08-24).
+
+## OPEN — `maskComments` desyncs, so design-lint reads its own prose as a violation
+
+**Symptom.** A comment that merely *names* a forbidden pattern is reported as a violation.
+Hit on 2026-08-24: two comments explaining why money fields use a text input with a numeric
+inputMode were flagged by `input-number`, while the code beneath them was correct.
+
+**Root cause, measured not guessed.** `scripts/lib/mask-comments.mjs` is supposed to blank
+comment bodies before any rule scans — its own header says "a rule that reads its own
+explanatory prose as a violation is worse than no rule." It stops doing that partway through
+a file. In `src/components/FundUsers.tsx` masking is correct up to roughly line 187 and
+**every comment from ~line 188 onward is left unmasked**. Reproduce with:
+
+```js
+import { maskComments } from "./scripts/lib/mask-comments.mjs";
+// compare maskComments(src) against src line by line; comment bodies stop being blanked
+```
+
+The masker skips string and template literals whole so a `//` inside one is not read as a
+comment. Something in that skip runs past its terminator and swallows the comment markers
+after it — the desync is consistent with an unbalanced quote or backtick being treated as a
+literal opener.
+
+**Why it stays open after the immediate fix.** The two comments were reworded to avoid the
+literal, which is a workaround, not a fix: the next person to write "never use X" in a
+comment near the bottom of a long component gets the same failure, and the natural reading is
+that their *code* is wrong.
+
+**Whose it is.** `scripts/design-lint.mjs` and `scripts/lib/` belong to the **design seat**.
+`CLAUDE.md` names an agent editing its own gate as the change no gate can catch, so the coder
+seat reported this rather than patching it.
+
+**What would close it.** A fix in the masker plus a fixture that puts a forbidden literal
+inside a comment late in a long file — `--self-test` currently has no case for prose that
+names the pattern it forbids, which is why this shipped.

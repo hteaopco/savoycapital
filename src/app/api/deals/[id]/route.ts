@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { parseDollarsToCents, parseDateInput } from "@/lib/money";
 import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
@@ -70,5 +71,86 @@ export async function GET(_request: Request, { params }: Params) {
       contentType: doc.contentType,
       uploadedAt: doc.uploadedAt.toISOString(),
     })),
+  });
+}
+
+/**
+ * Set a deal's investment size and date (owner, 2026-08-24).
+ *
+ * This is the backfill path as much as the edit path: the deal that existed
+ * before these columns has neither, and the screen opens its editor for exactly
+ * that reason.
+ *
+ * **Only those two fields are mutable.** Not the name, not `fundId` — moving a
+ * deal between funds would strand every R2 key already written under
+ * `.../funds/<fundId>/deals/<dealId>/`, and the key is what the read boundary
+ * guards on. A deal in the wrong fund is re-created, not moved.
+ *
+ * An explicit `null` clears a value; an absent key leaves it alone. That
+ * distinction is why this reads keys off the body rather than spreading it.
+ */
+export async function PATCH(request: Request, { params }: Params) {
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
+
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json(
+      { error: "The database is not configured. Set DATABASE_URL." },
+      { status: 503 },
+    );
+  }
+
+  const { id } = await params;
+  const dealId = Number(id);
+  if (!Number.isInteger(dealId) || dealId < 1) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const existing = await db.deal.findUnique({ where: { id: dealId }, select: { id: true } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+  const data: { amountCents?: bigint | null; investmentDate?: Date | null } = {};
+
+  if ("amountCents" in (body ?? {})) {
+    const raw = typeof body?.amountCents === "string" ? body.amountCents.trim() : "";
+    if (!raw) {
+      data.amountCents = null;
+    } else {
+      const cents = parseDollarsToCents(raw);
+      if (cents === null) {
+        return NextResponse.json({ error: "That investment size is not a number." }, { status: 400 });
+      }
+      data.amountCents = BigInt(cents);
+    }
+  }
+
+  if ("investmentDate" in (body ?? {})) {
+    const parsed = parseDateInput(
+      typeof body?.investmentDate === "string" ? body.investmentDate : "",
+    );
+    if (parsed === null) {
+      return NextResponse.json({ error: "Investment date must be YYYY-MM-DD." }, { status: 400 });
+    }
+    data.investmentDate = parsed ?? null;
+  }
+
+  const saved = await db.deal.update({ where: { id: dealId }, data });
+
+  return NextResponse.json({
+    id: saved.id,
+    amountCents: saved.amountCents === null ? null : Number(saved.amountCents),
+    investmentDate: saved.investmentDate
+      ? saved.investmentDate.toISOString().slice(0, 10)
+      : null,
   });
 }

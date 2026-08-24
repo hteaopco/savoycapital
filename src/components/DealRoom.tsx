@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { C } from "./palette";
+import { centsToDollarInput, formatCents } from "@/lib/money";
 
 /**
  * Deal Room — create a deal, then upload its documents (owner, 2026-08-24).
@@ -43,9 +44,16 @@ export type Deal = {
   id: number;
   fundId: number;
   name: string;
+  /** Integer cents, or `null` until somebody sets it. */
+  amountCents: number | null;
+  /** `YYYY-MM-DD`, or `null`. */
+  investmentDate: string | null;
   createdAt: string;
   documentCount: number;
 };
+
+/** Just enough of a fund to populate the picker. */
+export type FundOption = { id: number; name: string };
 
 type DealDocument = {
   id: number;
@@ -169,18 +177,42 @@ function Notice({ tone, children }: { tone: "error" | "muted"; children: React.R
   );
 }
 
-export function DealRoom({ initialDeals }: { initialDeals: Deal[] | null }) {
+export function DealRoom({
+  initialDeals,
+  funds,
+  initialFundId,
+}: {
+  initialDeals: Deal[] | null;
+  funds: FundOption[];
+  initialFundId: number;
+}) {
   const [deals, setDeals] = useState<Deal[]>(initialDeals ?? []);
   const [openDeal, setOpenDeal] = useState<DealDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Which fund's investments are on screen (owner, 2026-08-24: "select the fund
+   * to view investments in that fund only - default current fund").
+   *
+   * Defaults to the fund the server picked, which is fund 1 today. A new deal is
+   * created into whatever is selected here, so creating while looking at a fund
+   * cannot quietly file the deal somewhere else.
+   */
+  const [fundId, setFundId] = useState(initialFundId);
 
   // Every fetch below hangs off a user action — create, open, upload. None runs
   // from an effect, which is deliberate: the initial list arrives as a prop from
   // the server component, so there is no mount fetch and therefore no
   // `react-hooks/set-state-in-effect` violation and no loading state to render.
-  const reloadDeals = useCallback(async () => {
+  /**
+   * Reload for an explicit fund.
+   *
+   * The picker calls this with the fund it just selected rather than relying on
+   * `reloadDeals`, because `setFundId` has not applied yet at that point and the
+   * reload would fetch the fund being navigated away from.
+   */
+  const reloadDealsFor = useCallback(async (targetFundId: number) => {
     try {
-      const res = await fetch("/api/deals");
+      const res = await fetch(`/api/deals?fundId=${targetFundId}`);
       const body = await res.json();
       if (!res.ok) throw new Error(body?.error ?? "Could not load deals.");
       setDeals(body.deals);
@@ -189,6 +221,22 @@ export function DealRoom({ initialDeals }: { initialDeals: Deal[] | null }) {
       setError(e instanceof Error ? e.message : "Could not load deals.");
     }
   }, []);
+
+  const reloadDeals = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/deals?fundId=${fundId}`);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error ?? "Could not load deals.");
+      setDeals(body.deals);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load deals.");
+    }
+    // `fundId` is a real dependency now that the fetch is scoped by it. Left at
+    // `[]` this closes over the fund selected at mount, and every later reload
+    // silently re-fetches the wrong fund — which presents as a save that did not
+    // take rather than as a stale closure.
+  }, [fundId]);
 
   const openDealById = useCallback(async (id: number) => {
     try {
@@ -222,7 +270,7 @@ export function DealRoom({ initialDeals }: { initialDeals: Deal[] | null }) {
           setOpenDeal(null);
           void reloadDeals();
         }}
-        onUploaded={() => void openDealById(openDeal.id)}
+        onChanged={() => void openDealById(openDeal.id)}
       />
     );
   }
@@ -240,7 +288,40 @@ export function DealRoom({ initialDeals }: { initialDeals: Deal[] | null }) {
       />
 
       <div style={card}>
-        <div style={cardHeader}>Deals</div>
+        <div className="flex flex-wrap items-center" style={{ ...cardHeader, gap: 10 }}>
+          <span style={{ flex: 1 }}>Deals</span>
+          {/*
+            The fund picker. Changing it re-fetches rather than filtering an
+            array already on screen: the list is scoped server-side by `fundId`,
+            so a client-side filter would mean every fund's deals had been sent
+            to the browser and merely hidden.
+
+            Not an effect — the change handler fetches directly. React 19's
+            `react-hooks/set-state-in-effect` would reject the effect version,
+            and an event handler is what this actually is.
+          */}
+          <label
+            className="flex items-center"
+            style={{ gap: 8, fontSize: 11, fontWeight: 700, color: C.textDim }}
+          >
+            FUND
+            <select
+              value={fundId}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                setFundId(next);
+                void reloadDealsFor(next);
+              }}
+              style={{ ...input, width: "auto", minWidth: 170, fontSize: 12, padding: "7px 10px" }}
+            >
+              {funds.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         {deals.length === 0 ? (
           <div style={{ padding: 16, fontSize: 13, color: C.textMuted }}>
             No deals yet. Create one above.
@@ -271,9 +352,34 @@ export function DealRoom({ initialDeals }: { initialDeals: Deal[] | null }) {
                     className="block"
                     style={{ fontSize: 11, color: C.textMuted, fontVariantNumeric: "tabular-nums" }}
                   >
-                    Deal {deal.id} · Fund {deal.fundId} · {formatDate(deal.createdAt)}
+                    Deal {deal.id} · {formatCents(deal.amountCents)}
+                    {deal.investmentDate ? ` · invested ${deal.investmentDate}` : ""}
                   </span>
                 </span>
+                {/*
+                  Flags what still needs filling, and disappears once it is
+                  filled. The editor itself lives in the deal's detail view: this
+                  row is a <button>, and a form control nested inside one is
+                  invalid HTML that browsers resolve in their own ways.
+                */}
+                {deal.amountCents === null || deal.investmentDate === null ? (
+                  <span
+                    style={{
+                      padding: "3px 8px",
+                      borderRadius: 4,
+                      border: `1px solid ${C.amberBorder}`,
+                      background: C.amberBg,
+                      color: C.amber,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: ".06em",
+                      flexShrink: 0,
+                    }}
+                  >
+                    Needs values
+                  </span>
+                ) : null}
                 <span
                   style={{
                     fontSize: 11,
@@ -357,11 +463,17 @@ function CreateDeal({
 function DealDetailView({
   deal,
   onBack,
-  onUploaded,
+  onChanged,
 }: {
   deal: DealDetail;
   onBack: () => void;
-  onUploaded: () => void;
+  /**
+   * Re-reads the open deal. Named for what it now covers: an upload, a document
+   * delete, AND a change to the investment figures. It was `onUploaded` when
+   * uploading was the only thing that could change this screen; leaving that
+   * name would have made it wrong at the third call site rather than the first.
+   */
+  onChanged: () => void;
 }) {
   return (
     <div className="flex flex-col" style={{ gap: 16, maxWidth: 900 }}>
@@ -381,7 +493,9 @@ function DealDetailView({
         </div>
       </div>
 
-      <UploadBox deal={deal} onUploaded={onUploaded} />
+      <DealFigures deal={deal} onSaved={onChanged} />
+
+      <UploadBox deal={deal} onUploaded={onChanged} />
 
       <div style={{ ...card, background: C.bgAlt }}>
         <div className="flex items-center" style={{ ...cardHeader, gap: 8, color: C.textMuted }}>
@@ -409,6 +523,150 @@ function DealDetailView({
  * would defeat the thing being asked for. Open by default: "if needed" is not
  * "usually".
  */
+/**
+ * A deal's investment size and date.
+ *
+ * **Opens by default when either is missing** (owner, 2026-08-24: "can you make
+ * it to where i can backfill the values on first load"). The deal that existed
+ * before these columns has neither, so opening it puts the empty fields in front
+ * of you rather than behind a chevron. Once both are set it collapses to a
+ * summary — at that point the figures are worth reading and the inputs are not.
+ *
+ * Deliberately here and not on the list row: that row is a `<button>`, and a
+ * form control nested inside one is invalid HTML that browsers resolve in their
+ * own ways. The row flags what is missing; this edits it.
+ */
+function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void }) {
+  const needsBackfill = deal.amountCents === null || deal.investmentDate === null;
+  const [open, setOpen] = useState(needsBackfill);
+  const [amount, setAmount] = useState(centsToDollarInput(deal.amountCents));
+  const [date, setDate] = useState(deal.investmentDate ?? "");
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const amountId = useId();
+  const dateId = useId();
+
+  const save = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    setSaved(false);
+    try {
+      const res = await fetch(`/api/deals/${deal.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        // Both keys always sent: the route treats an absent key as "leave
+        // alone" and an empty string as "clear", so the form says exactly what
+        // it shows rather than blanking the field it did not touch.
+        body: JSON.stringify({ amountCents: amount, investmentDate: date }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error ?? "Could not save.");
+      setSaved(true);
+      onSaved();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={card}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex items-center min-h-[44px] md:min-h-0"
+        style={{
+          ...cardHeader,
+          gap: 8,
+          width: "100%",
+          border: "none",
+          borderBottom: open ? `1px solid ${C.border}` : "none",
+          background: "transparent",
+          fontFamily: "inherit",
+          textAlign: "left",
+        }}
+      >
+        <ChevronDown
+          size={14}
+          color={C.textMuted}
+          style={{
+            flexShrink: 0,
+            transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+            transition: "transform 160ms ease",
+          }}
+        />
+        <span style={{ flex: 1 }}>Investment</span>
+        {!open ? (
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              color: C.textMuted,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {formatCents(deal.amountCents)}
+            {deal.investmentDate ? ` · ${deal.investmentDate}` : ""}
+          </span>
+        ) : null}
+      </button>
+
+      {open ? (
+        <div className="flex flex-col" style={{ gap: 12, padding: 16 }}>
+          {error ? <Notice tone="error">{error}</Notice> : null}
+          <div className="flex flex-col gap-3 md:flex-row md:items-end">
+            <div className="flex flex-col md:w-[200px]" style={{ gap: 6 }}>
+              <label htmlFor={amountId} style={label}>
+                Investment size
+              </label>
+              {/*
+                A text input with a numeric inputMode, which the design gate
+                requires for money: a spinner control can be scrolled or arrowed
+                into a different figure by a stray gesture over a focused field.
+              */}
+              <input
+                id={amountId}
+                type="text"
+                inputMode="numeric"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="1,500,000"
+                style={{ ...input, fontVariantNumeric: "tabular-nums" }}
+              />
+            </div>
+            <div className="flex flex-col md:w-[200px]" style={{ gap: 6 }}>
+              <label htmlFor={dateId} style={label}>
+                Investment date
+              </label>
+              <input
+                id={dateId}
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                style={input}
+              />
+            </div>
+            <button
+              onClick={() => void save()}
+              disabled={busy}
+              className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+              style={{ ...primaryButton, opacity: busy ? 0.5 : 1 }}
+            >
+              {busy ? "Saving…" : saved ? "Saved" : "Save"}
+            </button>
+          </div>
+          <div style={{ fontSize: 11, color: C.textMuted }}>
+            Dollars, stored as cents. Clearing a field removes the value.
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function UploadBox({ deal, onUploaded }: { deal: DealDetail; onUploaded: () => void }) {
   const [formOpen, setFormOpen] = useState(true);
   const [staged, setStaged] = useState<Staged[]>([]);

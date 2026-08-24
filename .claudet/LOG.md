@@ -8,6 +8,32 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Fund size, deal investment size and date, and a fund filter on the Deal Room** (owner,
+  2026-08-24). Funds gain `sizeCents` alongside `inceptionDate`; deals gain `amountCents` and
+  `investmentDate`; the Deal Room gets a fund picker defaulting to Savoy Capital.
+  **Money is `BigInt`, not `Int`, and that is the load-bearing decision.** A Postgres
+  `INTEGER` stops at 2,147,483,647 — **$21,474,836** in cents. The fund is already at $10M,
+  half that ceiling, so `INTEGER` would have been a limit the schema imposed on the business,
+  discovered on the write that crossed it. Cents stay exact as a JS `number` to about $90
+  trillion, so only the column is wide and the API sends `Number(...)`.
+  **All three columns are nullable and the screens open their editors when a value is
+  missing** (owner: "can you make it to where i can backfill the values on first load"). Fund
+  1 and the existing deal predate the columns, and this repo may not invent a fund figure — a
+  migration backfilling from `src/content/fund-allocation.ts` would have written a money
+  figure onto the fund every deal belongs to.
+  The deal list is scoped **server-side** by `fundId` rather than filtered in the browser: a
+  client-side filter means every fund's deals were sent and merely hidden.
+  Two bugs caught while building rather than after: `reloadDeals` still had `[]` deps once the
+  fetch became fund-scoped, which would have re-fetched the fund selected at mount forever;
+  and `DealDetailView`'s `onUploaded` became false when a third thing could change the screen,
+  so it is `onChanged`.
+  **`Portfolio` still reads the content module, not these columns** — the owner named
+  database-driven figures as a future phase. Two sources of the fund size now exist and only
+  one renders; the schema says so at the column.
+  Money and date parsing exercised against 21 cases including `$50,000,000`, which is past
+  `INTEGER`'s ceiling and would not have fit the column this change replaced.
+  **Not verified: nothing has been written to Postgres.** The migration has not run anywhere.
+
 - **Role enforcement, and the Create New Fund collapse** (owner, 2026-08-24: *"roles
   assigned"*, *"put a collapse on create new fund...default to collapse"*).
   `src/lib/authz.ts` decides what a signed-in person may see. Management everything;
