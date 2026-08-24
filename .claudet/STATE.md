@@ -57,12 +57,13 @@ gates what the *public* page may say, not whether it may exist.
 interstitial, consistent with that record still being proxied — it should be **DNS only**
 (GOTCHA 8).
 
-**Blocked on the Clerk Dashboard** (`PLAYBOOKS/auth-clerk.md` § 2): sign-up mode is still
-**`public`** on a live production instance — anyone reaching it can create an account, and
-only the allowlist stops them seeing anything. It needs setting to **Restricted**. Then
-invite Rodney and Jett, and set `SAVOY_ALLOWED_PHONES` on Railway — **it is not set, so
-`/monitor` currently refuses everyone**, which is the intended fail-closed behaviour, not a
-bug. `next build` passes without them, so the deploy will not break before they land —
+Sign-up mode is **`restricted`** (owner, 2026-08-24, verified against the live instance) —
+it was `public` on first setup, which would have let anyone create an account.
+
+**Blocked on the Clerk Dashboard** (`PLAYBOOKS/auth-clerk.md` § 2): invite Rodney and Jett,
+and set `SAVOY_ALLOWED_PHONES` on Railway — **it is not set, so `/monitor` refuses everyone**,
+which is the intended fail-closed behaviour, not a bug. Their verified numbers, with country
+codes, are the one thing still missing before the monitor opens. `next build` passes without them, so the deploy will not break before they land —
 but the monitor refuses everyone until they do. Separately, the public nav's "Investor
 login" still points at `/coming-soon`; pointing it at `/sign-in` is a one-line owner call,
 left alone on purpose.
