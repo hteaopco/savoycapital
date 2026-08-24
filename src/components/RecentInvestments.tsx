@@ -408,6 +408,15 @@ export function RecentInvestments() {
             pointer is not a thumb — the same reading `FundAllocation` runs on.
 
             Sizing lives in the className, theming in the style prop.
+
+            **24 wide is where this stops, by the owner's call (2026-08-24):
+            "Leave them."** Taking the buttons to a full 44×44 was offered and
+            declined — at three dots plus two arrows it visibly spreads the row,
+            and the owner weighed that against a width that already clears WCAG
+            2.2 AA's 24×24 minimum. So this is a settled trade, not an
+            outstanding finding: **do not "fix" it on a later sweep.** The height
+            is the part that was broken and the height is fixed. Rationale in
+            `.claudet/DECISIONS.md`.
           */}
           <div className="flex items-center gap-0 md:gap-2">
             {INVESTMENTS.map((investment, i) => (
