@@ -7,16 +7,29 @@ built here should be indistinguishable in style from a screen built there.
 
 ## Divergences from theAPlink
 
-Nine of the ten content files are **byte-for-byte identical** to theAPlink's, verified by
-checksum. One is not:
+Seven of the ten content files are **byte-for-byte identical** to theAPlink's. Three are not:
 
 | File | Divergence | When |
 |---|---|---|
 | `DESIGN_SYSTEM.md` | § 0.8 — a **content crossfade** may run to 400ms, against the blanket 200ms animation ceiling. UI feedback keeps the 200ms limit. | 2026-08-23, owner |
 | `DESIGN_SYSTEM.md` | § 0.8 / § 9 — a **spaced secondary control** may go to 36×36px, against the blanket ≥44×44px tap-target floor. Primary actions, list rows and form controls stay at 44. | 2026-08-23, owner |
+| `MOBILE_REFERENCE.md` | header, § 2 — **mobile-first; desktop is not frozen.** theAPlink's freeze is a retrofit stance for an app with an accumulated desktop surface. Nothing here is frozen, and `DESIGN_SYSTEM.md` § 1.1 is mobile-first. | 2026-08-24, owner |
+| `MOBILE_REFERENCE.md` | § 1 — **a second breakpoint is allowed** when derived from arithmetic and shown at the call site, against "exactly one breakpoint." `FundAllocation.tsx`'s terms panel is the case (`2xl:` today); `DESIGN_SYSTEM.md` § 3.x uses `sm:`/`lg:` throughout. | 2026-08-24, owner |
+| `MOBILE_REFERENCE.md` | § 6 — **the tap-target floor is 44px, written per component** (`min-h-[44px] md:min-h-0`), against a 40px floor supplied globally by `globals.css`. **No `@media (max-width:767px)` block exists in this repo**, so nothing is auto-floored. | 2026-08-24, owner |
+| `MOBILE_REFERENCE.md` | § 1 / § 3 / § 4 / § 5, § 8, § 9 — **the named machinery does not exist here**: no `useIsMobile()`, `mobile-cards.tsx`, `.ap-chip-strip`, or `lint:mobile`. The coverage tables are theAPlink's numbers; ours is **unmeasured**. Patterns kept, claims corrected. | 2026-08-24, owner |
+| `MOBILE_AUDIT_PLAYBOOK.md` | header, § 0 — **both contract invariants replaced**: desktop is not frozen, and money-safety becomes the **auth boundary** (no money-writing surface exists; never widen `src/proxy.ts` for a layout). | 2026-08-24, owner |
+| `MOBILE_AUDIT_PLAYBOOK.md` | § 1, § 5, § 6 — **the loop is rewired to the gates that exist**: no `--report` to start from, no Prisma, no baseline, no cron. `verify` is typecheck + lint; CI adds `next build`; merge-on-green is standing authorization. | 2026-08-24, owner |
 
-The file carries a banner at the top saying the same thing, so a diff against theAPlink
-explains itself. **Add to that table before amending anything else here** — an undocumented
+**On "verified by checksum".** That phrase was carried from theAPlink and it overstates what
+is possible here: **there is no theAPlink checkout in this repo to checksum against**, so the
+identity of the seven is a claim held by hand, not a computed fact. Said plainly per
+`.claudet/README.md` rule 3 — an unenforced rule described as enforced is worse than an
+acknowledged convention. What *is* checkable, and what the banners exist for, is the
+narrower claim: every file that diverges says so at the top and names how.
+
+**Each of those three files carries a banner at the top saying the same thing**, so a diff
+against theAPlink explains itself and a reader who opens only one file still learns that it
+diverges. **Add to that table before amending anything else here** — an undocumented
 divergence turns "carried from theAPlink" into a claim nobody can check, and the value of
 this folder is that the claim is checkable.
 
@@ -29,8 +42,12 @@ this folder is that the claim is checkable.
 - `palette.ts` — the `C` palette (verbatim). **Every color comes from here. No raw hex.**
 - `DESIGN_SYSTEM.md` — the full upstream design system: principles, primitives, glyphs,
   PDF rules, accessibility.
-- `MOBILE_REFERENCE.md` — the ≤767px surface: what changes, what doesn't.
-- `MOBILE_AUDIT_PLAYBOOK.md` — how a mobile audit is run and what it checks.
+- `MOBILE_REFERENCE.md` — the ≤767px surface: what changes, what doesn't. **Amended for
+  savoycapital — read its banner first;** it names the machinery it describes that this repo
+  does not have, and § 6 in particular will mislead you about tap targets if you skip it.
+- `MOBILE_AUDIT_PLAYBOOK.md` — how a mobile audit is run and what it checks. **Amended for
+  savoycapital — read its banner first.** The rubric and triage carry; the loop's wiring
+  does not. Owned by the mobile seat, `.claudet/AGENTS/MOBILE.md`.
 - `inter-fonts.ts` — Inter Regular+Bold (base64) for PDF generation (verbatim).
 - `globals-reset-snippet.css` — the global reset bits the look relies on, especially the
   global cursor rule — **do not add per-element `cursor: pointer`.**

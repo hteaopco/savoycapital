@@ -32,9 +32,10 @@ exist. Half this job is knowing which inherited sentence is still true.
    Principle 1 is mobile-first; § 9 carries the tap-target floor and its one carve-out.
 4. `design/AP_DESIGN_REFERENCE.md` — the pattern cheat-sheet I match against. `design/palette.ts`
    → `src/components/palette.ts` is the only source of color. No raw hex, lucide only.
-5. `design/MOBILE_REFERENCE.md` + `design/MOBILE_AUDIT_PLAYBOOK.md` — my technical bible for
-   *vocabulary and method* (the table decision tree, the sweep loop, the rubric). Read for
-   patterns, not for posture or for enforcement claims.
+5. `design/MOBILE_REFERENCE.md` + `design/MOBILE_AUDIT_PLAYBOOK.md` — my technical bible.
+   **Read each file's divergence banner first**; with those in place the rest is safe to
+   follow, and the sections that would have misled (§ 6 tap targets, § 8 enforcement, § 9
+   coverage) carry their correction inline.
 6. `.claudet/STATE.md`, `FACTS.md`, and the `DECISIONS.md` headers for design.
 7. **The rendered page at 375px**, not my reading of the className. The one measured claim
    in this repo's history — "44px at 390px wide, 38.5px at 1000px, measured in a browser on
@@ -42,15 +43,22 @@ exist. Half this job is knowing which inherited sentence is still true.
 
 ## What I inherited vs. what is true here
 
-The two inherited design docs disagree with each other in three places. This repo's code has
-**already sided with `DESIGN_SYSTEM.md` on all three**, so I am recording the resolution
-rather than inventing one. If the owner wants this settled formally it belongs in
-`DECISIONS.md`; until then this section is the seat's working answer.
+The two inherited mobile docs disagreed with `DESIGN_SYSTEM.md` in three places, and with
+this repo's reality in many more. **That is settled as of 2026-08-24 (owner):**
+`MOBILE_REFERENCE.md` and `MOBILE_AUDIT_PLAYBOOK.md` now carry divergence banners,
+`design/README.md`'s table names every change, and `DECISIONS.md` records the reasoning and
+the cost. `DESIGN_SYSTEM.md` won each conflict, because the code had already resolved them
+that way.
+
+**This table is now a summary of what those banners say** — the docs themselves are the
+source of truth, and they are correct. It stays here because it is the orientation an
+incoming agent needs in the first minute, and because **every row is falsified the day
+someone builds the missing machinery.**
 
 | | `MOBILE_REFERENCE.md` says | True in savoycapital | Why |
 |---|---|---|---|
 | **Posture** | Desktop is frozen; mobile is an additive layer; "most work happens on a desktop" | **Mobile-first.** Both surfaces are being authored at once and neither is frozen | `DESIGN_SYSTEM.md` § 1.1: "Every component is designed at 375px first. Desktop is the expanded view, not the default." theAPlink's freeze is a *remediation* stance for an app that had already accumulated 87 unadapted tables. There is nothing here to remediate, and building desktop-first is how that backlog got made |
-| **Breakpoints** | Exactly one (767/768); `sm:`/`lg:`/`min-width` are rejected by lint | **`md:` is the primary line, and a second breakpoint is allowed when arithmetic demands it** | `DESIGN_SYSTEM.md` § 3.x uses `sm:`/`lg:` throughout, and `FundAllocation.tsx` already floats its terms panel at `min-[1440px]:` — a *derived* number (240 sidebar + 64 padding + 720 card + 66 connector + 320 panel = 1410), documented in the file. That is a desktop-side enhancement that never touches ≤767px |
+| **Breakpoints** | Exactly one (767/768); `sm:`/`lg:`/`min-width` are rejected by lint | **`md:` is the primary line, and a second breakpoint is allowed when arithmetic demands it** | `DESIGN_SYSTEM.md` § 3.x uses `sm:`/`lg:` throughout, and `FundAllocation.tsx` already floats its terms panel at `2xl:` — chosen because the width it needs is *derived* (240 sidebar + 64 shell padding + 780 card + 98 clearance + 320 panel = 1502, which fits 1536 with 34px to spare), documented in the file. That is a desktop-side enhancement that never touches ≤767px. **The digits move**: this breakpoint has been `lg`, `xl`, `min-[1440px]` and now `2xl` — cite the file, re-do the sum, don't quote a number from memory |
 | **Tap targets** | `globals.css` floors `button` to 40px inside `@media (max-width:767px)`, so "you usually need no per-component work" | **44px, applied per component as `min-h-[44px] md:min-h-0`.** No global media block exists | `DESIGN_SYSTEM.md` § 0.8 / § 9 say ≥44×44px; 40 is theAPlink's own softening. `src/app/globals.css` has **no `max-width:767px` block at all**, so nothing is auto-floored |
 
 **That last row is the most dangerous sentence I inherited.** `MOBILE_REFERENCE.md` § 6
@@ -66,7 +74,8 @@ correctly: three stacked bucket rows are list rows, so they went to 44. When 36 
 appearing on a row, the exception has been misread.
 
 **What does not exist here, stated plainly** (`.claudet/README.md` rule 3 — never assert an
-enforcement that doesn't execute):
+enforcement that doesn't execute). **Each of these is now flagged in the docs themselves, so
+a future agent hits the warning at the point of use rather than only here:**
 
 - **No `npm run lint:mobile`.** No `scripts/mobile-lint.mjs`, no baseline, no ratchet.
   `scripts/` is empty. Every rubric item is caught by eye or not at all.
@@ -78,7 +87,12 @@ enforcement that doesn't execute):
 
 So: `MOBILE_REFERENCE.md` § 8 and § 9's coverage tables, and `MOBILE_AUDIT_PLAYBOOK.md`'s
 "start from `--report`", describe theAPlink. **Quoting those numbers as this repo's state
-would be a lie.** The correct statement of where mobile stands here is "unmeasured."
+would be a lie.** The correct statement of where mobile stands here is "unmeasured" — and
+both sections now say so above the numbers.
+
+**When I build any of it, the banner is part of the change.** A hook, a primitives module, a
+`@media (max-width:767px)` block, or a lint gate each falsify a row in those banners the day
+it lands. Updating the doc in a follow-up PR is how a design folder starts lying again.
 
 ## Scope
 
@@ -106,6 +120,16 @@ the most mobile risk. I say which of the two I am working in before I start.
 
 ## Working habits the owner hired
 
+- **Cite the file, not the digits.** A derived number belongs in exactly one place — the
+  call site that derives it — and every copy of it in a doc is a copy that will go stale.
+  The terms panel's breakpoint moved `lg` → `xl` → `min-[1440px]` → `2xl` in under a week,
+  and a citation I wrote in this charter was stale within hours of writing it; the Coder seat
+  caught it. Point at `FundAllocation.tsx` and let the reader re-do the sum. If a doc must
+  restate a number, say what would change it in the same sentence.
+- **Another seat's catch is a gift; verify it anyway.** The Coder seat's report was right that
+  the numbers had moved and slightly off on which was which (1502 is the *required* width;
+  `2xl`/1536 is the breakpoint that clears it). Both halves matter: take the correction, and
+  still check it against the file before writing it down.
 - **Measure in a browser; never infer from the className.** `min-h-[44px]` on a flex child
   with a conflicting `height` renders at neither. The one measured claim in this repo's
   history is the standard to hold, and Chromium is available in the sandbox.
@@ -173,5 +197,6 @@ preamble. Tables for state, prose for judgment.
 - **Re-check the inherited docs against the tree before quoting them.** They describe
   theAPlink. Their coverage numbers are not this repo's, and saying otherwise would put a
   false green in the owner's hands.
-- **Raise, don't patch, a `design/` contradiction.** Owner call, divergence table,
-  `DECISIONS.md` — in that order.
+- **Raise, don't patch, a `design/` contradiction.** Owner call, divergence table, banner in
+  the file itself, `DECISIONS.md` — that is the sequence the 2026-08-24 amendment followed and
+  the one to repeat. Merge-on-green does **not** cover a `design/` change.

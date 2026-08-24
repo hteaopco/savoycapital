@@ -1,10 +1,38 @@
 # Mobile Audit Playbook — how a "go" sweep works
 
+> ### ⚠️ savoycapital divergence — this file is no longer identical to theAPlink's
+>
+> **Amended 2026-08-24, owner.** Carried byte-for-byte from theAPlink. **The method is the
+> keeper — the rubric in § 3 and the triage in § 4 are the reason this file exists.** What
+> does not carry is the machinery the loop is wired to and two of its invariants:
+>
+> | § | theAPlink | savoycapital |
+> |---|---|---|
+> | header, § 0.1 | Desktop frozen; every fix gated so desktop is byte-identical | **Mobile-first; neither surface frozen.** A change outside a mobile branch is ordinary work, not a defect |
+> | § 0.2 | Money-safety: never touch a cents value, a posting path, a QBO writer | **No money-writing surface exists.** The invariant that binds here is the **auth boundary** — never widen `src/proxy.ts`'s public list to make a layout easier |
+> | § 1.1, § 6 | Start from `--report`; `verify` runs seven gates; `prisma generate` for drift | **No gate, no Prisma.** A sweep starts from the diff. `npm run verify` is typecheck + lint; CI adds `npm run build` |
+> | § 6 | Merge on green via an auto-merge cron | **Merge-on-green is standing authorization** (owner, 2026-08-24) — no cron; merge directly on `clean` |
+>
+> The audit surface is also different in kind: theAPlink is one internal portal, savoycapital
+> is **a public marketing page plus a private portal**, and `design/README.md` supplies no
+> patterns for the first. See `.claudet/AGENTS/MOBILE.md` for the seat, `.claudet/DECISIONS.md`
+> for rationale.
+>
+> **If you are diffing this file against theAPlink's, these are the expected differences.**
+> Do not "restore" it, and record any further divergence here *and* in `design/README.md`.
+
+
 > The repeatable process behind each mobile pass on theAPlink. Desktop (≥768px) is
 > the frozen primary surface; mobile (≤767px) is an **additive** layer. Every change
 > is gated so the desktop DOM/paint is **byte-identical**. Read this with
 > `design/MOBILE_REFERENCE.md` (the pattern library) — this doc is the *method*,
 > that doc is the *vocabulary*.
+
+> **savoycapital: `npm run lint:mobile` does not exist here** — `scripts/` is empty — so the
+> block below describes a gate we do not have. Read it as the spec to build to, and in the
+> meantime run the *whole* rubric in § 3 by eye rather than the half the gate cannot see.
+> The § 4 triage principle in the last paragraph of this block is the durable part, and it
+> holds with or without a linter.
 
 > **`npm run lint:mobile` now backs part of this method.** The gate mechanically catches
 > five rubric items — §3A page-tearing tables, §3B unpinned label columns, an ungated fixed
@@ -43,17 +71,39 @@ Two invariants that override everything else:
    cents value, a posting path, a QuickBooks writer, or business logic. Sticky
    columns, wrapping, and sheets are pure layout.
 
+> **savoycapital: invariant 1 does not apply, and invariant 2 is replaced.**
+>
+> **On 1:** desktop is not frozen here — both surfaces are being authored at once, mobile-first
+> (`DESIGN_SYSTEM.md` § 1.1). A changed line outside a mobile branch is normal. What survives
+> is the *discipline* behind the rule: know which widths each change affects and say so, and
+> never let a mobile fix silently re-theme a desktop the owner has already signed off. The
+> `SiteNav` wordmark comment is the standing example — "making it clickable would be a change
+> to a surface the owner has already signed off, smuggled in under a refactor."
+>
+> **On 2:** there is no money-writing surface in this product — no posting path, no QBO
+> writer, nothing that moves a dollar. Money is still **integer cents formatted at render
+> with `tabular-nums`** (`FACTS.md`), and that stays. The invariant with real teeth here is
+> the **auth boundary**: `/portal` is closed by `src/proxy.ts`, and no layout problem is ever
+> solved by widening its public-route list. That file belongs to the Clerk seat
+> (`.claudet/AGENTS/CLERK.md`) — if a mobile change seems to need it, raise it, don't edit it.
+
 ---
 
 ## 1. The loop (every sweep, same order)
 
 1. **Reset to fresh main.** `git fetch origin main && git checkout -B <branch> origin/main`.
-   Never build on a stale tip — main moves fast (multiple agents/day).
+   Never build on a stale tip — main moves fast (multiple agents/day). **savoycapital: this
+   holds verbatim**, and for the same reason — several seats work this repo.
+   The mobile seat's branch is named in `.claudet/AGENTS/MOBILE.md`.
 2. **Diff since the last merge.** Find what's new:
    - New component/page files: `git diff --name-status <lastSHA>..HEAD -- 'src/**/*.tsx'` → `^A`
    - Biggest changed files: `git diff --stat …` sorted by churn.
    - This defines the audit surface. Ignore pure backend/route/lib churn — only
      files that render UI matter.
+   - **savoycapital: this step is the whole starting point**, since there is no
+     `--report` to lean on. The UI surface is small enough to enumerate by hand today —
+     `src/components/**` and `src/app/**/page.tsx` — so a sweep can legitimately audit
+     *everything* rather than just the diff, and should, until it can't.
 3. **Fan out audits.** One read-only `Explore` agent per file or tight group, each
    given the same rubric (§3). Parallel, because these are large files and the
    conclusions matter, not the file dumps. Group by area (e.g. "the six run modals",
@@ -63,9 +113,17 @@ Two invariants that override everything else:
 5. **Implement**, reusing the established primitives (§5). Gate everything.
 6. **Verify:** `npm install` (deps drift), `npx prisma generate` (schema drift),
    then `npm run verify` (typecheck + eslint + tenant-scoping + design-lint).
+   **savoycapital: `npm install` still applies** — a cold sandbox reports every import as
+   TS2307, which is drift, not your diff. **There is no Prisma**, so no `generate` step.
+   `npm run verify` is **typecheck + lint**; CI additionally runs `npm run build`, which is
+   not redundant — it is how this repo found its first two failures.
 7. **Commit** with the correct identity, **push** `--force-with-lease` (the branch
    carries already-merged history from prior PRs), open a **PR**, **merge on green**
    via the auto-merge cron.
+   **savoycapital: merge-on-green is standing authorization** (owner, 2026-08-24) and there
+   is no cron — merge directly once `verify` is green and `mergeable_state` is `clean`.
+   `--force-with-lease` applies for the same reason given: the seat's branch is reset from
+   `origin/main` each time and carries already-merged history.
 8. **Report** the pages touched and the fix for each; call out what was deliberately
    left as-is.
 
@@ -207,6 +265,11 @@ Guiding principles for the gray zone:
   `position: sticky; left: 0; width: calc(100vw - <pad>)` so its fields reflow into view.
 - **Public page (no `useIsMobile`)** — use a class + a `@media (max-width:767px)` rule
   in `globals.css` (keeps the desktop value exact, overrides only ≤767px).
+  **savoycapital: this is the normal case, not the exception** — nothing here uses
+  `useIsMobile`, and `globals.css` has no `@media (max-width:767px)` block yet. Prefer a
+  Tailwind `md:` utility, which needs no new CSS and cannot desynchronize from the server
+  render; reach for a `globals.css` block only for something a utility cannot express (a
+  blanket floor, a `::-webkit-scrollbar` rule).
 
 **Hooks-order gotcha:** put `const isMobile = useIsMobile()` **before any early
 `return`** in the component, or eslint's rules-of-hooks fails.
@@ -214,6 +277,16 @@ Guiding principles for the gray zone:
 ---
 
 ## 6. Verify & merge
+
+> **savoycapital: § 6 describes seven gates, a baseline and a cron. We have two gates and
+> none of the rest.** `npm run verify` = **typecheck + lint**. CI (`.github/workflows/ci.yml`)
+> runs that plus `npm run build`, deliberately with **no secrets set** — the build passes
+> without the Clerk keys, so a fork PR cannot leak them. There is no mobile-lint baseline to
+> update, no tenant-scoping ratchet (this is one fund, not a multi-tenant product —
+> `FACTS.md`), no design-lint, no tests, no Prisma and no auto-merge cron. Everything below
+> about baselines and `--update` is the blueprint for a gate we have not built. The
+> `mergeable_state` guidance **does** carry: `unstable` right after checks flip green is
+> GitHub lag — merge on `clean`, and treat `dirty` as a conflict to rebase out.
 
 - **Pre-push gate:** `npm run verify` = typecheck + eslint + tests + tenant-scoping
   ratchet + design-lint (no raw hex, lucide-only, etc.) + **mobile-lint** (the table-
