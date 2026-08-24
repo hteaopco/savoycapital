@@ -6,6 +6,22 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **Light only. There is no theme toggle and no dark theme (owner, 2026-08-24).**
+  > "no theme needed, light only"
+
+  `design/palette.ts` was already a **forced-light** palette that opts out of the dark theme
+  tokens — this makes the product decision match the palette's, rather than leaving the
+  palette looking like an accident someone should fix.
+  - **Why this needs recording at all.** theAPlink's sidebar — the one the Investor Portal's
+    nav was copied from — carries a moon toggle next to Sign Out, and it was in the very
+    screenshot this portal's shell was built from. Anyone working from that reference will
+    see a missing control and be tempted to add it. It is not missing; it is declined.
+  - **What it forbids:** a toggle that does nothing, a `prefers-color-scheme` block that
+    quietly re-themes the app, and any second set of palette tokens. `C` is the palette, in
+    one mode.
+  - **What it does not forbid:** honouring `prefers-reduced-motion`, which is an
+    accessibility signal and unrelated to colour.
+
 - **The in-app allowlist is removed; restricted sign-up is the whole boundary (owner,
   2026-08-24).** `SAVOY_ALLOWED_PHONES` and `src/lib/auth.ts` are deleted. The Clerk instance
   is set to `sign_up.mode: "restricted"`, so an account cannot exist unless a principal
