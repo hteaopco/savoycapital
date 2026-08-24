@@ -54,7 +54,10 @@ exists to serve that. **Savoy Capital has one fund and two users.**
   TypeScript strict, Tailwind for layout only, lucide, inline styles off the `C` palette,
   **Clerk** for auth, hosted on Railway. **Still unconfirmed:** Prisma + PostgreSQL — the
   expectation, but no schema exists, so nothing is scaffolded.
-- **Domain name** for the public site.
+~~- **Domain name** for the public site.~~ **Answered: `savoycapital.io`**, live on Railway
+  behind Cloudflare (verified serving the app 2026-08-24). Clerk runs as a **production**
+  instance keyed to `clerk.savoycapital.io`, which is why the Clerk DNS records exist and
+  why they must be **DNS only** in Cloudflare — see `PLAYBOOKS/auth-clerk.md` GOTCHA 8.
 - **Hosting.** Not connected to Railway yet (owner, 2026-08-23).
 - **What the portfolio actually tracks.** Position types (equity vs. debt differ
   materially — debt has a rate, term, amortization, and accrual; equity has ownership %,

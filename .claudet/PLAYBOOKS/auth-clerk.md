@@ -58,6 +58,9 @@ refuses everyone, including the principals.
 4. **Set the environment variables** on the Railway service *and* in local `.env.local`.
    `.env.example` documents all three. `SAVOY_ALLOWED_EMAILS` must contain the same
    addresses the invitations went to.
+5. **For a production instance (`pk_live_`), add Clerk's DNS records** on
+   `savoycapital.io` — and set them **DNS only** if the zone is on Cloudflare. See
+   GOTCHA 8; getting this wrong is silent until someone tries to sign in.
 
 Then, if the owner wants the login reachable from the public site, flip the nav link in
 `src/app/page.tsx` from `/coming-soon` to `/sign-in`. **That is an owner call, not a
@@ -131,6 +134,19 @@ fine.
 unset). The running server does.
 *Fix:* set both keys before deploying. This is a feature, not a bug: it means a missing key
 cannot be papered over at build time with a fake value.
+
+**GOTCHA 8 — Clerk's DNS records must be "DNS only" in Cloudflare, never proxied.**
+*Symptom:* `https://clerk.savoycapital.io` returns a Cloudflare HTML page titled
+**"DNS points to prohibited IP" (Cloudflare Error 1000)** instead of Clerk's JSON. Sign-in
+fails completely; the app looks fine and the apex domain serves normally, which makes this
+easy to misread as a Clerk outage.
+*Cause:* the CNAME was created with Cloudflare's **proxy enabled (orange cloud)**. Clerk's
+frontend API already sits behind Cloudflare, so proxying it a second time is refused.
+*Fix:* in Cloudflare DNS, set every Clerk record — `clerk`, `accounts`, `clkmail` and both
+`clk*._domainkey` records — to **DNS only (grey cloud)**. The apex/`www` records for the app
+itself are unaffected and may stay proxied.
+*Observed 2026-08-24* on `clerk.` and `accounts.` — this is not theoretical, it is what the
+first production DNS attempt produced.
 
 ---
 
