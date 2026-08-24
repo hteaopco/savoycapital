@@ -6,6 +6,53 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The design seat is commissioned, and design fidelity is now gated rather than trusted
+  (owner, 2026-08-24).** `npm run lint:design` runs in `verify` and therefore in CI on every
+  PR: nine ratcheted rules at a baseline of `{}`, plus a **hard, baseline-free mirror gate**
+  on `design/palette.ts` ↔ `src/components/palette.ts`. Before this, nothing in the repo
+  checked a single design rule — `verify` was typecheck + eslint, and "we follow `design/`"
+  was a claim with no way to fail.
+  - **The baseline is `{}` and stays `{}`.** Every rule sits at zero today, so the next
+    violation fails the build — that is the whole value. A genuine exception is waived at
+    the call site with a reason (`// design-ok:`), never by re-growing the baseline.
+  - **The rules were chosen so the baseline could be zero without touching a UI file.** Jett
+    owns the UI (`DESIGN_SYSTEM.md` § 1) and a design seat is exactly the seat that could
+    smuggle a pixel change through under a tooling PR. Rules that would have needed one —
+    `inline-svg` (wants a `design-ok:` line in `FundAllocation.tsx`) and the off-scale value
+    rules — were left out and are named as open in `ui-governance.md` § 6.
+  - **`--self-test` runs in CI ahead of the gate.** A rule with a broken regex reads green
+    forever, which is worse than no rule. Each of the ten was also mutation-probed against
+    the real repo — break the mirror, plant a hex, plant a theming class, plant a `sm:`,
+    delete the one real waiver — and confirmed to go red.
+  - **What it does NOT prove, stated up front:** it proves tokens and mechanisms, never
+    values. `C.overlay` used as a shadow passes. Off-scale spacing passes. Two cards at
+    different radii pass. `ui-governance.md` § 3 lists that residue as permanently a
+    reviewer's job so a green run is never mistaken for a review.
+  - **What would reopen this:** an off-scale rule becomes writable the day the scale
+    contradictions inside `design/` are resolved (see the next entry).
+
+- **`design/AP_DESIGN_REFERENCE.md` and `design/DESIGN_SYSTEM.md` contradict each other on
+  three points, and the code silently follows different files for different ones (found by
+  the design seat, 2026-08-24; unresolved, owner's call).** Both were carried from theAPlink,
+  where the same conflicts presumably existed harmlessly. Here the "READ FIRST" file tells a
+  new agent the opposite of what ships:
+  - **Tailwind for spacing.** `AP_DESIGN_REFERENCE.md` § 2: Tailwind "never for
+    color/spacing/theming". `DESIGN_SYSTEM.md` § 4: responsive spacing **must** be Tailwind
+    utilities, because an inline value cannot honour a breakpoint. The app follows
+    DESIGN_SYSTEM — ~40 spacing/sizing classes, and it could not be mobile-first otherwise.
+    The *color* half of § 2 is held perfectly: **zero** Tailwind color classes anywhere.
+  - **Radius for a card.** AP: 10 = cards/panels, 12 = modals. DESIGN_SYSTEM: 10 = larger
+    buttons and dashed empty cards, 12 = cards/panels. Both are shipping —
+    `RecentInvestments`'s card is 12, `FundAllocation`'s is 10.
+  - **Radius for a badge.** AP: status pill = 8. DESIGN_SYSTEM § 4: "Circular / pill badges
+    — always rectangle `borderRadius: 4`." Both are shipping — the public tags are 4, the
+    portal's "% DEPLOYED" pill is 8.
+
+  The 2026-08-24 precedent says **`DESIGN_SYSTEM.md` wins** and the losing file gets a
+  banner plus a row in `design/README.md`'s divergence table. Applying it here would make
+  `design/` four-tenths divergent and would change shipped pixels on two cards and one
+  badge, so it is left as an owner call rather than taken by the seat.
+
 - **The mobile docs are amended to describe this repo, and `DESIGN_SYSTEM.md` wins where the
   carried docs disagree (owner, 2026-08-24).** `design/MOBILE_REFERENCE.md` and
   `design/MOBILE_AUDIT_PLAYBOOK.md` were carried byte-for-byte from theAPlink and described a
