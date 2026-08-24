@@ -8,6 +8,19 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **The TOTAL FUND row was left 104px right of every other row, and is now aligned**
+  (owner, 2026-08-24). **A regression from the previous change, not a pre-existing defect.**
+  Moving the View Details column from before the money to after the percentage moved the
+  bucket rows' empty twin with it — but the total row's twin did not exist to move. Before,
+  the twin sat *ahead* of the money and the label's `flex: 1` absorbed it, so every row's
+  trailing cells still ended flush right and the total matched without carrying one. After,
+  the twin pulls the bucket and holding rows 104px off the card's edge while the total stayed
+  flush to it.
+  The fix is the third twin. Every row in the table now carries one: holdings the real
+  button, buckets and the total an empty span. Verified by counting them in the emitted HTML
+  — seven, being three segment rows, three holdings and the total — and by confirming each
+  legend row places money, share, then the slot.
+
 - **Deal Room: delete a document, and the object-only delete that had to go with it**
   (owner, 2026-08-24: "add a way to delete files in the deal room").
   `DELETE /api/deals/<dealId>/documents/<docId>` removes the row **then** the object — the
