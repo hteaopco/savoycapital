@@ -91,10 +91,23 @@ arrows at 36×36 (inside the § 9 carve-out, legitimately) and the carousel dots
 deliberate earlier fix up from 6px that clears WCAG 2.2 AA but not the house floor on width.
 Closing it visibly spreads the dot row, which is a design decision.
 
-**Blocking for anyone who wants to run the app locally: it will not boot without a Clerk
-publishable key** — every route 500s, `/api/health` included, because the proxy initialises
-before any route handler. That is the Clerk seat's surface, noted here because it stops any
-seat from looking at the site in a browser.
+**To run the app locally you need Clerk keys from the owner — the fix is keys, not code.**
+Without them every route 500s, `/api/health` included. Root cause confirmed by stack trace
+(2026-08-24): the thrower is **`src/proxy.ts`**, not `<ClerkProvider>` — `clerkMiddleware`
+calls `assertKey` inside `DevServer.runMiddleware`, ahead of any handler, which is why a
+route with no layout above it dies too. Worth stating because the plausible-sounding
+diagnosis (the provider wraps the root layout, so it takes everything down) does not explain
+`/api/health` and is wrong here.
+
+**Gating Clerk on key-presence to boot without them was considered and declined (owner,
+2026-08-24).** It would make `next dev` serve `/portal/portfolio` — real fund figures —
+unauthenticated. Fail-closed is worth more than local convenience. Do not re-propose it
+without reading `PLAYBOOKS/auth-clerk.md`.
+
+**With keys, local and production agree route-for-route** (both swept 2026-08-24): public
+four at 200, every `/portal/**` and `/api/files/**` path at 307 to an on-domain `/sign-in`
+with a relative `redirect_url`, unknown paths 307 too (deny-by-default). **The signed-in
+landing is still unverified by anything automated** — it needs an SMS code to a real handset.
 
 **The site is live on Railway** (owner-confirmed 2026-08-23). Next.js 16 + React 19 +
 TypeScript + Tailwind (layout only), the public landing page at `/`, and a dependency-free
