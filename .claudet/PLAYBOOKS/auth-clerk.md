@@ -27,9 +27,12 @@ routes; everything else requires a session. The inverse — list the private rou
 rest open — fails in the dangerous direction, because a new page under the monitor would ship
 public until someone remembered it.
 
-**The private surface is a route group.** Everything under `src/app/(private)/` renders
-through `(private)/layout.tsx`. `(private)` is a Next.js route group, so it does **not**
-appear in the URL: the page at `src/app/(private)/monitor/page.tsx` serves `/monitor`.
+**The private surface is `/portfolio`** (`src/app/portfolio/page.tsx`) — the fund allocation
+and its position-level amounts. It is protected by being **absent from the public list
+above**, not by anything on the page itself. There is no marker in the file that makes it
+private, which is the deny-by-default trade: adding a route is safe, and adding one to the
+public list is the dangerous edit. Review changes to that list the way you would review a
+change to a permission.
 
 ### What was removed, and the risk that came with it
 
@@ -73,9 +76,10 @@ at `/coming-soon` deliberately.
 
 ### Verifying bring-up worked
 
-- Signed out, `/monitor` → 307 to `/sign-in?redirect_url=...` **on this domain**. A redirect
+- Signed out, `/portfolio` → 307 to `/sign-in?redirect_url=...` **on this domain**. A redirect
   to a `*.accounts.dev` host means GOTCHA 1 has regressed.
-- Signed in as an invited user → the monitor shell renders with the user's first name.
+- Signed in as an invited user → `/portfolio` renders the allocation, with `<UserButton />`
+  in the top bar to sign out.
 - The instance still reports `"mode": "restricted"` (GOTCHA 3).
 
 ---
@@ -106,14 +110,15 @@ accepted cost of not leaking the private surface.
 *Symptom:* none, ever, until a stranger is looking at the fund's positions. This failure is
 completely silent by construction.
 *Cause:* with the allowlist removed, anyone who can create a Clerk account can open
-`/monitor`. If `sign_up.mode` returns to `public` — someone testing, a Clerk default
+`/portfolio`. If `sign_up.mode` returns to `public` — someone testing, a Clerk default
 changing, a new instance — the door is open and no code here notices.
 *Check it* (no credentials needed, the environment endpoint is public):
 ```
 curl -s "https://clerk.savoycapital.io/v1/environment?__clerk_api_version=2025-04-10&_clerk_js_version=5.0.0" \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['user_settings']['sign_up']['mode'])"
 ```
-Expect `restricted`. Anything else means the private surface is public.
+Expect `restricted`. Anything else means `/portfolio` — fund size and position-level
+amounts — is readable by anyone who signs up.
 *Fix:* Dashboard → Configure → Restrictions → Restricted.
 
 **GOTCHA 4 — there is no sign-up route, and adding one is a decision.**

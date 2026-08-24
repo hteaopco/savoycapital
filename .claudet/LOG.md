@@ -8,6 +8,26 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **`/portfolio` is closed; the auth work rebased onto it** (2026-08-24). The Clerk branch was
+  built against a repo whose private surface did not exist yet, so it carried a placeholder
+  `/monitor` behind a `(private)` route group. `#9` and `#10` landed the real thing —
+  `/portfolio`, the fund allocation with position-level amounts — and shipped it
+  **unauthenticated by an explicit owner call**, linked from the public homepage as "Investor
+  login", with `noindex` as the stated mitigation and a note in its own header saying to put
+  it behind auth before the site is promoted.
+  This is that. Rebased onto `main`; the placeholder `/monitor` and the `(private)` group are
+  **deleted** rather than kept, because `/portfolio` supersedes them and two private surfaces
+  would be one more than anyone can keep straight. `/portfolio` needs no marker to be
+  protected — it is protected by not appearing in `src/proxy.ts`'s public list, which is what
+  deny-by-default buys.
+  Measured before and after, not assumed: `https://savoycapital.io/portfolio` returned **HTTP
+  200 with the allocation to an anonymous request**; the rebased build returns **307 to
+  `/sign-in`** and serves no page content at all.
+  Also: `SiteNav` gains an optional `trailing` slot so `/portfolio` can carry Clerk's
+  `<UserButton />` for sign-out — a slot rather than an `auth` flag, so the shared nav still
+  knows nothing about authentication. The landing page's "Investor login" link is unchanged
+  from `main`; it already pointed at `/portfolio`, which now requires a session.
+
 - **The in-app allowlist is removed; restricted sign-up is the whole boundary** (2026-08-24,
   owner's call). `SAVOY_ALLOWED_PHONES` and `src/lib/auth.ts` are deleted, and
   `(private)/layout.tsx` no longer refuses anyone — Clerk's `sign_up.mode: "restricted"` means

@@ -57,7 +57,7 @@ export default function RootLayout({
     <ClerkProvider
       appearance={clerkAppearance}
       signInUrl="/sign-in"
-      signInFallbackRedirectUrl="/monitor"
+      signInFallbackRedirectUrl="/portfolio"
       afterSignOutUrl="/"
     >
       <html lang="en" className={inter.variable}>

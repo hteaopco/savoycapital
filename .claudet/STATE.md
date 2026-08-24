@@ -33,7 +33,7 @@ controls). The other nine content files are byte-identical, verified. If you are
 own banner, `design/README.md`'s divergence table and `DECISIONS.md` all say so.
 
 **Clerk is wired up.** `src/proxy.ts` protects everything except an enumerated public list,
-`/sign-in` is styled to the palette, and the `(private)` route group holds `/monitor`.
+`/sign-in` is styled to the palette, and **`/portfolio` — the fund allocation — is behind it**.
 Production instance `ins_3IL2OO8W1HTVwmTMHtleVAjH2AV` on `clerk.savoycapital.io`, keys set on
 Railway, `clerk.` DNS serving real Clerk JSON. `accounts.` still returns a Cloudflare
 interstitial, consistent with that record still being proxied — it should be **DNS only**
@@ -42,12 +42,16 @@ interstitial, consistent with that record still being proxied — it should be *
 **The access boundary is Clerk's `sign_up.mode: "restricted"` — nothing in this repo.** The
 earlier env-var allowlist was removed by the owner (2026-08-24) once sign-up was restricted;
 DECISIONS carries why and what it costs. The short version: **if that setting ever returns to
-`public`, `/monitor` opens to anyone who signs up and no code here will notice.** GOTCHA 3 is
+`public`, `/portfolio` opens to anyone who signs up and no code here will notice.** GOTCHA 3 is
 a one-line check worth running before anyone trusts the surface.
 
 The instance identifies users **by phone**, not email — `firstName` is the only reliable
-display value. `/monitor` is deliberately an empty shell; it exists so the boundary has
-something behind it, and what it displays waits on the position-model call below.
+display value.
+
+**The open-portfolio window is closed.** `/portfolio` shipped unauthenticated on 2026-08-23
+(a deliberate owner call, recorded in that page's own header), linked from the public
+homepage as "Investor login", serving fund size and position-level amounts to anyone with
+the URL. Verified reachable at HTTP 200 before this change and 307-to-sign-in after it.
 
 **Deliberately still absent:** Prisma (no schema yet, so no client to generate), a `/sign-up`
 route (two users, invited from the Dashboard), Clerk webhooks (nothing to sync into yet),

@@ -14,9 +14,15 @@ import { C } from "./palette";
 export type SiteNavProps = {
   /** The right-hand link. Omit for a bar with no action. */
   action?: { href: string; label: string };
+  /**
+   * Rendered to the right of the action. The authenticated surface puts
+   * Clerk's `<UserButton />` here — a slot rather than an `auth?: boolean`
+   * prop, so this component keeps knowing nothing about authentication.
+   */
+  trailing?: React.ReactNode;
 };
 
-export function SiteNav({ action }: SiteNavProps) {
+export function SiteNav({ action, trailing }: SiteNavProps) {
   return (
     <div style={{ borderBottom: `1px solid ${C.border}`, background: C.bg }}>
       <div className="mx-auto flex max-w-[1120px] items-center justify-between gap-6 px-5 py-4 md:px-10 md:py-5">
@@ -30,23 +36,26 @@ export function SiteNav({ action }: SiteNavProps) {
         >
           SAVOY CAPITAL
         </div>
-        {action ? (
-          <Link
-            href={action.href}
-            style={{
-              padding: "8px 14px",
-              borderRadius: 8,
-              border: `1px solid ${C.border}`,
-              background: C.bg,
-              color: C.text,
-              fontSize: 13,
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
-            {action.label}
-          </Link>
-        ) : null}
+        <div className="flex items-center" style={{ gap: 12 }}>
+          {action ? (
+            <Link
+              href={action.href}
+              style={{
+                padding: "8px 14px",
+                borderRadius: 8,
+                border: `1px solid ${C.border}`,
+                background: C.bg,
+                color: C.text,
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              {action.label}
+            </Link>
+          ) : null}
+          {trailing}
+        </div>
       </div>
     </div>
   );
