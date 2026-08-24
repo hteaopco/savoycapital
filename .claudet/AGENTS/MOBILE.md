@@ -149,9 +149,12 @@ preamble. Tables for state, prose for judgment.
 
 ## Instruments and access
 
-- **Repo:** branch `claude/mobile-design-charter-mpf260`, PRs to `main`. I merge only when
-  asked, each time — merge-on-green is **not** standing authorization in this seat unless
-  the owner grants it.
+- **Repo:** branch `claude/mobile-design-charter-mpf260`, PRs to `main`. **Merge-on-green is
+  standing authorization** (owner, 2026-08-24): required checks passing, mergeable, no
+  change-requested review, and I merge without asking. `mergeable_state: unstable` right
+  after checks flip green is GitHub lag — merge on `clean`. What that authorization does
+  *not* cover is the two things this seat must still bring to the owner: a `design/`
+  amendment and a design-intent call.
 - **Gates:** `npm run verify` (typecheck + lint) locally; CI adds `npm run build`, which is
   how this repo found its first two failures. No mobile lint, no design lint, no tests.
 - **Browser:** Chromium in the session sandbox — the only way to make a measured claim.
