@@ -8,6 +8,33 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **The Deal Room, and the first database in this repo** (2026-08-24). Create a deal, upload
+  management-facing PDFs/Excel with a description each, download them back with View.
+  Postgres holds deal names and descriptions, R2 holds bytes, and the write order is R2 first
+  — an orphaned object is survivable, a row whose View button 404s is not.
+  **The scoping questions were worth more than the code.** "Files for investors and
+  management" collides with a model where `src/proxy.ts` asks only whether somebody is signed
+  in; the owner chose management-only. Where descriptions live decided whether a listing costs
+  one request or one per file; the owner chose a database over the seat's recommendation of an
+  R2 manifest, and that trade is recorded rather than quietly taken. Mid-build he added the
+  fund dimension — investors scoped by `fundId`, every deal fund 1 today — which is a
+  deliberate override of `FACTS.md`'s "one fund" framing and is now recorded as such in three
+  files.
+  **Prisma 7 is not Prisma 6.** `url` is gone from `schema.prisma`; migrate reads
+  `prisma.config.ts` and the client takes a driver adapter. `prisma.config.ts` reads
+  `process.env` rather than Prisma's `env()` helper, because `postinstall` codegen runs in CI
+  where no secret is set and the helper treats a missing variable as an error.
+  **Landing this falsified four written claims** — `CLAUDE.md` said Prisma was deliberately
+  absent and that there is no `prisma generate` step, `FACTS.md` called Prisma unconfirmed,
+  `STATE.md` listed it as absent and `prisma/` as empty. All corrected in the same change, per
+  the rule that exists because it does not enforce itself.
+  Verified: `verify` green, `next build` green from a cleared `.next` **with no
+  `DATABASE_URL`**, and the key builder plus prefix guard exercised against 10 cases including
+  an investor key being refused by the download route and a `management-private/` lookalike.
+  **Not verified: any request reaching Postgres or R2** — the sandbox cannot reach
+  `postgres.railway.internal` and the app does not boot locally without a Clerk key. The first
+  migration runs on deploy.
+
 - **The portal nav is grouped: Admin over a rule, then Portal Home** (2026-08-24). Owner's
   spec, with a screenshot of theAPlink's own sidebar as the pattern. Two sections with a
   lucide icon and a titled label, children indented behind a vertical spine, one hairline

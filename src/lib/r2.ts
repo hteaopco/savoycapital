@@ -27,19 +27,53 @@ import { S3Client } from "@aws-sdk/client-s3";
  * variable into a legible error rather than a crash on an unrelated page.
  */
 
-/** Prefix per audience. Management is the only one served today. */
+/**
+ * Prefix per audience. **The audience is the OUTERMOST segment on purpose** —
+ * it is what `isServableKey()` guards on, so the read boundary is the first
+ * thing in the key rather than something nested inside it.
+ *
+ * Full layout: `<audience>/funds/<fundId>/deals/<dealId>/<uuid>/<filename>`
+ */
 export const PREFIX = {
   /** Rodney and Jett. Everything the fund holds about itself. */
   management: "management/",
   /**
-   * Reserved, NOT served by any route. Investor access needs an authorization
-   * layer this app does not have — `src/proxy.ts` asks only whether somebody is
-   * signed in, which is sufficient only while the population is two people who
-   * both see everything (DECISIONS 2026-08-24). Namespacing from day one so
-   * that layer can land without rewriting every key that already exists.
+   * Reserved, and NOT served by any route today. Investor access needs an
+   * authorization layer this app does not have — `src/proxy.ts` asks only
+   * whether somebody is signed in, which is sufficient only while the population
+   * is two people who both see everything (DECISIONS 2026-08-24).
+   *
+   * When it lands, `funds/<fundId>/` inside this prefix is the boundary: an
+   * investor belongs to a fund and may read that fund's investor-facing
+   * documents (owner, 2026-08-24). That is why the fund id is in the key and
+   * not only in Postgres — the check should not need a database round trip to
+   * decide whether a key is readable.
    */
   investors: "investors/",
 } as const;
+
+/** Audience, as the schema's enum spells it, mapped to its key prefix. */
+export const PREFIX_FOR_AUDIENCE = {
+  MANAGEMENT: PREFIX.management,
+  INVESTOR: PREFIX.investors,
+} as const;
+
+/**
+ * Build the object key for one uploaded file.
+ *
+ * The uuid segment is what guarantees uniqueness; the filename rides along so
+ * a listing and a `Content-Disposition` both have something human to show
+ * without a second lookup.
+ */
+export function documentKey(args: {
+  audience: keyof typeof PREFIX_FOR_AUDIENCE;
+  fundId: number;
+  dealId: number;
+  filename: string;
+}): string {
+  const prefix = PREFIX_FOR_AUDIENCE[args.audience];
+  return `${prefix}funds/${args.fundId}/deals/${args.dealId}/${crypto.randomUUID()}/${safeFilename(args.filename)}`;
+}
 
 /** Hard ceiling on an upload. Bodies are buffered, so this bounds memory too. */
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;

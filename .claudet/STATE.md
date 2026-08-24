@@ -7,6 +7,25 @@ learning that). Keep this to a paragraph. Edit it only when the answer actually 
 
 ## Now
 
+**The Deal Room is built, and it brought a database with it** (owner, 2026-08-24). Create a
+deal, upload management-facing PDFs/Excel with a description each, download them back with
+View. **Prisma 7 + Railway Postgres** holds deal names and descriptions; **R2** holds bytes.
+Keys are `management/funds/<fundId>/deals/<dealId>/<uuid>/<filename>` — audience outermost,
+because that is what `isServableKey()` guards on.
+
+**Deals carry a `fundId` and every deal is fund 1 today.** Investors will be scoped by fund
+(owner). A deliberate, recorded override of `FACTS.md`'s "one fund" framing — one column, not
+multi-tenancy.
+
+**Investor-facing upload is refused at the API, not merely disabled in the UI.** Nothing
+serves the `investors/` prefix, so a file uploaded there would be readable by nobody while
+looking like investors have access.
+
+**Unverified until someone signs in:** no request has reached Postgres or R2 from this
+machine — the sandbox cannot reach `postgres.railway.internal`, and the app does not boot
+locally without a Clerk key. The first migration runs on deploy, guarded on `DATABASE_URL`
+being present so a missing variable cannot fail the healthcheck.
+
 **The document store is live in code, management-only** (owner, 2026-08-24). Cloudflare R2
 behind `/api/files` — list, upload, download, delete — with bytes streamed through
 authenticated route handlers rather than presigned URLs, so the bucket needs no CORS policy
@@ -144,9 +163,10 @@ display value.
 homepage as "Investor login", serving fund size and position-level amounts to anyone with
 the URL. Verified reachable at HTTP 200 before this change and 307-to-sign-in after it.
 
-**Deliberately still absent:** Prisma (no schema yet, so no client to generate), a `/sign-up`
+**Deliberately still absent:** a `/sign-up`
 route (two users, invited from the Dashboard), Clerk webhooks (nothing to sync into yet), and
-a test runner. `prisma/` and `docs/` are still empty by intent. **`.github/workflows` and
+a test runner. **`prisma/` is no longer empty** — schema and the first migration landed
+2026-08-24; `docs/` still is. **`.github/workflows` and
 `scripts/` are not** — CI landed in #15, and `scripts/` now holds `design-lint.mjs`.
 
 **Blocked on a person:** what an equity vs. debt position holds — the decision the portfolio

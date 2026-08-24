@@ -1,15 +1,28 @@
 import type { Metadata } from "next";
 import { C } from "@/components/palette";
+import { DealRoom as DealRoomScreen, type Deal } from "@/components/DealRoom";
 import { PortalShell } from "@/components/PortalShell";
+import { DEFAULT_FUND_ID, getDb } from "@/lib/db";
 
 /**
  * Deal Room — the one screen under the nav's Admin section (owner, 2026-08-24).
+ * Create a deal, then upload its documents.
  *
- * A placeholder shell, deliberately: the owner's instruction was to build the
- * nav first and then "we'll build the Deal Room screen". So this is the route
- * and the frame, with nothing invented about what the screen contains — no
- * columns, no stages, no counts. Guessing that shape now would mean the real
- * build starts by undoing it.
+ * **The deal list is loaded HERE, on the server, and handed down as a prop.**
+ * The obvious alternative — a client component fetching `/api/deals` from a
+ * mount effect — is what this started as, and React 19's
+ * `react-hooks/set-state-in-effect` rule rejects it: a state update driven by an
+ * effect on mount causes a cascading render. Loading on the server removes the
+ * effect, the loading state and a round trip all at once. The client component
+ * still fetches, but only from real user actions — create, open, upload — which
+ * are event handlers, not effects.
+ *
+ * `force-dynamic` because of that query. Without it Next would try to prerender
+ * this page at build time, and CI builds with **no `DATABASE_URL` at all**.
+ *
+ * Deal names and descriptions live in Postgres; bytes live in R2. See
+ * `PLAYBOOKS/deal-room.md` for how the two halves fit and which one is written
+ * first.
  *
  * **Authenticated.** `src/proxy.ts` requires a session for every route not on
  * its short public list, so protection comes from this path being ABSENT from
@@ -21,27 +34,36 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function DealRoom() {
+export const dynamic = "force-dynamic";
+
+export default async function DealRoomPage() {
+  const db = getDb();
+
+  // `null` means "not configured", which the screen reports as such. An empty
+  // array means "configured, no deals yet" — a different thing, and conflating
+  // the two would show "create your first deal" on a broken deploy.
+  const initialDeals: Deal[] | null = db
+    ? (
+        await db.deal.findMany({
+          where: { fundId: DEFAULT_FUND_ID },
+          orderBy: { createdAt: "desc" },
+          include: { _count: { select: { documents: true } } },
+        })
+      ).map((d) => ({
+        id: d.id,
+        fundId: d.fundId,
+        name: d.name,
+        createdAt: d.createdAt.toISOString(),
+        documentCount: d._count.documents,
+      }))
+    : null;
+
   return (
     <PortalShell title="Deal Room">
       <div className="px-5 py-8 md:px-8 md:py-10">
         <div className="flex flex-col" style={{ gap: 14 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Deal Room</div>
-
-          <div
-            style={{
-              maxWidth: 720,
-              padding: 24,
-              borderRadius: 10,
-              border: `1px dashed ${C.borderStrong}`,
-              background: C.bgAlt,
-              color: C.textMuted,
-              fontSize: 13,
-              textAlign: "center",
-            }}
-          >
-            Coming soon.
-          </div>
+          <DealRoomScreen initialDeals={initialDeals} />
         </div>
       </div>
     </PortalShell>

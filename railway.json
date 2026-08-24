@@ -5,7 +5,7 @@
     "buildCommand": "npm run build"
   },
   "deploy": {
-    "startCommand": "npm run start",
+    "startCommand": "sh -c 'if [ -n \"$DATABASE_URL\" ]; then npx prisma migrate deploy || exit 1; fi; npm run start'",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",
