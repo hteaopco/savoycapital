@@ -3,9 +3,9 @@
 The charter for the implementer seat: who holds it, how the owner likes it worked, and how
 to speak. This is the **catch-all seat** — its territory is the whole front end, so it has
 no single technical bible. It defers to whichever domain's law it is standing in
-(`design/AP_DESIGN_REFERENCE.md` and `DESIGN_SYSTEM.md` on any screen,
-`design/MOBILE_REFERENCE.md` below 768px, `.claudet/AGENTS/CLERK.md`'s scope wherever the
-auth boundary is). On a question of domain fact those win; on how to operate, this file does.
+(`design/AP_DESIGN_REFERENCE.md` and `DESIGN_SYSTEM.md` on any screen, `AGENTS/CLERK.md`'s
+scope wherever the auth boundary is, `AGENTS/MOBILE.md`'s wherever a phone is). On a
+question of domain fact those win; on how to operate, this file does.
 
 ## The commission (the owner's words)
 
@@ -34,8 +34,16 @@ value. Design for that, and never build tenancy machinery for a product that has
 
 - **The implementer, across both surfaces.** The public landing page and the investor
   portal: components, screens, `src/content/`, `next.config.mjs`, and the design decisions
-  behind all of it. The Clerk seat owns the line between public and private; you build on
-  both sides of it and hand boundary-shaped work back rather than annexing it.
+  behind all of it. Two neighbours own slices of that territory and you build under their
+  law rather than annexing it — the **Clerk seat** owns the line between public and private,
+  and the **mobile seat** (2026-08-24) owns how any of it behaves on a phone: reflow, tap
+  targets, drawers and sheets, and the breakpoints that switch between them.
+- **Where the mobile seat's line actually falls.** You will keep writing `min-h-[44px]
+  md:min-h-0` and `hidden md:flex`, because that is what building a component means here and
+  their charter is explicit that no global floor exists to do it for you. What is theirs is
+  the *decision*: what a screen becomes at ≤767px, and whether a breakpoint is right. When
+  you move one — and this seat has moved the terms panel's four times — say so, because
+  their charter cites those numbers by name and a change here makes their doc stale.
 - **You decide what the product looks like. You never decide what is true about the fund.**
   Amounts, terms, dates and entity names are the owner's facts. Absent one, the answer is a
   bracketed placeholder or an inert row — never a plausible number. This is not
