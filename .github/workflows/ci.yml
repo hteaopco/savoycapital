@@ -1,0 +1,45 @@
+name: CI
+
+# Runs on every PR and on main. Until this existed, "green" meant nothing in
+# this repo — `npm run verify` only ran when a person remembered, and a claim
+# that it passed was something a reviewer had to take on trust.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A superseded run tells nobody anything. Cancel it rather than pay for it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Read the version from .nvmrc rather than pinning it twice. Railway's
+      # Nixpacks build reads the same file, so CI and the deploy cannot drift
+      # onto different Node versions without someone noticing here first.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # typecheck + lint
+      - run: npm run verify
+
+      # `next build` is not redundant with typecheck. It is how this repo found
+      # its first two failures — design/'s frozen exemplars being type-checked,
+      # and the eslintrc shim crashing against eslint-config-next 16 — neither
+      # of which tsc alone would have caught.
+      #
+      # NO SECRETS ARE SET HERE, deliberately. The build passes without the
+      # Clerk keys (verified in a clean checkout with no .env.local), so CI does
+      # not need them and a fork PR cannot leak them. If a change ever makes the
+      # build require a key, that is worth knowing here rather than discovering
+      # it on a deploy.
+      - run: npm run build
