@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
+import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
  * Assign or clear one Clerk account's role and fund.
@@ -44,8 +44,16 @@ function validClerkId(id: string): boolean {
 }
 
 export async function PUT(request: Request, { params }: Params) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const db = getDb();
   if (!db) return unconfigured();
@@ -73,8 +81,8 @@ export async function PUT(request: Request, { params }: Params) {
 
   const saved = await db.userRole.upsert({
     where: { clerkUserId },
-    create: { clerkUserId, fundId, role, assignedBy: userId },
-    update: { fundId, role, assignedBy: userId },
+    create: { clerkUserId, fundId, role, assignedBy: viewer.clerkUserId },
+    update: { fundId, role, assignedBy: viewer.clerkUserId },
   });
 
   return NextResponse.json({
@@ -86,8 +94,16 @@ export async function PUT(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const db = getDb();
   if (!db) return unconfigured();

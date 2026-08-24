@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import {
   ListObjectsV2Command,
   PutObjectCommand,
@@ -10,6 +9,7 @@ import {
   getR2,
   safeFilename,
 } from "@/lib/r2";
+import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
  * The fund's document store — list and upload.
@@ -68,8 +68,16 @@ function unconfigured() {
 }
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const r2 = getR2();
   if (!r2) return unconfigured();
@@ -99,8 +107,16 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const r2 = getR2();
   if (!r2) return unconfigured();

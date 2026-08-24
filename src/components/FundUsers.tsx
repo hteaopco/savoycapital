@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useId, useState } from "react";
-import { Building2, Plus, TriangleAlert, Users } from "lucide-react";
+import { Building2, ChevronDown, Plus, TriangleAlert, Users } from "lucide-react";
 import { C } from "./palette";
 
 /**
@@ -263,6 +263,14 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
   const [inceptionDate, setInceptionDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Collapsed by default (owner, 2026-08-24). Unlike the Deal Room's upload
+   * form, which opens because uploading is the reason you came, creating a fund
+   * is a rare act — there is one fund and there will not be many. The form
+   * sitting open pushes the fund list, which IS what you came to see, below the
+   * fold of its own card.
+   */
+  const [formOpen, setFormOpen] = useState(false);
   const nameId = useId();
   const dateId = useId();
 
@@ -291,11 +299,46 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
   return (
     <div className="flex flex-col" style={{ gap: 14 }}>
       <div style={card}>
-        <div className="flex items-center" style={{ ...cardHeader, gap: 8 }}>
+        <button
+          onClick={() => setFormOpen((v) => !v)}
+          aria-expanded={formOpen}
+          className="flex items-center min-h-[44px] md:min-h-0"
+          style={{
+            ...cardHeader,
+            gap: 8,
+            width: "100%",
+            border: "none",
+            // The rule under the header goes with the body it separates. Left
+            // behind on a collapsed card it reads as an empty section.
+            borderBottom: formOpen ? `1px solid ${C.border}` : "none",
+            background: "transparent",
+            fontFamily: "inherit",
+            textAlign: "left",
+          }}
+        >
+          <ChevronDown
+            size={14}
+            color={C.textMuted}
+            style={{
+              flexShrink: 0,
+              transform: formOpen ? "rotate(0deg)" : "rotate(-90deg)",
+              transition: "transform 160ms ease",
+            }}
+          />
           <Plus size={14} color={C.accent} />
-          Create New Fund
-        </div>
-        <div className="flex flex-col" style={{ gap: 12, padding: 16 }}>
+          <span style={{ flex: 1 }}>Create New Fund</span>
+        </button>
+        {/*
+          Hidden with `display`, not unmounted — which is the one place this
+          differs from the Deal Room's otherwise identical collapse. Both look
+          the same; this one keeps a half-typed fund name if you collapse the
+          card mid-entry, and there is nothing expensive mounted behind it to
+          justify tearing it down.
+        */}
+        <div
+          className="flex flex-col"
+          style={{ gap: 12, padding: 16, display: formOpen ? undefined : "none" }}
+        >
           {error ? <Notice tone="error">{error}</Notice> : null}
           <div className="flex flex-col gap-3 md:flex-row md:items-end">
             <div className="flex min-w-0 flex-1 flex-col" style={{ gap: 6 }}>

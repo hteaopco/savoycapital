@@ -34,7 +34,7 @@ that opens the door, and it is silent — GOTCHA 3.
 | Layer | File | Question it answers |
 |---|---|---|
 | Authentication | `src/proxy.ts` | Is somebody signed in? |
-| Authorization | *(none — see below)* | Answered by the account existing, in Clerk |
+| Authorization | `src/lib/authz.ts` | What may this signed-in person see? Read in pages and route handlers, never here — middleware is edge and Prisma is not. Added 2026-08-24; see `PLAYBOOKS/fund-users.md` § 1a. |
 
 **Route protection is deny-by-default.** `src/proxy.ts` holds an exhaustive list of PUBLIC
 routes; everything else requires a session. The inverse — list the private routes, leave the

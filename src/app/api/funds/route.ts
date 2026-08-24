@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
+import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
  * Funds — list and create.
@@ -29,8 +29,16 @@ function unconfigured() {
 }
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const db = getDb();
   if (!db) return unconfigured();
@@ -55,8 +63,16 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
 
   const db = getDb();
   if (!db) return unconfigured();

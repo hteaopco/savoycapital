@@ -30,8 +30,9 @@ that matters — the bucket's privacy is two dashboard toggles, not code.
 
 **Clerk is the roster.** The app reads the account list from Clerk and stores only what Clerk
 has no opinion about — which fund and what role, in `UserRole`, keyed by Clerk user id
-(2026-08-24). It creates no accounts and grants no access, and **nothing reads the role yet**;
-enforcement is a separate, sequenced change. Do not read the paragraph below as softened by
+(2026-08-24). It creates no accounts and grants no access, and **the role is enforced** as of
+2026-08-24 (`src/lib/authz.ts`): management sees everything, an investor sees only their own
+fund's portfolio, and an account with no assignment sees nothing. Do not read the paragraph below as softened by
 any of it: who can sign in is governed entirely by Clerk. `PLAYBOOKS/fund-users.md` § 1.
 
 **The authenticated user population is two people.** Not a growth curve — two. What scales

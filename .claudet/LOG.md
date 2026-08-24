@@ -8,6 +8,32 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Role enforcement, and the Create New Fund collapse** (owner, 2026-08-24: *"roles
+  assigned"*, *"put a collapse on create new fund...default to collapse"*).
+  `src/lib/authz.ts` decides what a signed-in person may see. Management everything;
+  an investor their own fund's portfolio only — not the Deal Room, not Fund & Users, not
+  another fund; an unassigned account **nothing**. Read by pages and route handlers, never by
+  `src/proxy.ts`, which runs on the edge where Prisma cannot go.
+  **Every API route was guarded, not just the pages.** Nine route files, fourteen handlers; a
+  page redirect that left the API open would be theatre. Verified by grepping for any remaining
+  bare `auth()` in `src/app/api/` — none.
+  **The bootstrap valve is the part to remember: an EMPTY `UserRole` table treats everyone as
+  management.** Without it the first deploy locks the owners out of their own portal and
+  nothing here can reach Postgres to undo it. It closes as soon as one assignment exists, and
+  the Portfolio screen banners the state. The inverted consequence is worth knowing — deleting
+  every assignment unlocks the app rather than locking it.
+  Nine written claims about there being no authorization layer were falsified and corrected in
+  the same change: `CLAUDE.md`'s disclosure-risk paragraph, `src/proxy.ts`'s own comment,
+  `auth-clerk.md`'s layer table, `r2.ts`'s investors-prefix note, `FACTS.md`, and the
+  fund-users playbook.
+  Verified by exercising the decision table directly — 15 cases including an investor of fund 1
+  refused fund 2, an unassigned viewer refused everything, and the two 403 messages naming the
+  state rather than the rule. The predicates were extracted mechanically from the real file
+  because extensionless imports do not resolve under node's ESM loader; `getViewer` itself
+  needs a database and is **not** covered.
+  **Not verified: no request has reached Postgres from here, and nobody has signed in as an
+  investor anywhere.**
+
 - **Clerk becomes the roster; the phone-keyed `User` table is dropped** (owner, 2026-08-24:
   *"can we just read users from clerk?"*). Answered by reading the SDK rather than from
   memory, and two of the three answers changed the design.

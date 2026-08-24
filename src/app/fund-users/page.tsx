@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { C } from "@/components/palette";
 import { FundUsers as FundUsersScreen, type Person } from "@/components/FundUsers";
 import { CLERK_LIST_LIMIT, listClerkAccounts } from "@/lib/clerk-users";
 import { PortalShell } from "@/components/PortalShell";
 import { getDb } from "@/lib/db";
+import { getViewer, isManagement } from "@/lib/authz";
 
 /**
  * Fund & Users — the second screen under Admin (owner, 2026-08-24).
@@ -32,6 +34,16 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function FundUsersPage() {
+  // MANAGEMENT ONLY (owner, 2026-08-24). An investor is redirected rather than
+  // shown an empty shell: a screen that renders its chrome and nothing else
+  // reads as broken, and this one is where unannounced transactions live.
+  //
+  // The redirect is a convenience, NOT the control. Every route this page calls
+  // guards itself — a page that only hid its own UI would leave the API open to
+  // anyone who typed the URL.
+  const { viewer } = await getViewer();
+  if (!isManagement(viewer)) redirect("/portal/portfolio");
+
   const db = getDb();
 
   // `null` means "not configured", which the screen reports as such. Empty
@@ -87,7 +99,7 @@ export default async function FundUsersPage() {
     : null;
 
   return (
-    <PortalShell title="Fund & Users">
+    <PortalShell title="Fund & Users" isManagement>
       <div className="px-5 py-8 md:px-8 md:py-10">
         <div className="flex flex-col" style={{ gap: 14 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Fund &amp; Users</div>

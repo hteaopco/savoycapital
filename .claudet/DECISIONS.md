@@ -6,6 +6,33 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **Role is enforced, and an empty roster opens the portal rather than closing it (2026-08-24).**
+  The layer is `src/lib/authz.ts`, read by pages and route handlers.
+  - **Not in `src/proxy.ts`, and not only because of ownership.** Middleware runs on the edge,
+    where Prisma's driver adapter cannot go. It is also the right shape regardless: middleware
+    deciding data-dependent authorization puts every route's rules somewhere the route cannot
+    see. The proxy still answers "is somebody signed in" and nothing more.
+  - **The bootstrap valve: ZERO assignments means everyone signed in is management.** Without
+    it, the first deploy of this file locks the portal's owners out — a fail-closed check
+    against an empty table denies everybody — and nothing in this repo can reach Railway's
+    Postgres to undo it. It closes the moment one assignment exists, which it does. The
+    Portfolio screen banners the state rather than leaving it silent.
+    **The counterintuitive consequence, worth stating because it inverts the obvious reading:
+    deleting every assignment UNLOCKS the app.** "Remove all the roles" sounds like lockdown
+    and is the opposite.
+  - **Once assignments exist, an unassigned account sees nothing.** That also narrows the
+    sign-up-mode risk in `CLAUDE.md`: a stranger who signed up if the toggle flipped to
+    `public` would land unassigned and reach no figures. A real improvement, and not a reason
+    to relax about the toggle — it holds only while the table is non-empty.
+  - **Hiding a nav link is not a control.** Every page and route guards itself; the nav filter
+    exists so an investor is not shown destinations that bounce them. `isManagement` defaults
+    to `true` so a forgetful caller shows more chrome, making the mistake visible rather than
+    hiding a screen from someone.
+  - **The Portfolio check is against the fund the CONTENT describes**, not a per-fund query.
+    Positions and marks are still blocked on a person, so the figures are static content for
+    fund 1; an investor on another fund is told there is no portfolio for it rather than shown
+    fund 1's.
+
 - **Clerk is the roster; this app stores only role and fund (owner, 2026-08-24).**
   > "lets make role actually work...can we just read users from clerk? or do i need to add
   > them here and send to clerk?"
