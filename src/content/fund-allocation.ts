@@ -24,7 +24,7 @@ export const FUND_BUCKETS: AllocationBucket[] = [
     tone: "accent",
     holdings: [
       { name: "Westfield Companies", amountCents: 250_000_000 },
-      { name: "Marucci Sports", amountCents: 250_000_000 },
+      { name: "Marucci Sports", amountCents: 150_000_000 },
     ],
   },
   {
