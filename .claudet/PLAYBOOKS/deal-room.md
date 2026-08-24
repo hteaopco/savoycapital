@@ -125,6 +125,21 @@ Nothing serves the `investors/` prefix. A file written there is readable by nobo
 screen that looks like investors have access. The audience becomes an input when the
 authorization layer lands — see DECISIONS 2026-08-24.
 
+**GOTCHA 8 — delete removes the ROW first and the OBJECT second, the reverse of upload.**
+Both orders serve one rule: **never leave a row without its object.** Upload writes R2 first
+so a failure orphans an object; delete removes the row first for the same reason. The
+opposite order leaves a document on screen whose View button 404s, with nothing left to say
+what the file was. If R2 is unconfigured or the object delete throws, the row still goes and
+the object is left — refusing would keep a deleted document on screen over a variable that
+has nothing to do with it.
+
+**GOTCHA 8c — there is no `DELETE /api/files/<key>` any more, and adding one back is a bug.**
+There was one when R2 was the only store. Every object under `management/funds/.../deals/...`
+now has a `DealDocument` row, so a key-addressed delete removes bytes and strands the row.
+That route is reached by an object key — the one identifier that cannot find its row without
+a scan. Deletion belongs to `DELETE /api/deals/<dealId>/documents/<docId>`, which owns both
+halves.
+
 **GOTCHA 8a — folders are matched by exact string, so "UCC" and "UCC " are two folders.**
 There is no normalisation beyond a `trim()`, and no rename. The mitigation is a `<datalist>`
 of the deal's existing folder names on every folder input, so picking beats typing. If two
@@ -139,7 +154,7 @@ row ends up done or carrying its own reason, and only failures stay staged. Do n
 this into one request carrying eight files — that reintroduces both problems and puts eight
 files against a per-file 25MB ceiling.
 
-**GOTCHA 8 — uploads are buffered and capped at 25MB.**
+**GOTCHA 8d — uploads are buffered and capped at 25MB.**
 `MAX_UPLOAD_BYTES`. The size is checked before *and* after buffering, because `File.size` is
 the client's declaration rather than a fact about the bytes that arrived. Raising it
 meaningfully means `@aws-sdk/lib-storage`'s multipart `Upload`, not a bigger number.
@@ -153,9 +168,11 @@ meaningfully means `@aws-sdk/lib-storage`'s multipart `Upload`, not a bigger num
 - **Folder rename.** Renaming one means updating every document carrying that string. It is a
   small route when someone wants it; until then the row control moves documents one at a time.
 - **Nested folders.** One level only. Nothing has asked for a tree.
-- **Delete.** No route removes a deal or a document. Fund records are not a thing to make
-  easy to destroy; add it when there is a real need and decide then whether it is a soft
-  delete.
+- **Deleting a DEAL.** Only documents can be deleted (owner asked for files, 2026-08-24).
+  A deal delete would cascade to every document row and leave every object behind, so it
+  needs the sweep below to exist first.
+- **Undo, and any sweep for orphaned objects.** Both deletes are hard: the row is gone and
+  the bytes follow. Nothing lists objects that no row points at.
 - **Positions, marks, valuations.** Still blocked on a person — see `STATE.md`.
 - **Any test runner.** The pure functions in `src/lib/r2.ts` were exercised by a throwaway
   harness, not by a suite that runs in CI. That gap is real and named here rather than

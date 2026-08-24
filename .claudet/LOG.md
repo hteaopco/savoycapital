@@ -8,6 +8,26 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Deal Room: delete a document, and the object-only delete that had to go with it**
+  (owner, 2026-08-24: "add a way to delete files in the deal room").
+  `DELETE /api/deals/<dealId>/documents/<docId>` removes the row **then** the object — the
+  reverse of the upload's order, serving the same single rule: **never leave a row without
+  its object.** An orphaned object is invisible and costs a fraction of a cent; a row whose
+  View button 404s is a broken product with nothing left to say what the file was. If R2 is
+  unconfigured or the object delete throws, the row still goes: refusing would keep a deleted
+  document on screen over a variable that has nothing to do with it.
+  **The find:** `/api/files/[...key]` still carried a `DELETE` from when R2 was the only
+  store. Nothing called it, but every object under `management/funds/.../deals/...` now has a
+  row, so it would have removed bytes and stranded the row — precisely the failure the upload
+  route's own header calls unsurvivable. Removed, with GOTCHA 8c saying why adding one back
+  is a bug: that route is addressed by object key, the one identifier that cannot find its
+  row without a scan.
+  The control asks first — two clicks, per-row, with the other actions replaced while armed
+  so "Delete?" cannot be answered by clicking View. Neutral until armed, because a control
+  that is already red reads as a warning about the row rather than about the action.
+  **Not verified: nothing has been deleted anywhere.** No request has reached Postgres or R2
+  from here.
+
 - **Deal Room: folders, multi-file upload, and a collapsible upload form** (owner,
   2026-08-24, after uploading 7-8 files one at a time). Three asks in one pass.
   **Folders** are a nullable free-text column on `DealDocument`, not a table — a folder here

@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getR2, isServableKey } from "@/lib/r2";
 
 /**
  * The fund's document store — download and delete one object.
  *
- * `GET`    → streams the object back as an attachment.
- * `DELETE` → removes it.
+ * `GET` → streams the object back as an attachment. **Read only.**
+ *
+ * ## There is deliberately no DELETE here any more
+ *
+ * There was one, written when R2 was the only store. Once the Deal Room landed,
+ * every object under `management/funds/.../deals/...` also has a `DealDocument`
+ * row — and a delete that removed the object while leaving the row would produce
+ * exactly the failure the upload route calls unsurvivable: a document on screen
+ * whose View button 404s, with no way to tell what the file was meant to be.
+ *
+ * Deleting a document is `DELETE /api/deals/<dealId>/documents/<docId>`, which
+ * owns both halves and does them in the order that fails safely. Do not add a
+ * key-addressed delete back here: this route is reached by an object key, which
+ * is the one identifier that cannot find the row describing it without a scan.
  *
  * The catch-all segment IS the object key, because a key contains slashes
  * (`management/<uuid>/<filename>`). That makes it untrusted URL input, so it
@@ -72,19 +84,4 @@ export async function GET(_request: Request, ctx: Params) {
       "X-Content-Type-Options": "nosniff",
     },
   });
-}
-
-export async function DELETE(_request: Request, ctx: Params) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const r2 = getR2();
-  if (!r2) return NextResponse.json({ error: "File storage is not configured." }, { status: 503 });
-
-  const key = await resolveKey(ctx);
-  if (!key) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  await r2.client.send(new DeleteObjectCommand({ Bucket: r2.bucket, Key: key }));
-
-  return new NextResponse(null, { status: 204 });
 }
