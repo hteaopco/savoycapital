@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getDb } from "@/lib/db";
+import { getR2 } from "@/lib/r2";
 
 /**
- * Move one document into a folder, or back out of one.
+ * One document: move it between folders, or delete it.
  *
  * `PATCH` with `{ "folder": "Personal Guarantees" }`, or `{ "folder": null }`
  * to return it to the deal's top level.
@@ -93,4 +95,83 @@ export async function PATCH(request: Request, { params }: Params) {
   if (count === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   return NextResponse.json({ id: documentId, folder });
+}
+
+/**
+ * Delete one document — its row and its bytes.
+ *
+ * ## Order of writes, and why it is the reverse of the upload
+ *
+ * **Row first, object second.** The two stores cannot be made atomic, so the
+ * only question is which half-failure survives — and the answer is the same one
+ * the upload route reaches from the other direction: never leave a row without
+ * its object.
+ *
+ * - Row gone, object left → an orphaned object. Invisible, costs a fraction of
+ *   a cent, findable by diffing keys against rows.
+ * - Object gone, row left → a document on screen whose View button 404s, with
+ *   no way to tell what the file was meant to be.
+ *
+ * So the upload writes the object first and the delete removes the row first.
+ * Both orders serve one rule; they only look opposite.
+ *
+ * ## R2 being unconfigured does not block the delete
+ *
+ * If the bucket is unreachable the row still goes, and the object is left
+ * behind. Refusing would mean a document the owner has deleted staying on
+ * screen because of a variable that has nothing to do with it — and the
+ * leftover object is the failure this route is already willing to accept.
+ *
+ * Scoped to the deal in the path, same as PATCH: a document id alone must not
+ * be enough to delete something out of a deal you did not name.
+ */
+export async function DELETE(_request: Request, { params }: Params) {
+  const { userId } = await auth();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json(
+      { error: "The database is not configured. Set DATABASE_URL." },
+      { status: 503 },
+    );
+  }
+
+  const { id, docId } = await params;
+  const dealId = Number(id);
+  const documentId = Number(docId);
+  if (
+    !Number.isInteger(dealId) ||
+    dealId < 1 ||
+    !Number.isInteger(documentId) ||
+    documentId < 1
+  ) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // Read the key before the row goes — afterwards there is nothing left that
+  // names the object.
+  const doc = await db.dealDocument.findFirst({
+    where: { id: documentId, dealId },
+    select: { key: true },
+  });
+  if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await db.dealDocument.delete({ where: { id: documentId } });
+
+  const r2 = getR2();
+  if (r2) {
+    try {
+      await r2.client.send(
+        new DeleteObjectCommand({ Bucket: r2.bucket, Key: doc.key }),
+      );
+    } catch {
+      // Swallowed on purpose. The row is already gone, so the document is gone
+      // as far as the product is concerned; failing the request here would tell
+      // the owner the delete did not work when the visible half of it did.
+      // What is left is an orphaned object, which is the survivable side.
+    }
+  }
+
+  return new NextResponse(null, { status: 204 });
 }

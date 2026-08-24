@@ -6,15 +6,16 @@ import { redirect } from "next/navigation";
  * > "point the 'home' button here https://savoycapital.io/portal/portfolio for
  * > right now until we build out the site" — owner, 2026-08-24
  *
- * **The nav's Home link moved to `/home` on 2026-08-24** (owner). This redirect
- * stays anyway, for the other reason it existed: `signInFallbackRedirectUrl` in
- * `src/app/layout.tsx` lands here after sign-in, that prop is the Clerk seat's,
- * and a user who has just signed in should arrive at a real screen rather than
- * at `/home`, which is still a coming-soon placeholder.
+ * **This redirect is now the only thing standing between sign-in and a real
+ * screen.** `signInFallbackRedirectUrl` in `src/app/layout.tsx` lands here after
+ * sign-in; that prop belongs to the Clerk seat, so the redirect lives on this
+ * side. Home and Historical were deleted on 2026-08-24 (owner), leaving
+ * Portfolio as the only portal screen — which makes this the right target
+ * rather than merely a convenient one.
  *
- * So `/portal` is now reachable only by sign-in and by an old link — no nav entry
- * points here. That also keeps the active check honest: two nav entries pointing
- * at the same href would both match `pathname === href` and light up together.
+ * `/portal` is reachable only by sign-in and by an old link; no nav entry points
+ * here. That also keeps the active check honest: two nav entries on the same
+ * href would both match `pathname === href` and light up together.
  *
  * **Authenticated.** `src/proxy.ts` requires a session for every route not on
  * its short public list, so protection comes from this path being ABSENT from

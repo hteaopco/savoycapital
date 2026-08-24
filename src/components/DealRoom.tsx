@@ -10,6 +10,7 @@ import {
   FolderOpen,
   Lock,
   Plus,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
@@ -848,6 +849,16 @@ function DocumentRow({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(doc.folder ?? "");
   const [busy, setBusy] = useState(false);
+  /**
+   * Delete asks first (owner, 2026-08-24). Two clicks rather than a `confirm()`
+   * dialog: the design system has no vocabulary for a browser confirm, and this
+   * removes a fund document and its bytes — a misclick beside "View" should not
+   * be able to do that. The confirm state is per-row, so arming one row does not
+   * arm the others.
+   */
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const save = async () => {
     if (busy) return;
@@ -872,6 +883,28 @@ function DocumentRow({
     } finally {
       setBusy(false);
     }
+  };
+
+  const remove = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/deals/${deal.id}/documents/${doc.id}`, {
+        method: "DELETE",
+      });
+      // 204 has no body, so there is nothing to parse and nothing to read a
+      // message out of — the status is the whole answer.
+      if (!res.ok) throw new Error("Delete failed.");
+      setConfirming(false);
+      onChanged();
+    } catch {
+      setError("Could not delete. Try again.");
+      setDeleting(false);
+    }
+    // Deliberately not clearing `deleting` on success: the row is about to be
+    // unmounted by the refresh, and re-enabling the button first invites a
+    // second DELETE against an id that is already gone.
   };
 
   return (
@@ -919,41 +952,95 @@ function DocumentRow({
           <div
             style={{
               fontSize: 11,
-              color: C.textMuted,
+              color: error ? C.red : C.textMuted,
               fontVariantNumeric: "tabular-nums",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}
           >
-            {doc.filename} · {formatSize(doc.sizeBytes)} · {formatDate(doc.uploadedAt)}
+            {error
+              ? error
+              : `${doc.filename} · ${formatSize(doc.sizeBytes)} · ${formatDate(doc.uploadedAt)}`}
           </div>
         )}
       </div>
 
-      {!editing ? (
-        <button
-          onClick={() => setEditing(true)}
-          aria-label={doc.folder ? `Move ${doc.description} out of ${doc.folder}` : `Move ${doc.description} to a folder`}
-          className="inline-flex items-center min-h-[44px] md:min-h-0"
-          style={{ ...secondaryButton, flexShrink: 0, color: C.textMuted }}
-        >
-          <Folder size={13} />
-          {doc.folder ?? "Folder"}
-        </button>
-      ) : null}
+      {confirming ? (
+        // Armed. The other actions are replaced rather than sitting alongside,
+        // so the row asks one question and "Delete?" cannot be answered by
+        // clicking something else.
+        <div className="flex items-center" style={{ gap: 6, flexShrink: 0 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: C.red }}>Delete?</span>
+          <button
+            onClick={() => void remove()}
+            disabled={deleting}
+            className="inline-flex items-center min-h-[44px] md:min-h-0"
+            style={{
+              ...secondaryButton,
+              border: `1px solid ${C.redBorder}`,
+              background: C.redBg,
+              color: C.red,
+            }}
+          >
+            {deleting ? "Deleting…" : "Yes, delete"}
+          </button>
+          <button
+            onClick={() => {
+              setConfirming(false);
+              setError(null);
+            }}
+            disabled={deleting}
+            className="inline-flex items-center min-h-[44px] md:min-h-0"
+            style={{ ...secondaryButton }}
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <>
+          {!editing ? (
+            <button
+              onClick={() => setEditing(true)}
+              aria-label={doc.folder ? `Move ${doc.description} out of ${doc.folder}` : `Move ${doc.description} to a folder`}
+              className="inline-flex items-center min-h-[44px] md:min-h-0"
+              style={{ ...secondaryButton, flexShrink: 0, color: C.textMuted }}
+            >
+              <Folder size={13} />
+              {doc.folder ?? "Folder"}
+            </button>
+          ) : null}
 
-      {/* A plain link, not a fetch: the download route answers with an
-          attachment disposition, so the browser saves the file and the
-          page does not navigate away. */}
-      <a
-        href={`/api/files/${doc.key}`}
-        className="inline-flex items-center min-h-[44px] md:min-h-0"
-        style={{ ...secondaryButton, flexShrink: 0 }}
-      >
-        <Eye size={13} />
-        View
-      </a>
+          {/* A plain link, not a fetch: the download route answers with an
+              attachment disposition, so the browser saves the file and the
+              page does not navigate away. */}
+          <a
+            href={`/api/files/${doc.key}`}
+            className="inline-flex items-center min-h-[44px] md:min-h-0"
+            style={{ ...secondaryButton, flexShrink: 0 }}
+          >
+            <Eye size={13} />
+            View
+          </a>
+
+          {/* Neutral until armed. A destructive control that is already red
+              before it has been asked for reads as a warning about the row
+              rather than about the action. */}
+          <button
+            onClick={() => setConfirming(true)}
+            aria-label={`Delete ${doc.description}`}
+            className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+            style={{
+              ...secondaryButton,
+              flexShrink: 0,
+              padding: "8px 10px",
+              color: C.textMuted,
+            }}
+          >
+            <Trash2 size={13} />
+          </button>
+        </>
+      )}
     </div>
   );
 }
