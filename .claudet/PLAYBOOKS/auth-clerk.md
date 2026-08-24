@@ -27,7 +27,7 @@ routes; everything else requires a session. The inverse — list the private rou
 rest open — fails in the dangerous direction, because a new page under the monitor would ship
 public until someone remembered it.
 
-**The private surface is `/portfolio`** (`src/app/portfolio/page.tsx`) — the fund allocation
+**The private surface is `/portal`** (`src/app/portal/page.tsx`) — the fund allocation
 and its position-level amounts. It is protected by being **absent from the public list
 above**, not by anything on the page itself. There is no marker in the file that makes it
 private, which is the deny-by-default trade: adding a route is safe, and adding one to the
@@ -76,9 +76,9 @@ at `/coming-soon` deliberately.
 
 ### Verifying bring-up worked
 
-- Signed out, `/portfolio` → 307 to `/sign-in?redirect_url=...` **on this domain**. A redirect
+- Signed out, `/portal` → 307 to `/sign-in?redirect_url=...` **on this domain**. A redirect
   to a `*.accounts.dev` host means GOTCHA 1 has regressed.
-- Signed in as an invited user → `/portfolio` renders the allocation, with `<UserButton />`
+- Signed in as an invited user → `/portal` renders the allocation, with `<UserButton />`
   in the top bar to sign out.
 - The instance still reports `"mode": "restricted"` (GOTCHA 3).
 
@@ -110,14 +110,14 @@ accepted cost of not leaking the private surface.
 *Symptom:* none, ever, until a stranger is looking at the fund's positions. This failure is
 completely silent by construction.
 *Cause:* with the allowlist removed, anyone who can create a Clerk account can open
-`/portfolio`. If `sign_up.mode` returns to `public` — someone testing, a Clerk default
+`/portal`. If `sign_up.mode` returns to `public` — someone testing, a Clerk default
 changing, a new instance — the door is open and no code here notices.
 *Check it* (no credentials needed, the environment endpoint is public):
 ```
 curl -s "https://clerk.savoycapital.io/v1/environment?__clerk_api_version=2025-04-10&_clerk_js_version=5.0.0" \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['user_settings']['sign_up']['mode'])"
 ```
-Expect `restricted`. Anything else means `/portfolio` — fund size and position-level
+Expect `restricted`. Anything else means `/portal` — fund size and position-level
 amounts — is readable by anyone who signs up.
 *Fix:* Dashboard → Configure → Restrictions → Restricted.
 
@@ -189,6 +189,21 @@ attacker-controlled unless the proxy is known to overwrite it, and feeding it in
 target is how open redirects are built. A relative path has no such surface.
 *General rule:* never put `request.url` into anything that survives past the redirect.
 Observed in production 2026-08-24, minutes after the first deploy.
+
+**GOTCHA 12 — renaming the private route needs `signInFallbackRedirectUrl` moved with it.**
+*Symptom:* sign-in succeeds and lands the user on a 404. The boundary is fine; the
+destination is not.
+*Cause:* `signInFallbackRedirectUrl` lives on `<ClerkProvider>` in `src/app/layout.tsx` —
+nowhere near the route folder, so a rename that moves the page and updates the nav link
+still misses it.
+*What the rename does NOT need:* any change to `src/proxy.ts`. Protection is deny-by-default,
+so the new path is closed the moment it exists and the old one stops mattering. This is the
+payoff for enumerating public routes rather than private ones — under the inverse design the
+renamed route would ship **public** until someone remembered it.
+*Checklist for renaming the private route:* move the folder; `signInFallbackRedirectUrl` in
+`src/app/layout.tsx`; the `SiteNav` href in `src/app/page.tsx`; this playbook and `STATE.md`.
+Then verify on the deployed host that the new path 307s and that signing in lands somewhere
+real. `/portfolio` -> `/portal`, 2026-08-24.
 
 ---
 

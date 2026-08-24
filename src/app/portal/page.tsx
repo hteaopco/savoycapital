@@ -10,11 +10,17 @@ import {
 } from "@/content/fund-allocation";
 
 /**
- * The portfolio monitor. Reached from "Investor login" (owner, 2026-08-23).
+ * The investor portal. Reached from "Investor login" (owner, 2026-08-23).
+ *
+ * Renamed from /portfolio to /portal 2026-08-24. The rename needed no change to
+ * the proxy: protection is deny-by-default, so the new path was closed the
+ * moment it existed. What it DID need was `signInFallbackRedirectUrl` in
+ * src/app/layout.tsx — that lives nowhere near this file, and leaving it on the
+ * old path would land a successfully signed-in user on a 404.
  *
  * **This route is now authenticated** (2026-08-24). It is protected by
  * `src/proxy.ts`, which requires a session for every route not on its short
- * public list — so protection comes from `/portfolio` being absent from that
+ * public list — so protection comes from `/portal` being absent from that
  * list, not from anything on this page. Do not add it there.
  *
  * The window this shipped open in is closed: it was reachable by anyone with
@@ -27,7 +33,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function Portfolio() {
+export default function Portal() {
   return (
     <main>
       <SiteNav
