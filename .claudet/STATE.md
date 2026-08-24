@@ -86,8 +86,10 @@ eslint + design-lint) and `npm run build` pass clean.
 
 The public site is deliberately minimal: a nav, the **Our Portfolio** carousel (HTeaO
 Franchisee, Westfield Fluid Controls, Marucci Sports — in that order) and nothing else. The
-instrument cards and the footer were cut by the owner "until we get more formal." Investor
-login goes to `/coming-soon`. **The first slide is a credit position in HTeaO's largest
+instrument cards and the footer were cut by the owner "until we get more formal." The nav's
+one action is **"Investor Portal" → `/portal`**, which is protected, so a signed-out visitor
+is 307'd to `/sign-in`; `/coming-soon` is still a public route with nothing linking to it.
+**The first slide is a credit position in HTeaO's largest
 FRANCHISEE, not in HTeaO itself**, though it carries HTeaO's mark.
 All three slides carry the owner's real copy — write-up, instrument, year, "Current" status
 and a company link — so **no `[BRACKETED]` placeholder remains on the public page.** The
@@ -144,8 +146,11 @@ it was `public` on first setup, which would have let anyone create an account.
 
 **Blocked on the Clerk Dashboard** (`PLAYBOOKS/auth-clerk.md` § 2): invite Rodney and Jett.
 That invitation is now the whole authorization step — there is no list to add them to. Also
-still outstanding: flip the `accounts.` DNS record to DNS-only, and point the public nav's
-"Investor login" at `/sign-in` when the owner wants it discoverable. `next build` passes without them, so the deploy will not break before they land —
-but the monitor refuses everyone until they do. Separately, the public nav's "Investor
-login" still points at `/coming-soon`; pointing it at `/sign-in` is a one-line owner call,
-left alone on purpose.
+still outstanding: flip the `accounts.` DNS record to DNS-only. `next build` passes without
+them, so the deploy will not break before they land — but the monitor refuses everyone until
+they do.
+
+**The public nav is NOT outstanding, and this file said twice that it was.** It renders
+"Investor Portal" → `/portal`; `/portal` is protected, so the login is already discoverable
+via the 307 to `/sign-in`. Pointing the nav straight at `/sign-in` would only skip that
+redirect, and remains an owner call rather than a cleanup task.
