@@ -85,6 +85,10 @@ a future agent hits the warning at the point of use rather than only here:**
   `tailwind-theme` fails a Tailwind color/radius/shadow class. **It is also the working
   model for `mobile-lint.mjs`** — same masker, same baseline discipline, same `--self-test`
   shape. Building that falsifies the row above; update it that day.
+- **A `@media (max-width:767px)` block now EXISTS** in `src/app/globals.css` (2026-08-24) and
+  floors `input`/`select`/`textarea` at 44px. **`button` is excluded on purpose** — the 36px
+  carve-out is live on the carousel arrows. So: form controls are handled globally; buttons,
+  links and clickable `<div>`s are still per-component and still unchecked by any gate.
 - **No `useIsMobile()`.** `src/lib/` is empty. Mobile branching today is pure CSS
   (`md:` / `md:hidden`), which is SSR-safe by construction and has no hydration flash.
 - **No `mobile-cards.tsx`** — no `MobileCard`, `MobileCardList`, `sheetBackdrop`, `sheetCard`.
