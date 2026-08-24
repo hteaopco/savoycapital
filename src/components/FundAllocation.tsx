@@ -113,23 +113,36 @@ const TRANSITION = "160ms ease";
  * The open sweep: accent runs out along the connector, then across the panel's
  * top edge, so the two read as one line travelling from the card to the box.
  *
- * It is staggered, not simultaneous, and the whole sequence still lands on
- * § 0.8's 200ms ceiling — 100ms out, 100ms across. Opening a panel is UI
- * feedback, so the 400ms content-crossfade carve-out does NOT apply here and
- * these numbers are not free to grow. The panel's own fade is sized to finish
- * inside the same 200ms rather than trailing it.
+ * The top edge runs at HALF the connector's speed (owner, 2026-08-24). They no
+ * longer overlap end-to-end because of it: the two now start together and the
+ * slower one finishes last, which is what keeps the SEQUENCE on § 0.8's 200ms
+ * ceiling instead of summing to 300. Opening a panel is UI feedback, so the
+ * 400ms content-crossfade carve-out does not apply and 200 is the whole budget
+ * — slowing the edge further means taking it out of the connector, not adding
+ * to the total.
  */
-const SWEEP_MS = 100;
+const CONNECTOR_MS = 100;
+const EDGE_MS = 200;
 const FADE_MS = 150;
 const FADE_DELAY_MS = 50;
 
 /**
- * The connector's length lives in Tailwind classes, not a constant: these two
- * must stay equal — `lg:w-[56px]` on the line, `lg:left-[calc(100%+56px)]` on
- * the panel it ends at. A constant interpolated into a className would look
- * tidier and silently break, because Tailwind scans source text and never sees
- * a class assembled at runtime.
+ * The line's weight, and where it begins.
+ *
+ * It starts at the CARD's right border, not at the row's — the row ends 26px
+ * short of it (18px of card padding, 8px of tray padding), so the connector is
+ * pushed out by that much and the gap it then crosses is 40px. Those two are
+ * summed into the panel's own offset: 26 + 40 = 66.
+ *
+ * All three live in Tailwind classes written out in full rather than in
+ * constants. Tailwind scans source text, so a class assembled from a variable
+ * looks tidier and silently never reaches the stylesheet — which is exactly
+ * what happened on the first draft of this panel.
+ *   line   `min-[1440px]:left-[calc(100%+26px)]` `min-[1440px]:w-[40px]`
+ *   panel  `min-[1440px]:left-[calc(100%+66px)]` `min-[1440px]:w-[320px]`
  */
+const CONNECTOR_WEIGHT = 1;
+const EDGE_WEIGHT = 2;
 
 const numCell: React.CSSProperties = {
   fontVariantNumeric: "tabular-nums",
@@ -139,17 +152,21 @@ const numCell: React.CSSProperties = {
 /**
  * The terms panel for an opened position, plus the line that runs out to it.
  *
- * Two layouts, one DOM node: from `lg` (1024px) up it floats to the right of the
- * card on the end of the connector, which is the shape this was asked for.
- * Narrower than that it drops inline under the row and the connector is hidden,
- * because a floating panel running off the side of the screen is worse than one
- * that stacks.
+ * Two layouts, one DOM node: from 1440px up it floats to the right of the card
+ * on the end of the connector, which is the shape this was asked for. Narrower
+ * than that it drops inline under the row and the connector is hidden, because
+ * a floating panel running off the side of the screen is worse than one that
+ * stacks.
  *
- * Whether it fits is arithmetic, not taste, and it is why the portfolio page
- * caps the card at 600px: at a 1024px viewport the shell leaves 944px of
- * content, the card and connector consume 630 of it, and the panel needs 272.
- * Widening that card again pushes this off-screen at `lg` — check the sum
- * before changing either number.
+ * The breakpoint is a RESULT of the arithmetic, not a preference, and it is not
+ * a Tailwind default because the sum does not land on one. The portal's sidebar
+ * takes 240px before the page has any content at all; the shell's padding takes
+ * 64; the card is 720, clearing it and crossing the gap costs 66, and the panel
+ * is 320. That comes to 1410, so it floats from 1440 and stacks below.
+ *
+ * It sat at `xl` (1280) while there was no sidebar. Change ANY of those five
+ * numbers and re-do the sum before trusting the breakpoint — the failure mode
+ * is a panel hanging off the right edge, which only shows up at one width.
  *
  * Mounted only while open, so the sweep replays on every open rather than
  * firing once for the life of the page.
@@ -166,7 +183,6 @@ function HoldingDetail({ holding }: { holding: Holding }) {
   }, []);
 
   const sweep: React.CSSProperties = {
-    height: 2,
     background: C.accent,
     transformOrigin: "left center",
     transform: revealed ? "scaleX(1)" : "scaleX(0)",
@@ -176,18 +192,18 @@ function HoldingDetail({ holding }: { holding: Holding }) {
     <>
       <div
         aria-hidden
-        className="hidden lg:block lg:w-[56px]"
+        className="hidden min-[1440px]:block min-[1440px]:w-[40px] min-[1440px]:left-[calc(100%+26px)]"
         style={{
           ...sweep,
+          height: CONNECTOR_WEIGHT,
           position: "absolute",
-          left: "100%",
           top: "50%",
-          transition: `transform ${SWEEP_MS}ms ease-out`,
+          transition: `transform ${CONNECTOR_MS}ms ease-out`,
         }}
       />
 
       <div
-        className="mt-2 lg:mt-0 lg:absolute lg:top-1/2 lg:-translate-y-1/2 lg:z-10 lg:w-[272px] lg:left-[calc(100%+56px)]"
+        className="mt-2 min-[1440px]:mt-0 min-[1440px]:absolute min-[1440px]:top-1/2 min-[1440px]:-translate-y-1/2 min-[1440px]:z-10 min-[1440px]:w-[320px] min-[1440px]:left-[calc(100%+66px)]"
         style={{
           borderRadius: 10,
           border: `1px solid ${C.border}`,
@@ -200,7 +216,7 @@ function HoldingDetail({ holding }: { holding: Holding }) {
       >
         <div
           aria-hidden
-          style={{ ...sweep, transition: `transform ${SWEEP_MS}ms ease-out ${SWEEP_MS}ms` }}
+          style={{ ...sweep, height: EDGE_WEIGHT, transition: `transform ${EDGE_MS}ms ease-out` }}
         />
 
         <div
@@ -523,74 +539,87 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
                       const hasDetail = (h.detail ?? []).length > 0;
                       const isDetailOpen = openHolding === key;
 
-                      const cells = (
-                        <>
-                          <span
-                            style={{ flex: 1, fontSize: 12, fontWeight: 500, color: C.textMuted }}
-                          >
-                            {h.name}
-                          </span>
-                          <span
-                            style={{ fontSize: 11, fontWeight: 400, color: C.textMuted, ...numCell }}
-                          >
-                            {money(h.amountCents)}
-                          </span>
-                          <span
-                            style={{
-                              width: 54,
-                              textAlign: "right",
-                              fontSize: 11,
-                              color: C.textDim,
-                              ...numCell,
-                            }}
-                          >
-                            {pct(h.amountCents, fundSizeCents)}
-                          </span>
-                        </>
-                      );
-
                       return (
                         <div
                           key={h.name}
-                          className="lg:relative"
+                          className="min-[1440px]:relative"
                           style={{ borderLeft: `1px solid ${C.borderStrong}`, paddingLeft: 12 }}
                         >
                           {/*
-                            A holding with terms is a button; one without stays a
-                            plain row. That keeps the panel honest — no empty box
-                            for a position whose terms nobody has given us — and
-                            it costs one of the four cues that separated a bucket
-                            from a drill-down, since drill-downs are now clickable
-                            too. Three remain and they still carry it: buckets own
-                            the chevron and the colour chip, and sit a size and a
-                            weight above these rows in the grey tray.
+                            The ROW is inert; the button is the only control on
+                            it (owner, 2026-08-24). That restores the cue the
+                            last pass spent: a bucket row is clickable and a
+                            drill-down row is not, on top of the chevron, the
+                            colour chip, and the size and weight the buckets sit
+                            above these in the grey tray.
 
-                            Interactive means the § 7 floor applies: these are
-                            list rows, so 44px on touch, the tray's density from
-                            md up — the same split the bucket rows above run on.
+                            It wraps rather than truncates. At 390px the name,
+                            amount, share and button want ~354px and the tray
+                            gives 260, so on a phone the button drops to a line
+                            of its own — § 0.7 lets a NAME truncate but never a
+                            money value, and truncating the name to nothing to
+                            keep one line would be the worse trade.
                           */}
-                          {hasDetail ? (
-                            <button
-                              onClick={() => setOpenHolding(isDetailOpen ? null : key)}
-                              aria-expanded={isDetailOpen}
-                              className="flex items-center w-full min-h-[44px] md:min-h-0"
+                          <div
+                            className="flex flex-wrap items-center"
+                            style={{ gap: 9, padding: "5px 0" }}
+                          >
+                            <span
+                              style={{ flex: 1, fontSize: 12, fontWeight: 500, color: C.textMuted }}
+                            >
+                              {h.name}
+                            </span>
+                            <span
                               style={{
-                                gap: 9,
-                                padding: "5px 0",
-                                border: "none",
-                                background: isDetailOpen ? C.accentBg : "transparent",
-                                fontFamily: "inherit",
-                                textAlign: "left",
-                                transition: `background ${TRANSITION}`,
+                                fontSize: 11,
+                                fontWeight: 400,
+                                color: C.textMuted,
+                                ...numCell,
                               }}
                             >
-                              {cells}
-                            </button>
-                          ) : (
-                            <div className="flex items-center" style={{ gap: 9, padding: "5px 0" }}>
-                              {cells}
-                            </div>
-                          )}
+                              {money(h.amountCents)}
+                            </span>
+                            <span
+                              style={{
+                                width: 54,
+                                textAlign: "right",
+                                fontSize: 11,
+                                color: C.textDim,
+                                ...numCell,
+                              }}
+                            >
+                              {pct(h.amountCents, fundSizeCents)}
+                            </span>
+
+                            {/*
+                              Only a position we actually hold terms for gets a
+                              button, so the control cannot open an empty box.
+                              § 7's floor lands on the button now that it is what
+                              a thumb hits: 44px on touch, the tray's density
+                              from md up.
+                            */}
+                            {hasDetail ? (
+                              <button
+                                onClick={() => setOpenHolding(isDetailOpen ? null : key)}
+                                aria-expanded={isDetailOpen}
+                                className="ml-auto inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+                                style={{
+                                  padding: "4px 10px",
+                                  borderRadius: 6,
+                                  border: `1px solid ${isDetailOpen ? C.accent : C.border}`,
+                                  background: isDetailOpen ? C.accent : C.bg,
+                                  color: isDetailOpen ? C.onSolid : C.accent,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  fontFamily: "inherit",
+                                  whiteSpace: "nowrap",
+                                  transition: `background ${TRANSITION}, color ${TRANSITION}, border-color ${TRANSITION}`,
+                                }}
+                              >
+                                View Details
+                              </button>
+                            ) : null}
+                          </div>
 
                           {isDetailOpen ? <HoldingDetail holding={h} /> : null}
                         </div>

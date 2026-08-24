@@ -1,59 +1,49 @@
 import type { Metadata } from "next";
 import { C } from "@/components/palette";
-import { FundAllocation } from "@/components/FundAllocation";
-import { UserButton } from "@clerk/nextjs";
-import { SiteNav } from "@/components/SiteNav";
-import {
-  FUND_AS_OF,
-  FUND_BUCKETS,
-  FUND_SIZE_CENTS,
-} from "@/content/fund-allocation";
+import { PortalShell } from "@/components/PortalShell";
 
 /**
- * The investor portal. Reached from "Investor login" (owner, 2026-08-23).
+ * The portal's landing page. Deliberately an empty shell (owner, 2026-08-24):
+ * it exists so the sidebar's first link lands somewhere real, and what it opens
+ * on has not been decided. Filling it with invented tiles would be guessing at
+ * the product.
  *
- * Renamed from /portfolio to /portal 2026-08-24. The rename needed no change to
- * the proxy: protection is deny-by-default, so the new path was closed the
- * moment it existed. What it DID need was `signInFallbackRedirectUrl` in
- * src/app/layout.tsx — that lives nowhere near this file, and leaving it on the
- * old path would land a successfully signed-in user on a 404.
+ * `signInFallbackRedirectUrl` in src/app/layout.tsx points here, so this is the
+ * page a successful sign-in arrives on — which is the other reason it cannot be
+ * a dead route.
  *
- * **This route is now authenticated** (2026-08-24). It is protected by
- * `src/proxy.ts`, which requires a session for every route not on its short
- * public list — so protection comes from `/portal` being absent from that
- * list, not from anything on this page. Do not add it there.
- *
- * The window this shipped open in is closed: it was reachable by anyone with
- * the URL, and the URL was linked from the public homepage. `noindex` stays —
- * it is no longer load-bearing now that a crawler cannot reach the page at all,
- * but a private surface has no business in an index either way.
+ * **Authenticated.** `src/proxy.ts` requires a session for every route not on
+ * its short public list, so protection comes from this path being ABSENT from
+ * that list. Do not add it there.
  */
 export const metadata: Metadata = {
-  title: "Portfolio — Savoy Capital",
+  title: "Home — Savoy Capital",
   robots: { index: false, follow: false },
 };
 
-export default function Portal() {
+export default function PortalHome() {
   return (
-    <main>
-      <SiteNav
-        action={{ href: "/", label: "Public site" }}
-        trailing={<UserButton />}
-      />
-
-      <div className="mx-auto max-w-[1120px] px-5 py-10 md:px-10 md:py-12">
+    <PortalShell title="Home">
+      <div className="px-5 py-8 md:px-8 md:py-10">
         <div className="flex flex-col" style={{ gap: 14 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Portfolio</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Home</div>
 
-          <div style={{ maxWidth: 600 }}>
-            <FundAllocation
-              fundSizeCents={FUND_SIZE_CENTS}
-              buckets={FUND_BUCKETS}
-              asOf={FUND_AS_OF}
-            />
+          <div
+            style={{
+              maxWidth: 720,
+              padding: 24,
+              borderRadius: 10,
+              border: `1px dashed ${C.borderStrong}`,
+              background: C.bgAlt,
+              color: C.textMuted,
+              fontSize: 13,
+              textAlign: "center",
+            }}
+          >
+            Nothing here yet — what the portal opens on hasn&rsquo;t been decided.
           </div>
         </div>
       </div>
-    </main>
+    </PortalShell>
   );
 }
