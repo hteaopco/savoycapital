@@ -13,18 +13,27 @@ Charter in `AGENTS/DESIGN.md`, law in `.claude/rules/ui-governance.md`. **`npm r
 now typecheck + eslint + `lint:design`**, so design drift fails CI instead of being noticed
 by a person. Baseline `{}` on every rule; the mirror gate has no baseline at all.
 
-**The first full audit is done and the app is clean on every mechanical rule** — zero raw
-hex, zero raw rgba, zero non-lucide icons, zero shadcn, zero Tailwind color classes, zero
-sub-768px breakpoints, palette mirror byte-identical. **What it is NOT clean on is the
-residue no gate reaches**, and that list is the open work: `C.green` means "Private Credit"
-in the portal and "positive/Current" on the public page; two cards ship at different radii;
-the carousel dots are 6px tall against a 44px floor; ~9 spacing values sit off the documented
-scale; and the public surface's display type scale exists only as duplicated literals in two
-components. **None of it was fixed** — every item is a UI-scope edit and Jett owns the UI.
+**The first full audit is done and everything it found is fixed** (owner, 2026-08-24: "Fix
+everything"). The app is clean on all twelve mechanical rules, and the residue the audit
+raised has been worked rather than parked: the `C.green` collision is resolved by a standing
+rule (**a badge's tone encodes state, never category**), both cards ship at radius 12, the
+"% DEPLOYED" badge at 4, the carousel dots and `SiteNav`'s action meet the 44px floor on touch
+with **desktop byte-identical**, the public display scale lives in `src/components/type.ts`
+instead of duplicated literals, and the mobile drawer closes on Esc and returns focus.
 
-**`design/` contradicts itself in three places** (Tailwind-for-spacing, card radius, badge
-radius) and the code follows a different file for different ones. `DECISIONS.md` carries the
-detail. Resolving it is an owner call because it moves shipped pixels.
+**Two of those turned into rules** — `radius-scale` and `inline-svg` — so the gate is twelve
+rules deep. **One deliberately did not:** there is no `spacing-scale` rule, because
+`DESIGN_SYSTEM.md` § 3's own primitives use padding off its § 2 scale. The nine "off-scale
+spacing violations" the first pass reported were not violations. Don't re-raise them.
+
+**`design/`'s three self-contradictions are resolved** toward `DESIGN_SYSTEM.md` —
+`AP_DESIGN_REFERENCE.md` carries a banner and `design/README.md` three new table rows. That
+file is **READ FIRST** and was wrong here on three counts; read its banner before trusting a
+rule in it.
+
+**Still open, and named as gaps rather than oversights:** no `lint:mobile`, no focus trap on
+the drawer (mobile seat's, needs a sentinel pair and a scroll lock), and no `tap-target` rule
+because a hit area is not computable from a regex.
 
 **Auth has an owner now.** The Clerk seat is commissioned (owner, 2026-08-24) — the instance,
 `src/proxy.ts`, the sign-in surface, and the configuration and DNS behind them. **Not the

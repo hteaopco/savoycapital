@@ -7,7 +7,7 @@ built here should be indistinguishable in style from a screen built there.
 
 ## Divergences from theAPlink
 
-Seven of the ten content files are **byte-for-byte identical** to theAPlink's. Three are not:
+Six of the ten content files are **byte-for-byte identical** to theAPlink's. Four are not:
 
 | File | Divergence | When |
 |---|---|---|
@@ -17,19 +17,24 @@ Seven of the ten content files are **byte-for-byte identical** to theAPlink's. T
 | `MOBILE_REFERENCE.md` | § 1 — **a second breakpoint is allowed** when derived from arithmetic and shown at the call site, against "exactly one breakpoint." `FundAllocation.tsx`'s terms panel is the case (`2xl:` today); `DESIGN_SYSTEM.md` § 3.x uses `sm:`/`lg:` throughout. | 2026-08-24, owner |
 | `MOBILE_REFERENCE.md` | § 6 — **the tap-target floor is 44px, written per component** (`min-h-[44px] md:min-h-0`), against a 40px floor supplied globally by `globals.css`. **No `@media (max-width:767px)` block exists in this repo**, so nothing is auto-floored. | 2026-08-24, owner |
 | `MOBILE_REFERENCE.md` | § 1 / § 3 / § 4 / § 5, § 8, § 9 — **the named machinery does not exist here**: no `useIsMobile()`, `mobile-cards.tsx`, `.ap-chip-strip`, or `lint:mobile`. The coverage tables are theAPlink's numbers; ours is **unmeasured**. Patterns kept, claims corrected. | 2026-08-24, owner |
+| `AP_DESIGN_REFERENCE.md` | § 2 — **Tailwind IS how spacing and sizing are written**, against "never for color/spacing/theming". `DESIGN_SYSTEM.md` § 4 *forbids* inline responsive spacing, because an inline value cannot honour a breakpoint. The theming half survives intact: never a Tailwind class for color, radius, shadow, weight or type size. | 2026-08-24, owner |
+| `AP_DESIGN_REFERENCE.md` | § 3 — **the radius scale is `DESIGN_SYSTEM.md` § 2's** (4 / 6 / 8 / 10 / 12 / 16 / 999), not 6/7/8/10/12. Cards and panels are **12**, not 10; 10 is larger buttons and dashed empty cards. **There is no 7.** | 2026-08-24, owner |
+| `AP_DESIGN_REFERENCE.md` | § 4 — **a status pill is `borderRadius: 4`**, not 8. `DESIGN_SYSTEM.md` § 4: "Circular / pill badges — always rectangle `borderRadius: 4`." | 2026-08-24, owner |
 | `MOBILE_AUDIT_PLAYBOOK.md` | header, § 0 — **both contract invariants replaced**: desktop is not frozen, and money-safety becomes the **auth boundary** (no money-writing surface exists; never widen `src/proxy.ts` for a layout). | 2026-08-24, owner |
 | `MOBILE_AUDIT_PLAYBOOK.md` | § 1, § 5, § 6 — **the loop is rewired to the gates that exist**: no Prisma, no cron, and no *mobile* baseline. `verify` is typecheck + eslint + design-lint; CI adds `next build`; merge-on-green is standing authorization. | 2026-08-24, owner (§ 1.1/§ 6 rows re-corrected 2026-08-24 when `design-lint` landed) |
 
 **On "verified by checksum".** That phrase was carried from theAPlink and it overstates what
 is possible here: **there is no theAPlink checkout in this repo to checksum against**, so the
-identity of the seven is a claim held by hand, not a computed fact. Said plainly per
+identity of the six is a claim held by hand, not a computed fact. Said plainly per
 `.claudet/README.md` rule 3 — an unenforced rule described as enforced is worse than an
 acknowledged convention. What *is* checkable, and what the banners exist for, is the
 narrower claim: every file that diverges says so at the top and names how.
 
-**Each of those three files carries a banner at the top saying the same thing**, so a diff
+**Each of those four files carries a banner at the top saying the same thing**, so a diff
 against theAPlink explains itself and a reader who opens only one file still learns that it
-diverges. **Add to that table before amending anything else here** — an undocumented
+diverges. `AP_DESIGN_REFERENCE.md`'s banner matters most — it is the file labelled **READ
+FIRST**, and until 2026-08-24 it told every incoming agent the opposite of what ships on three
+counts. **Add to that table before amending anything else here** — an undocumented
 divergence turns "carried from theAPlink" into a claim nobody can check, and the value of
 this folder is that the claim is checkable.
 
@@ -37,8 +42,10 @@ this folder is that the claim is checkable.
 
 - `AP_DESIGN_REFERENCE.md` — **READ FIRST.** The pattern cheat-sheet: palette, typography,
   and copy-paste patterns for shell / tables / buttons / tabs / modals / cards / pills /
-  inputs, extracted from the live components. (Filename keeps its theAPlink spelling
-  because the file is carried byte-for-byte; the patterns in it are not AP-specific.)
+  inputs, extracted from the live components. **Amended for savoycapital — read its banner
+  first;** three of its rules are superseded by `DESIGN_SYSTEM.md` and one of them (§ 2 on
+  Tailwind) would tell you the codebase's dominant layout convention is forbidden. (Filename
+  keeps its theAPlink spelling; the patterns in it are not AP-specific.)
 - `palette.ts` — the `C` palette (verbatim). **Every color comes from here. No raw hex.**
 - `DESIGN_SYSTEM.md` — the full upstream design system: principles, primitives, glyphs,
   PDF rules, accessibility.

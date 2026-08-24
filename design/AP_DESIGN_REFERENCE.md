@@ -1,5 +1,26 @@
 # theAPlink — AP Design Reference (source of truth)
 
+> ### ⚠️ savoycapital: three rules below are SUPERSEDED by `DESIGN_SYSTEM.md`. Read this first.
+>
+> This file is carried from theAPlink and it contradicts `DESIGN_SYSTEM.md` in three places.
+> Per DECISIONS 2026-08-24, **`DESIGN_SYSTEM.md` wins every such conflict** — it is the full
+> spec and this file is a cheat-sheet extracted from one product's live components. The three,
+> resolved by the owner on 2026-08-24:
+>
+> | § here | What this file says | **What actually binds** |
+> |---|---|---|
+> | § 2 | Tailwind "never for color/**spacing**/theming" | **Tailwind IS how spacing and sizing are written.** `DESIGN_SYSTEM.md` § 4 requires it — an inline value cannot honour a breakpoint, so inline responsive spacing is *forbidden*, not preferred. The rule that survives is the **theming** half: never a Tailwind class for color, radius, shadow, font weight or type size. Those are inline styles off `C`. |
+> | § 3 | Radius scale **6 / 7 / 8 / 10 / 12**, "10 cards/panels, 12 modals" | **`DESIGN_SYSTEM.md` § 2's scale: 4 / 6 / 8 / 10 / 12 / 16 / 999.** Badges and pills are **4**. Cards and panels are **12**; 10 is larger buttons and dashed "empty" cards; 16 is modal/sheet top corners. **There is no 7.** |
+> | § 4 "Status / result pill" | `borderRadius: 8` | **4.** `DESIGN_SYSTEM.md` § 4 forbidden patterns: "Circular / pill badges — always rectangle `borderRadius: 4`." |
+>
+> **Everything else in this file stands** — the palette, the tone conventions, the hard rules
+> on hex/lucide/`tabular-nums`/`type="number"`/cursor, the component patterns, the icon sizes.
+> Those are what it is for. `design/README.md`'s divergence table carries the same three rows.
+>
+> Why the file is amended rather than obeyed: the code had already resolved all three toward
+> `DESIGN_SYSTEM.md`, so leaving this one as-written meant the file labelled **READ FIRST**
+> told every incoming agent the opposite of what ships.
+
 > **RULE: everything must be IDENTICAL to the current HTeaO AP design. Nothing different.**
 > This folder is the canonical reference. When in doubt, copy the exemplar components in
 > `design/exemplars/` verbatim and reuse `palette.ts`. Do not re-theme, re-approximate, or

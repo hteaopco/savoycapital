@@ -6,6 +6,57 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The three `AP_DESIGN_REFERENCE.md` contradictions are resolved toward `DESIGN_SYSTEM.md`,
+  and the code now matches (owner, 2026-08-24: "Fix everything").** The file labelled **READ
+  FIRST** told every incoming agent the opposite of what ships, on three counts. Each now
+  carries a banner row and a row in `design/README.md`'s table; `design/` is four-tenths
+  divergent from theAPlink rather than three-tenths, and that cost is accepted for the same
+  reason as last time — the alternative is a doc that instructs agents to undo working code.
+  - **Tailwind is how spacing and sizing are written.** AP § 2 said "never for
+    color/**spacing**/theming"; `DESIGN_SYSTEM.md` § 4 *forbids* inline responsive spacing,
+    because an inline value cannot honour a breakpoint. The theming half survives whole, and
+    the app has **zero** Tailwind color classes.
+  - **Cards and panels are radius 12, not 10.** `FundAllocation`'s card and its terms panel
+    moved 10 → 12, matching `RecentInvestments`. 10 stays correct for the dashed empty state.
+  - **Badges are radius 4, not 8.** The portal's "% DEPLOYED" pill moved 8 → 4, matching the
+    public page's tags.
+
+- **A badge's tone encodes STATE, never category (design seat, 2026-08-24).** `C.green` meant
+  "Private Credit" in the portal's chart and "Current" on the public page, and the public
+  page's instrument badge was accent-tinted — which § 4 forbids as decorative use of the
+  primary-action color. Every rule passed; it was only visible to a person reading both
+  screens. **The instrument badge is now neutral on both surfaces, green is reserved for the
+  positive state, and accent appears once per card as an active-state readout.** The donut
+  keeps accent/green as **arc identity**, which is a separate vocabulary — `DESIGN_SYSTEM.md`
+  has no chart words at all, and its legend chips mirror arcs rather than badging anything.
+
+- **There is deliberately NO `spacing-scale` lint rule, and off-scale component padding is not
+  a finding (design seat, 2026-08-24).** `DESIGN_SYSTEM.md` § 2 lists `4, 6, 8, 10, 12, 16,
+  20, 24` and says anything else needs a written exception — but § 3's **own primitives** ship
+  `padding: "10px 14px"` and `"48px 16px"`. **The canon does not hold itself to that scale for
+  component-internal padding.** The first audit pass read nine "violations" off that scale;
+  measuring the canon showed they were nothing of the kind, and a rule enforcing it would have
+  failed honest code and pushed agents to re-theme working components. Treat § 2 as layout
+  rhythm. `radius-scale` and `inline-svg` **were** added — those two the canon does hold.
+
+- **Tap targets are fixed on TOUCH only; desktop stays byte-identical (design seat,
+  2026-08-24).** The carousel dots were 6px tall and 8px apart — under § 7's floor, under WCAG
+  2.2 AA's 24×24, and not rescued by the spacing exception. `SiteNav`'s only action was ~32px,
+  below even the 36px carve-out, which would not have applied anyway since that one is for a
+  *secondary* control. All three now use this repo's established pattern —
+  `min-h-[44px] md:min-h-0`, with the dots also taking 9px of transparent horizontal padding
+  on touch and the row's gap collapsed to 0 so the spacing is unchanged. **A pointer is not a
+  thumb**, so no desktop pixel moved. The carousel arrows stay at 36 — they are the case § 7's
+  carve-out was written for.
+
+- **The mobile drawer closes on Esc and returns focus; it is still not a focus trap (design
+  seat, 2026-08-24).** § 7 asks that every modal close on Esc, and the drawer is a modal — it
+  covers the page and takes the tap. A scrim dismissible only by tapping is unusable from a
+  keyboard. Focus returns to the menu button, without which dismissing drops focus to `<body>`
+  and the next Tab restarts from the top of the document. **A real trap needs a sentinel pair
+  and a scroll lock and belongs with the mobile seat's drawer work** — named here so the gap
+  is known rather than an oversight.
+
 - **Merge-on-green is house-level standing authorization, stated in `CLAUDE.md`, and no
   charter may hedge it (owner, 2026-08-24).**
 
