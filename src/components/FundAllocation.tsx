@@ -874,6 +874,22 @@ export function FundAllocation({
             >
               100.0%
             </span>
+            {/*
+              The third twin of the holding rows' action column, and the one
+              that was missed when that column moved to the end of the row
+              (owner, 2026-08-24). Every row in this table now carries one:
+              holdings the real button, buckets and this total an empty span.
+              Without it the total's money and share sit 104px right of every
+              other row's — flush to the card while the rest stop short of it.
+
+              `md:` on all three, matching them: below md the action slot goes
+              full-width on its own line and there is no column to line up with.
+            */}
+            <span
+              aria-hidden
+              className="hidden md:block md:w-[104px]"
+              style={{ flexShrink: 0 }}
+            />
           </div>
         </div>
       </div>
