@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { C } from "@/components/palette";
 import { FundAllocation } from "@/components/FundAllocation";
-import { SiteNav } from "@/components/SiteNav";
+import { PortalShell } from "@/components/PortalShell";
 import {
   FUND_AS_OF,
   FUND_BUCKETS,
@@ -9,7 +9,7 @@ import {
 } from "@/content/fund-allocation";
 
 /**
- * The portfolio monitor. Reached from "Investor Portal" (owner, 2026-08-23).
+ * Portfolio — how the fund's capital is split, and what sits inside each split.
  *
  * **This route is not authenticated.** There is no auth in the repo yet; the
  * owner's call was to ship it open on the grounds that nobody is visiting the
@@ -27,10 +27,8 @@ export const metadata: Metadata = {
 
 export default function Portfolio() {
   return (
-    <main>
-      <SiteNav width="wide" action={{ href: "/", label: "Public site" }} />
-
-      <div className="mx-auto max-w-[1600px] px-5 py-10 md:px-10 md:py-12">
+    <PortalShell title="Portfolio">
+      <div className="px-5 py-8 md:px-8 md:py-10">
         <div className="flex flex-col" style={{ gap: 14 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Portfolio</div>
 
@@ -43,6 +41,6 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
-    </main>
+    </PortalShell>
   );
 }

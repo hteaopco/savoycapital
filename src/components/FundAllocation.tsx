@@ -138,8 +138,8 @@ const FADE_DELAY_MS = 50;
  * constants. Tailwind scans source text, so a class assembled from a variable
  * looks tidier and silently never reaches the stylesheet — which is exactly
  * what happened on the first draft of this panel.
- *   line   `xl:left-[calc(100%+26px)]` `xl:w-[40px]`
- *   panel  `xl:left-[calc(100%+66px)]` `xl:w-[340px]`
+ *   line   `min-[1440px]:left-[calc(100%+26px)]` `min-[1440px]:w-[40px]`
+ *   panel  `min-[1440px]:left-[calc(100%+66px)]` `min-[1440px]:w-[320px]`
  */
 const CONNECTOR_WEIGHT = 1;
 const EDGE_WEIGHT = 2;
@@ -152,19 +152,21 @@ const numCell: React.CSSProperties = {
 /**
  * The terms panel for an opened position, plus the line that runs out to it.
  *
- * Two layouts, one DOM node: from `xl` (1280px) up it floats to the right of the
- * card on the end of the connector, which is the shape this was asked for.
- * Narrower than that it drops inline under the row and the connector is hidden,
- * because a floating panel running off the side of the screen is worse than one
- * that stacks.
+ * Two layouts, one DOM node: from 1440px up it floats to the right of the card
+ * on the end of the connector, which is the shape this was asked for. Narrower
+ * than that it drops inline under the row and the connector is hidden, because
+ * a floating panel running off the side of the screen is worse than one that
+ * stacks.
  *
- * Whether it fits is arithmetic, not taste, and the breakpoint is a RESULT of
- * it rather than a preference. At 1280px the shell leaves 1200px of content;
- * the 720px card, the 66px it takes to clear the card and cross the gap, and
- * the 340px panel come to 1126. At 1024 the same sum has only 944px to live in
- * and overflows, which is why this floats from `xl` and not from `lg` — it sat
- * at `lg` while the card was 600 and the panel 272. Widen either one again and
- * re-do the sum before touching the breakpoint.
+ * The breakpoint is a RESULT of the arithmetic, not a preference, and it is not
+ * a Tailwind default because the sum does not land on one. The portal's sidebar
+ * takes 240px before the page has any content at all; the shell's padding takes
+ * 64; the card is 720, clearing it and crossing the gap costs 66, and the panel
+ * is 320. That comes to 1410, so it floats from 1440 and stacks below.
+ *
+ * It sat at `xl` (1280) while there was no sidebar. Change ANY of those five
+ * numbers and re-do the sum before trusting the breakpoint — the failure mode
+ * is a panel hanging off the right edge, which only shows up at one width.
  *
  * Mounted only while open, so the sweep replays on every open rather than
  * firing once for the life of the page.
@@ -190,7 +192,7 @@ function HoldingDetail({ holding }: { holding: Holding }) {
     <>
       <div
         aria-hidden
-        className="hidden xl:block xl:w-[40px] xl:left-[calc(100%+26px)]"
+        className="hidden min-[1440px]:block min-[1440px]:w-[40px] min-[1440px]:left-[calc(100%+26px)]"
         style={{
           ...sweep,
           height: CONNECTOR_WEIGHT,
@@ -201,7 +203,7 @@ function HoldingDetail({ holding }: { holding: Holding }) {
       />
 
       <div
-        className="mt-2 xl:mt-0 xl:absolute xl:top-1/2 xl:-translate-y-1/2 xl:z-10 xl:w-[340px] xl:left-[calc(100%+66px)]"
+        className="mt-2 min-[1440px]:mt-0 min-[1440px]:absolute min-[1440px]:top-1/2 min-[1440px]:-translate-y-1/2 min-[1440px]:z-10 min-[1440px]:w-[320px] min-[1440px]:left-[calc(100%+66px)]"
         style={{
           borderRadius: 10,
           border: `1px solid ${C.border}`,
@@ -540,7 +542,7 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
                       return (
                         <div
                           key={h.name}
-                          className="xl:relative"
+                          className="min-[1440px]:relative"
                           style={{ borderLeft: `1px solid ${C.borderStrong}`, paddingLeft: 12 }}
                         >
                           {/*
