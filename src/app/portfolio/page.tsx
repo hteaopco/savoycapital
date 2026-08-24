@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { C } from "@/components/palette";
 import { FundAllocation } from "@/components/FundAllocation";
+import { UserButton } from "@clerk/nextjs";
 import { SiteNav } from "@/components/SiteNav";
 import {
   FUND_AS_OF,
@@ -11,14 +12,15 @@ import {
 /**
  * The portfolio monitor. Reached from "Investor login" (owner, 2026-08-23).
  *
- * **This route is not authenticated.** There is no auth in the repo yet; the
- * owner's call was to ship it open on the grounds that nobody is visiting the
- * site during the window before auth lands. People, maybe — crawlers arrive on
- * their own and an indexed page outlives the window, so the page is `noindex,
- * nofollow`. That is a mitigation, not a substitute: anyone with the URL can
- * read the fund's size and its position-level amounts. Put this behind the auth
- * boundary before the site is promoted anywhere, and drop the robots block at
- * the same time.
+ * **This route is now authenticated** (2026-08-24). It is protected by
+ * `src/proxy.ts`, which requires a session for every route not on its short
+ * public list — so protection comes from `/portfolio` being absent from that
+ * list, not from anything on this page. Do not add it there.
+ *
+ * The window this shipped open in is closed: it was reachable by anyone with
+ * the URL, and the URL was linked from the public homepage. `noindex` stays —
+ * it is no longer load-bearing now that a crawler cannot reach the page at all,
+ * but a private surface has no business in an index either way.
  */
 export const metadata: Metadata = {
   title: "Portfolio — Savoy Capital",
@@ -28,7 +30,10 @@ export const metadata: Metadata = {
 export default function Portfolio() {
   return (
     <main>
-      <SiteNav action={{ href: "/", label: "Public site" }} />
+      <SiteNav
+        action={{ href: "/", label: "Public site" }}
+        trailing={<UserButton />}
+      />
 
       <div className="mx-auto max-w-[1120px] px-5 py-10 md:px-10 md:py-12">
         <div className="flex flex-col" style={{ gap: 14 }}>

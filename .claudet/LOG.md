@@ -8,6 +8,80 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **`/portfolio` is closed; the auth work rebased onto it** (2026-08-24). The Clerk branch was
+  built against a repo whose private surface did not exist yet, so it carried a placeholder
+  `/monitor` behind a `(private)` route group. `#9` and `#10` landed the real thing —
+  `/portfolio`, the fund allocation with position-level amounts — and shipped it
+  **unauthenticated by an explicit owner call**, linked from the public homepage as "Investor
+  login", with `noindex` as the stated mitigation and a note in its own header saying to put
+  it behind auth before the site is promoted.
+  This is that. Rebased onto `main`; the placeholder `/monitor` and the `(private)` group are
+  **deleted** rather than kept, because `/portfolio` supersedes them and two private surfaces
+  would be one more than anyone can keep straight. `/portfolio` needs no marker to be
+  protected — it is protected by not appearing in `src/proxy.ts`'s public list, which is what
+  deny-by-default buys.
+  Measured before and after, not assumed: `https://savoycapital.io/portfolio` returned **HTTP
+  200 with the allocation to an anonymous request**; the rebased build returns **307 to
+  `/sign-in`** and serves no page content at all.
+  Also: `SiteNav` gains an optional `trailing` slot so `/portfolio` can carry Clerk's
+  `<UserButton />` for sign-out — a slot rather than an `auth` flag, so the shared nav still
+  knows nothing about authentication. The landing page's "Investor login" link is unchanged
+  from `main`; it already pointed at `/portfolio`, which now requires a session.
+
+- **The in-app allowlist is removed; restricted sign-up is the whole boundary** (2026-08-24,
+  owner's call). `SAVOY_ALLOWED_PHONES` and `src/lib/auth.ts` are deleted, and
+  `(private)/layout.tsx` no longer refuses anyone — Clerk's `sign_up.mode: "restricted"` means
+  an account cannot exist without an invitation, so "signed in" and "allowed in" are the same
+  statement and `src/proxy.ts` enforcing one enforces both.
+  **The owner's objection was the right one:** putting user identities in an env var means a
+  redeploy to add a person and a list that drifts from the invitations it mirrors. That is not
+  how this is normally done, and the reason it was built that way had expired — the allowlist
+  was designed when the instance was `sign_up.mode: "public"`, where a session genuinely proved
+  nothing. Restricting sign-up removed the premise.
+  **What it costs, recorded because it is silent:** the security boundary now lives in a Clerk
+  Dashboard toggle that no code here can see. If sign-up returns to `public`, `/monitor` opens
+  to anyone who signs up and nothing notices. GOTCHA 3 is a one-line curl against a public
+  endpoint that answers it; treat that setting as code.
+  Same day, before this: the allowlist had been rewritten from emails to **phone numbers**,
+  after reading the live instance showed it identifies users by phone with email off — an email
+  allowlist would have rejected the principals along with everyone else. That work is gone with
+  the allowlist, but the finding is not: `firstName` is the only reliable display value on this
+  instance, kept as GOTCHA 9.
+  Also fixed today: **Cloudflare Error 1000** on the Clerk DNS records (proxied instead of
+  DNS-only) — `clerk.` now serves real Clerk JSON, `accounts.` still shows an interstitial and
+  wants the same fix; and sign-up mode was moved from `public` to `restricted`.
+
+- **Clerk is wired up: the auth boundary exists, and it is closed by an allowlist**
+  (2026-08-23). `@clerk/nextjs` 7.8, `<ClerkProvider>` in the root layout with the `C`
+  palette mapped onto Clerk's appearance variables (no raw hex reaches its components), a
+  styled `/sign-in`, a `(private)` route group, and `/monitor` as its first — deliberately
+  empty — page.
+  **Two layers, not one.** `src/proxy.ts` decides whether *somebody* is signed in;
+  `src/lib/auth.ts` decides whether that someone is one of ours, against
+  `SAVOY_ALLOWED_EMAILS`. The second layer is the point: Clerk alone cannot tell you whether
+  a stranger may create an account — that is a Dashboard setting no one can verify from this
+  repo. Rationale and the fail-closed cost are in DECISIONS.
+  Route protection is **deny-by-default**: the public routes are enumerated and everything
+  else needs a session, so a forgotten private page fails shut and a forgotten public page
+  merely asks for a login.
+  **A real defect was found by testing rather than shipped.** The first smoke test redirected
+  signed-out visitors to Clerk's hosted portal on a `*.accounts.dev` domain, which would have
+  left the styled `/sign-in` page as dead code. `src/proxy.ts` now sets `unauthenticatedUrl`
+  explicitly. GOTCHA 1 in the playbook.
+  Verified end to end against a running production server: public routes 200, `/monitor` and
+  unknown routes 307 to `/sign-in` **on this domain** with `redirect_url` preserved, the
+  landing page still server-rendering all three investments, and `next build` passing with
+  the Clerk keys *unset* (so the Railway build cannot break before the keys land). The
+  allowlist logic was separately exercised over 12 cases — fail-closed on unset, empty and
+  whitespace-only lists, unverified addresses rejected, case/whitespace tolerance, secondary
+  verified addresses accepted, lookalike domain rejected.
+  **Not live.** Four steps need a person with the Clerk Dashboard — create the app, restrict
+  sign-up to invitation-only, invite Rodney and Jett, set the env vars — and until then the
+  monitor correctly refuses everyone. The public "Investor login" link still points at
+  `/coming-soon` on purpose; flipping it to `/sign-in` is the owner's call.
+  Also: the proxy lives at `src/proxy.ts`, not `src/middleware.ts` — Next 16.3 deprecated the
+  old name and warns on every build. First playbook in the repo: `PLAYBOOKS/auth-clerk.md`.
+
 - **Carousel arrows drop to 36px at every width; the tap-target rule amended to allow it**
   (2026-08-23, owner). Second deliberate divergence of `design/` from theAPlink, and the second
   amendment to the same principle. The blanket ≥44×44px floor now carves out a control that is

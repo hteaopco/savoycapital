@@ -16,4 +16,6 @@ What belongs in one:
   by number from a bug entry or a decision
 - what is deliberately *not* built, and why, where that would otherwise get re-proposed
 
-_Empty. Nothing is operational yet._
+| File | Subsystem |
+|---|---|
+| `auth-clerk.md` | Authentication and the private-surface authorization boundary (Clerk). |
