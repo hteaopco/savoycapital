@@ -308,6 +308,12 @@ Newest first.
     it discoverable, and it should happen when the owner has invited the users and set the
     keys — not as a side effect of wiring the library up. It is a one-line change in
     `src/app/page.tsx` when they want it.
+  - **SUPERSEDED on the link only, 2026-08-24.** That change has since happened: the nav
+    reads **"Investor Portal" → `/portal`**, and because `/portal` is protected the login is
+    already discoverable via the 307 to `/sign-in`. `/coming-soon` is orphaned. The rest of
+    this entry stands unchanged — there is still no `/sign-up` route, and `<ClerkProvider>`
+    still carries no `signUpUrl`. Left in place rather than rewritten because this file is
+    the record of what was decided when.
 
 - **Clerk's redirect target is set in code, not by env var (2026-08-23).** `src/proxy.ts`
   passes an explicit `unauthenticatedUrl` to `auth.protect()`. Without it Clerk sends

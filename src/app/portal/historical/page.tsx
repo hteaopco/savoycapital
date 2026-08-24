@@ -12,8 +12,12 @@ import { PortalShell } from "@/components/PortalShell";
  * on a person, so this page waits for it rather than inventing a shape that the
  * schema would then have to match.
  *
- * Not authenticated — see the note on the portfolio page. `noindex` for the
- * same reason, and it comes off when auth goes on.
+ * **Authenticated.** `src/proxy.ts` requires a session for every route not on
+ * its short public list, so protection comes from this path being ABSENT from
+ * that list. Do not add it there.
+ *
+ * `noindex` stays. It is no longer load-bearing now that a crawler cannot reach
+ * the page at all, but a private surface has no business in an index either way.
  */
 export const metadata: Metadata = {
   title: "Historical — Savoy Capital",

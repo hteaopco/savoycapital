@@ -27,12 +27,14 @@ routes; everything else requires a session. The inverse — list the private rou
 rest open — fails in the dangerous direction, because a new page under the monitor would ship
 public until someone remembered it.
 
-**The private surface is `/portal`** (`src/app/portal/page.tsx`) — the fund allocation
-and its position-level amounts. It is protected by being **absent from the public list
-above**, not by anything on the page itself. There is no marker in the file that makes it
-private, which is the deny-by-default trade: adding a route is safe, and adding one to the
-public list is the dangerous edit. Review changes to that list the way you would review a
-change to a permission.
+**The private surface is the whole `/portal` section**, not a single page. `/portal`
+itself (`src/app/portal/page.tsx`) is a redirect; the fund allocation and its position-level
+amounts live at `/portal/portfolio` (`src/app/portal/portfolio/page.tsx`), and
+`/portal/historical` is an empty shell waiting on the position schema. Each is protected by
+being **absent from the public list above**, not by anything on the page itself. There is no
+marker in any of those files that makes them private, which is the deny-by-default trade:
+adding a route is safe, and adding one to the public list is the dangerous edit. Review
+changes to that list the way you would review a change to a permission.
 
 ### What was removed, and the risk that came with it
 
@@ -69,17 +71,22 @@ refuses everyone, including the principals.
    `savoycapital.io` — and set them **DNS only** if the zone is on Cloudflare. See
    GOTCHA 8; getting this wrong is silent until someone tries to sign in.
 
-Then, if the owner wants the login reachable from the public site, flip the nav link in
-`src/app/page.tsx` from `/coming-soon` to `/sign-in`. **That is an owner call, not a
-cleanup task** — it is what makes the login publicly discoverable, and it was left pointing
-at `/coming-soon` deliberately.
+The login is **already** reachable from the public site, so this is not an outstanding
+bring-up step. `src/app/page.tsx` renders `<SiteNav action={{ href: "/portal", label:
+"Investor Portal" }} />`, and because `/portal` is protected a signed-out visitor who clicks
+it is 307'd to `/sign-in`. Pointing the nav straight at `/sign-in` would only skip that one
+redirect; doing so is an owner call, not a cleanup task. `/coming-soon` is still a public
+route, but nothing links to it any more.
 
 ### Verifying bring-up worked
 
 - Signed out, `/portal` → 307 to `/sign-in?redirect_url=...` **on this domain**. A redirect
-  to a `*.accounts.dev` host means GOTCHA 1 has regressed.
-- Signed in as an invited user → `/portal` renders the allocation, with `<UserButton />`
-  in the top bar to sign out.
+  to a `*.accounts.dev` host means GOTCHA 1 has regressed. Check `/portal/portfolio` and
+  `/portal/historical` too: each is protected on its own, not by the section prefix.
+- Signed in as an invited user → `/portal` redirects to `/portal/portfolio`, which renders
+  the allocation. Sign-out is in **`PortalShell`'s own account block at the foot of the
+  sidebar** — not Clerk's `<UserButton />`, which the owner replaced on 2026-08-24. The
+  portal does not render `SiteNav` at all.
 - The instance still reports `"mode": "restricted"` (GOTCHA 3).
 
 ---
