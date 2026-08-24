@@ -6,41 +6,50 @@ Subsystem status: **built, and it grants nothing.** Read § 1 before assuming ot
 
 ---
 
-## 1. This is a RECORD, not an account. Read this first.
+## 1. Clerk is the roster. This app stores only role and fund.
 
-**Creating a user here does not create a Clerk account, does not send an invitation, and
-does not let anyone sign in. Deleting one does not revoke anything.**
+Owner, 2026-08-24: *"can we just read users from clerk?"* — **yes, and that is what it
+does.** The Users tab lists real Clerk accounts via `clerkClient().users.getUserList()`.
+Names and phone numbers are read live; nothing about a person is duplicated here.
 
-Access is what it has always been: the Clerk instance is set to **restricted sign-up**, so an
-account cannot exist unless a principal invited it from the Clerk Dashboard. That setting is
-the boundary — `PLAYBOOKS/auth-clerk.md` § 1. This table sits beside it and is read by
-nothing.
+The first version kept its own `User` table — first name, last name, phone — and it was the
+wrong shape. **Two lists of people that nothing reconciles will disagree**, and the one that
+gates sign-in is Clerk's, so the other is decoration at best and a lie about who has access
+at worst. That table was dropped.
 
-**`Role` is stored and enforced nowhere.** It mirrors `Audience` so the eventual
-authorization layer has a column to read. Until that layer exists, a `MANAGEMENT` row and an
-`INVESTOR` row carry identical power: whatever their Clerk account has, which is everything
-behind the sign-in.
+### You cannot invite from this app, and that is a fact about the instance
 
-Why this warning is repeated in the schema, in both API routes, on the screen itself and
-here: **a table of people with a Role column is indistinguishable from a permissions system
-at a glance.** The failure it invites is silent — somebody removes a row, believes the person
-is out, and they are not. A doc alone would not stop that, which is why the screen says it
-too.
+`clerkClient().invitations.createInvitation()` takes **`emailAddress` and has no phone
+field** — read from `@clerk/backend`'s own types, not assumed — and this instance identifies
+people by phone (auth-clerk GOTCHA 9). `users.createUser()` *does* take a phone, but it mints
+an account outright rather than inviting one, which is a different decision about who may
+create an identity and belongs to the Clerk seat.
 
-### What would make it real
+**So accounts are still invited from the Clerk Dashboard.** This app decides what those
+accounts can see — or will, once § 1a is true.
 
-An authorization layer that reads this table, keyed by the Clerk identity. The join is
-**phone**: the instance identifies people by phone, not email (auth-clerk GOTCHA 9), which is
-why `User.phone` is unique. Nothing implements that join yet.
+### 1a. Nothing enforces the role yet
 
----
+Assigning a fund and role writes a `UserRole` row and changes nothing else. Everyone signed
+in still sees everything. **Enforcement is a separate change**, sequenced after this one on
+the owner's call (2026-08-24) so the assignments exist before anything depends on them — the
+alternative risks a deploy where nobody has a row and the portal locks its own owners out,
+with no way to reach Postgres from a sandbox to undo it.
+
+When it lands, the agreed scope is: **an investor sees the investor-facing documents for
+their fund, and that fund's portfolio** — fund size, allocation, positions. Not the Deal
+Room, not management-facing files, not another fund.
 
 ## 2. Shape
 
 | Model | Holds |
 |---|---|
-| `Fund` | `name`, optional `inceptionDate` (a `DATE`), its deals and users |
-| `User` | `firstName`, `lastName`, unique `phone`, `fundId`, `role`, `createdBy` |
+| `Fund` | `name`, optional `inceptionDate` (a `DATE`), its deals and role assignments |
+| `UserRole` | unique `clerkUserId`, `fundId`, `role`, `assignedBy` |
+
+**Keyed by `clerkUserId`, not phone.** Phone matching would need normalisation — `+1 555 000
+1111` and `5550001111` are one person and two strings — and getting that wrong on the field
+that decides what somebody can see fails quietly and in the dangerous direction.
 
 `Fund → User` is `onDelete: Restrict`, same as `Fund → Deal`. A fund with anything attached
 cannot be deleted, which is why **there is no fund delete route** — it would fail at the
@@ -54,12 +63,14 @@ is a calendar day, and a time component invites a timezone to move it across mid
 ### Routes
 
 ```
-GET  /api/funds          list, with per-fund user and deal counts
-POST /api/funds          { name, inceptionDate? }
-GET  /api/users          list, with the fund name
-POST /api/users          { firstName, lastName, phone, fundId, role }
-DELETE /api/users/<id>   remove a row — revokes nothing
+GET    /api/funds                     list, with per-fund assignment and deal counts
+POST   /api/funds                     { name, inceptionDate? }
+GET    /api/users                     CLERK'S accounts, each joined to its assignment
+PUT    /api/users/<clerkUserId>/role  { role, fundId } — upsert
+DELETE /api/users/<clerkUserId>/role  clear the assignment; Clerk access is untouched
 ```
+
+There is no user create or delete. An account is born and killed in the Clerk Dashboard.
 
 All protected by absence from `src/proxy.ts`'s public list, with an explicit `auth()` in each
 handler. Do not add any of them to that list: `/api/users` returns phone numbers.
@@ -83,9 +94,9 @@ insert *and* caught after it — the check can lose a race, the catch cannot.
 route and the page slice `toISOString()` instead, which keeps the calendar day that was
 entered. If a date ever displays a day early, this is why.
 
-**GOTCHA 4 — no edit route.** Users can be added and removed, not amended. The field most
-likely to need it is `phone`, which is also the unique one, so a PATCH owes the same
-collision handling `POST` has. Delete and re-add covers it until then.
+**GOTCHA 4 — the account list is capped at 100 and says so.**
+`CLERK_LIST_LIMIT`. Past that the screen shows a notice rather than silently displaying a
+prefix; paging is not built. The population is two.
 
 **GOTCHA 5 — `/fund-users` is `force-dynamic`, and needs to be.**
 It queries Postgres in a server component. Without it Next tries to prerender at build time
@@ -99,9 +110,10 @@ mount. Re-adding a `useEffect` that fetches will fail `npm run lint`.
 
 ## 4. Deliberately not built
 
-- **Anything that turns a row into access.** § 1.
-- **Editing a user, renaming a fund, deleting a fund.** Create and remove only.
-- **Inviting from this screen.** It would need a Clerk backend call and a decision about who
-  may invite; that is the Clerk seat's surface, not this one's.
+- **Enforcement.** § 1a — next change, scope already agreed.
+- **Inviting or creating accounts.** § 1 — the instance is phone-first and Clerk's invitations
+  are email-only. Changing that is the Clerk seat's call.
+- **Renaming or deleting a fund.** Create only.
+- **Paging the account list.** GOTCHA 4.
 - **More than two roles.** `MANAGEMENT` and `INVESTOR` mirror `Audience` so the two agree.
   A third is a migration and a conversation about what it would mean.

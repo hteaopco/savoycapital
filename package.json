@@ -2,7 +2,7 @@
   "name": "savoycapital",
   "version": "0.1.0",
   "private": true,
-  "description": "Savoy Capital \u2014 public site and investment portfolio monitor.",
+  "description": "Savoy Capital — public site and investment portfolio monitor.",
   "engines": {
     "node": ">=20.9.0"
   },
@@ -25,7 +25,8 @@
     "next": "^16.3.0",
     "prisma": "^7.9.1",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

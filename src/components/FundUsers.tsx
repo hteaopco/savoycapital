@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useId, useState } from "react";
-import { Building2, Plus, Trash2, TriangleAlert, Users } from "lucide-react";
+import { Building2, Plus, TriangleAlert, Users } from "lucide-react";
 import { C } from "./palette";
 
 /**
@@ -12,17 +12,22 @@ import { C } from "./palette";
  * > Create New and name of fund + inception date ... users can be added to a
  * > fund"
  *
- * ## The notice at the top of the Users tab is the most important thing here
+ * ## The Users tab lists CLERK'S accounts, not a roster of its own
  *
- * **This screen creates RECORDS, not accounts.** Adding somebody does not create
- * a Clerk account, does not send an invitation, and does not let them sign in.
- * Removing somebody does not revoke anything. Access is Clerk's restricted
- * sign-up plus an invitation from the Clerk Dashboard, and that has not changed.
+ * Owner, 2026-08-24: *"can we just read users from clerk?"* — yes, and that is
+ * now what this does. The first version kept its own list of names and phone
+ * numbers, which was the wrong shape: two lists of people that nothing
+ * reconciles will disagree, and the one that gates sign-in is Clerk's.
  *
- * A table of people with a Role column beside it looks exactly like a
- * permissions system. It is not one, and the failure that matters — somebody
- * believing a person was removed when they were not — is silent. So the screen
- * says it rather than leaving it to a doc nobody opens.
+ * So every row here is a real account that can really sign in. What this app
+ * adds is the two facts Clerk has no opinion about — **which fund, and what
+ * role** — and those are the only things the controls change.
+ *
+ * **Assigning a role still grants nothing today.** Nothing reads it yet;
+ * enforcement is a separate change, sequenced after this one so the assignments
+ * exist before anything depends on them. The notice on the tab says so, because
+ * a Role dropdown beside a list of real accounts looks exactly like it is
+ * already deciding something.
  *
  * ## Data loading
  *
@@ -37,21 +42,32 @@ export type Fund = {
   id: number;
   name: string;
   inceptionDate: string | null;
-  userCount: number;
+  assignedCount: number;
   dealCount: number;
 };
 
-export type RosterUser = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  role: "MANAGEMENT" | "INVESTOR";
-  fundId: number;
-  fundName: string;
+export type Role = "MANAGEMENT" | "INVESTOR";
+
+/** A Clerk account, plus whatever this app has assigned to it. */
+export type Person = {
+  clerkUserId: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  email: string | null;
+  /** `null` until somebody assigns one. */
+  role: Role | null;
+  fundId: number | null;
+  fundName: string | null;
 };
 
-const ROLES: RosterUser["role"][] = ["MANAGEMENT", "INVESTOR"];
+const ROLES: Role[] = ["MANAGEMENT", "INVESTOR"];
+
+/** Clerk can leave both names blank; a blank row reads as broken, not empty. */
+function personLabel(p: Person): string {
+  const name = [p.firstName, p.lastName].filter(Boolean).join(" ").trim();
+  return name || p.phone || p.email || p.clerkUserId;
+}
 
 const card: React.CSSProperties = {
   borderRadius: 12,
@@ -92,18 +108,6 @@ const primaryButton: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 700,
   fontFamily: "inherit",
-};
-const secondaryButton: React.CSSProperties = {
-  gap: 6,
-  padding: "8px 12px",
-  borderRadius: 8,
-  border: `1px solid ${C.border}`,
-  background: C.bg,
-  color: C.text,
-  fontSize: 12,
-  fontWeight: 600,
-  fontFamily: "inherit",
-  textDecoration: "none",
 };
 const numCell: React.CSSProperties = {
   fontVariantNumeric: "tabular-nums",
@@ -200,29 +204,38 @@ function Toggle({
 
 export function FundUsers({
   initialFunds,
-  initialUsers,
+  initialPeople,
+  truncated,
+  listLimit,
 }: {
   initialFunds: Fund[] | null;
-  initialUsers: RosterUser[] | null;
+  initialPeople: Person[] | null;
+  truncated: boolean;
+  /**
+   * Passed down rather than imported. `@/lib/clerk-users` carries
+   * `import "server-only"`, and a client component reaching into it is a build
+   * error — which is exactly what that import is for, and it caught this.
+   */
+  listLimit: number;
 }) {
   const [tab, setTab] = useState<"funds" | "users">("funds");
   const [funds, setFunds] = useState<Fund[]>(initialFunds ?? []);
-  const [users, setUsers] = useState<RosterUser[]>(initialUsers ?? []);
+  const [people, setPeople] = useState<Person[]>(initialPeople ?? []);
 
   const refresh = useCallback(async () => {
     const [f, u] = await Promise.all([fetch("/api/funds"), fetch("/api/users")]);
     if (f.ok) setFunds((await f.json()).funds);
-    if (u.ok) setUsers((await u.json()).users);
+    if (u.ok) setPeople((await u.json()).people);
   }, []);
 
-  // `null` means "not configured", which is a different thing from "configured
-  // and empty" — conflating them would show "create your first fund" on a
-  // broken deploy.
-  if (initialFunds === null || initialUsers === null) {
+  // The two halves fail independently and are reported separately: a missing
+  // CLERK_SECRET_KEY and a missing DATABASE_URL send you to different variables,
+  // and one error covering both would send you to the wrong one.
+  if (initialFunds === null) {
     return (
       <Notice tone="error">
-        The database is not configured, so funds and users cannot be read. Set{" "}
-        <strong>DATABASE_URL</strong> on the app service in Railway.
+        The database is not configured, so funds and role assignments cannot be read.
+        Set <strong>DATABASE_URL</strong> on the app service in Railway.
       </Notice>
     );
   }
@@ -233,7 +246,13 @@ export function FundUsers({
       {tab === "funds" ? (
         <FundsTab funds={funds} onChanged={refresh} />
       ) : (
-        <UsersTab users={users} funds={funds} onChanged={refresh} />
+        <UsersTab
+          people={initialPeople === null ? null : people}
+          funds={funds}
+          truncated={truncated}
+          listLimit={listLimit}
+          onChanged={refresh}
+        />
       )}
     </div>
   );
@@ -353,7 +372,7 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
                   </div>
                 </div>
                 <div style={{ fontSize: 11, color: C.textMuted, ...numCell }}>
-                  {f.userCount} {f.userCount === 1 ? "user" : "users"} · {f.dealCount}{" "}
+                  {f.assignedCount} assigned · {f.dealCount}{" "}
                   {f.dealCount === 1 ? "deal" : "deals"}
                 </div>
               </div>
@@ -366,217 +385,149 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
 }
 
 function UsersTab({
-  users,
+  people,
   funds,
+  truncated,
+  listLimit,
   onChanged,
 }: {
-  users: RosterUser[];
+  people: Person[] | null;
   funds: Fund[];
+  truncated: boolean;
+  listLimit: number;
   onChanged: () => void;
 }) {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [fundId, setFundId] = useState<string>(funds[0] ? String(funds[0].id) : "");
-  const [role, setRole] = useState<RosterUser["role"]>("INVESTOR");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  if (people === null) {
+    return (
+      <Notice tone="error">
+        Clerk&apos;s backend API is not configured, so the account list cannot be read.
+        Set <strong>CLERK_SECRET_KEY</strong> on the app service in Railway.
+      </Notice>
+    );
+  }
 
-  const ready = firstName.trim() && lastName.trim() && phone.trim() && fundId;
-
-  const create = async () => {
-    if (!ready || busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          phone: phone.trim(),
-          fundId: Number(fundId),
-          role,
-        }),
-      });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body?.error ?? "Could not add the user.");
-      setFirstName("");
-      setLastName("");
-      setPhone("");
-      onChanged();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not add the user.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const unassigned = people.filter((p) => p.role === null).length;
 
   return (
     <div className="flex flex-col" style={{ gap: 14 }}>
       {/*
-        The whole reason this screen needs a warning. A roster beside a Role
-        column reads as a permissions system; it is not one, and the failure —
-        believing somebody was removed when they were not — is silent.
+        A Role dropdown beside a list of real accounts looks exactly like it is
+        already deciding something. It is not, yet — and the failure that
+        misreading invites is silent, so it is said on the screen rather than
+        only in a doc.
       */}
       <Notice tone="warn">
         <span className="inline-flex items-center" style={{ gap: 6, fontWeight: 700 }}>
           <TriangleAlert size={13} />
-          This is a record, not an account.
+          Roles are not enforced yet.
         </span>{" "}
-        Adding someone here does not create a login, send an invitation, or grant
-        access — and removing them does not revoke it. Accounts are invited from the
-        Clerk Dashboard. <strong>Role is stored but not yet enforced:</strong> anyone
-        who can sign in sees everything.
+        These are the real Clerk accounts that can sign in. Assigning a fund and role
+        stores it, but nothing reads it — everyone signed in still sees everything.
+        Enforcement lands as a separate change once these assignments exist.
       </Notice>
 
-      <div style={card}>
-        <div className="flex items-center" style={{ ...cardHeader, gap: 8 }}>
-          <Plus size={14} color={C.accent} />
-          Add User
-        </div>
-        <div className="flex flex-col" style={{ gap: 12, padding: 16 }}>
-          {error ? <Notice tone="error">{error}</Notice> : null}
-          {funds.length === 0 ? (
-            <Notice tone="muted">Create a fund first — a user belongs to one.</Notice>
-          ) : (
-            <>
-              <div className="grid gap-3 md:grid-cols-2">
-                <Field labelText="First name">
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    style={input}
-                  />
-                </Field>
-                <Field labelText="Last name">
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    style={input}
-                  />
-                </Field>
-                <Field labelText="Phone">
-                  {/*
-                    `type="tel"`, and stored exactly as typed. The Clerk instance
-                    identifies people by phone, so this is the field that would
-                    join a roster row to a real account — but normalising it here
-                    would guess at a country code, and guessing wrong on the one
-                    field that has to match Clerk is worse than storing what was
-                    entered. It is unique; the API says whose it is on a clash.
-                  */}
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+1 555 000 1111"
-                    style={input}
-                  />
-                </Field>
-                <Field labelText="Fund">
-                  <select
-                    value={fundId}
-                    onChange={(e) => setFundId(e.target.value)}
-                    style={input}
-                  >
-                    {funds.map((f) => (
-                      <option key={f.id} value={f.id}>
-                        {f.name}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field labelText="Role">
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as RosterUser["role"])}
-                    style={input}
-                  >
-                    {ROLES.map((r) => (
-                      <option key={r} value={r}>
-                        {r === "MANAGEMENT" ? "Management" : "Investor"}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
-              <button
-                onClick={() => void create()}
-                disabled={busy || !ready}
-                className="inline-flex items-center justify-center self-start min-h-[44px] md:min-h-0"
-                style={{ ...primaryButton, opacity: busy || !ready ? 0.5 : 1 }}
-              >
-                <Plus size={14} />
-                {busy ? "Adding…" : "Add User"}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+      {funds.length === 0 ? (
+        <Notice tone="muted">Create a fund first — an assignment needs one.</Notice>
+      ) : null}
+
+      {truncated ? (
+        <Notice tone="muted">
+          Showing the first {listLimit} accounts. There are more, and this screen
+          does not page yet.
+        </Notice>
+      ) : null}
 
       <div style={card}>
-        <div className="flex items-center" style={{ ...cardHeader, gap: 8 }}>
+        <div className="flex flex-wrap items-center" style={{ ...cardHeader, gap: 8 }}>
           <Users size={14} color={C.accent} />
-          Roster
+          <span style={{ flex: 1 }}>Clerk Accounts</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, ...numCell }}>
+            {people.length} {people.length === 1 ? "account" : "accounts"}
+            {unassigned > 0 ? ` · ${unassigned} unassigned` : ""}
+          </span>
         </div>
-        {users.length === 0 ? (
-          <div style={{ padding: 16, fontSize: 13, color: C.textMuted }}>No users yet.</div>
+
+        {people.length === 0 ? (
+          <div style={{ padding: 16, fontSize: 13, color: C.textMuted }}>
+            No accounts on the Clerk instance yet. They are invited from the Clerk
+            Dashboard — this screen cannot create one.
+          </div>
         ) : (
           <div className="flex flex-col">
-            {users.map((u) => (
-              <UserRow key={u.id} user={u} onChanged={onChanged} />
+            {people.map((p) => (
+              <PersonRow key={p.clerkUserId} person={p} funds={funds} onChanged={onChanged} />
             ))}
           </div>
         )}
       </div>
+
+      <Notice tone="muted">
+        Accounts are created by invitation in the Clerk Dashboard, not here. Inviting
+        from this app was considered and does not fit: Clerk&apos;s invitations require an
+        email address, and this instance identifies people by phone.
+      </Notice>
     </div>
   );
 }
 
 /**
- * A labelled control.
+ * One Clerk account, with its fund and role.
  *
- * The `<label>` WRAPS the control rather than pointing at it with `htmlFor`.
- * Wrapping associates the label with the first form control inside it, which
- * needs no id to be generated and threaded through — and `htmlFor` aimed at a
- * wrapper `<div>` associates with nothing at all, which is a label that looks
- * right in the markup and does nothing for a screen reader.
+ * Both controls save immediately on change rather than behind a Save button.
+ * There are two fields and the write is an upsert, so a button would add a step
+ * and a second state — "changed but not saved" — worth having only when a form
+ * is long enough to want reviewing before it commits.
  */
-function Field({ labelText, children }: { labelText: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col" style={{ gap: 6 }}>
-      <span style={label}>{labelText}</span>
-      {children}
-    </label>
+function PersonRow({
+  person,
+  funds,
+  onChanged,
+}: {
+  person: Person;
+  funds: Fund[];
+  onChanged: () => void;
+}) {
+  const [role, setRole] = useState<Role | "">(person.role ?? "");
+  const [fundId, setFundId] = useState<string>(
+    person.fundId ? String(person.fundId) : funds[0] ? String(funds[0].id) : "",
   );
-}
-
-function UserRow({ user, onChanged }: { user: RosterUser; onChanged: () => void }) {
-  const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const remove = async () => {
-    if (busy) return;
-    setBusy(true);
+  const save = async (nextRole: Role | "", nextFundId: string) => {
     setError(null);
+    // Clearing the role clears the whole assignment — a fund with no role is a
+    // half-answer nothing could act on.
+    if (!nextRole) {
+      setBusy(true);
+      try {
+        const res = await fetch(`/api/users/${person.clerkUserId}/role`, { method: "DELETE" });
+        if (!res.ok) throw new Error();
+        onChanged();
+      } catch {
+        setError("Could not clear. Try again.");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+    if (!nextFundId) return;
+    setBusy(true);
     try {
-      const res = await fetch(`/api/users/${user.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed.");
-      setConfirming(false);
+      const res = await fetch(`/api/users/${person.clerkUserId}/role`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: nextRole, fundId: Number(nextFundId) }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error ?? "Could not save.");
       onChanged();
-    } catch {
-      setError("Could not remove. Try again.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save.");
+    } finally {
       setBusy(false);
     }
-    // Not clearing `busy` on success: the row is about to unmount, and
-    // re-enabling first invites a second DELETE on an id that is already gone.
   };
-
-  const isManagement = user.role === "MANAGEMENT";
 
   return (
     <div
@@ -585,7 +536,7 @@ function UserRow({ user, onChanged }: { user: RosterUser; onChanged: () => void 
     >
       <div className="min-w-0 flex-1">
         <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-          {user.firstName} {user.lastName}
+          {personLabel(person)}
         </div>
         <div
           style={{
@@ -596,71 +547,70 @@ function UserRow({ user, onChanged }: { user: RosterUser; onChanged: () => void 
             textOverflow: "ellipsis",
           }}
         >
-          {error ?? `${user.phone} · ${user.fundName}`}
+          {error ?? person.phone ?? person.email ?? "no phone or email on the account"}
         </div>
       </div>
 
       {/*
-        Neutral, not tinted by role. A badge's tone encodes STATE, never
-        category (DECISIONS 2026-08-24) — and "Management" is a category. Giving
-        it accent or green here would also imply the role does something, which
-        is the exact misreading the notice above exists to prevent.
+        Unassigned is called out rather than left as an empty dropdown. Once the
+        enforcement change lands, an account with no assignment is the one that
+        behaves differently, so it is worth being able to see at a glance which
+        those are.
       */}
-      <span
-        style={{
-          padding: "3px 8px",
-          borderRadius: 4,
-          border: `1px solid ${C.border}`,
-          background: C.bgAlt,
-          color: C.textMuted,
-          fontSize: 10,
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: ".06em",
-          flexShrink: 0,
-        }}
-      >
-        {isManagement ? "Management" : "Investor"}
-      </span>
-
-      {confirming ? (
-        <div className="flex items-center" style={{ gap: 6, flexShrink: 0 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: C.red }}>Remove?</span>
-          <button
-            onClick={() => void remove()}
-            disabled={busy}
-            className="inline-flex items-center min-h-[44px] md:min-h-0"
-            style={{
-              ...secondaryButton,
-              border: `1px solid ${C.redBorder}`,
-              background: C.redBg,
-              color: C.red,
-            }}
-          >
-            {busy ? "Removing…" : "Yes, remove"}
-          </button>
-          <button
-            onClick={() => {
-              setConfirming(false);
-              setError(null);
-            }}
-            disabled={busy}
-            className="inline-flex items-center min-h-[44px] md:min-h-0"
-            style={secondaryButton}
-          >
-            Cancel
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => setConfirming(true)}
-          aria-label={`Remove ${user.firstName} ${user.lastName}`}
-          className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
-          style={{ ...secondaryButton, padding: "8px 10px", color: C.textMuted, flexShrink: 0 }}
+      {person.role === null ? (
+        <span
+          style={{
+            padding: "3px 8px",
+            borderRadius: 4,
+            border: `1px solid ${C.amberBorder}`,
+            background: C.amberBg,
+            color: C.amber,
+            fontSize: 10,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: ".06em",
+            flexShrink: 0,
+          }}
         >
-          <Trash2 size={13} />
-        </button>
-      )}
+          Unassigned
+        </span>
+      ) : null}
+
+      <select
+        value={fundId}
+        onChange={(e) => {
+          setFundId(e.target.value);
+          if (role) void save(role, e.target.value);
+        }}
+        disabled={busy || funds.length === 0}
+        aria-label={`Fund for ${personLabel(person)}`}
+        style={{ ...input, width: "auto", minWidth: 150, fontSize: 12, padding: "8px 10px" }}
+      >
+        {funds.map((f) => (
+          <option key={f.id} value={f.id}>
+            {f.name}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={role}
+        onChange={(e) => {
+          const next = e.target.value as Role | "";
+          setRole(next);
+          void save(next, fundId);
+        }}
+        disabled={busy || funds.length === 0}
+        aria-label={`Role for ${personLabel(person)}`}
+        style={{ ...input, width: "auto", minWidth: 140, fontSize: 12, padding: "8px 10px" }}
+      >
+        <option value="">— No role —</option>
+        {ROLES.map((r) => (
+          <option key={r} value={r}>
+            {r === "MANAGEMENT" ? "Management" : "Investor"}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

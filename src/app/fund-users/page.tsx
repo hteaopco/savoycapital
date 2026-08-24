@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { C } from "@/components/palette";
-import {
-  FundUsers as FundUsersScreen,
-  type Fund,
-  type RosterUser,
-} from "@/components/FundUsers";
+import { FundUsers as FundUsersScreen, type Person } from "@/components/FundUsers";
+import { CLERK_LIST_LIMIT, listClerkAccounts } from "@/lib/clerk-users";
 import { PortalShell } from "@/components/PortalShell";
 import { getDb } from "@/lib/db";
 
@@ -40,12 +37,16 @@ export default async function FundUsersPage() {
   // `null` means "not configured", which the screen reports as such. Empty
   // arrays mean "configured, nothing yet" — a different thing, and conflating
   // them would show "create your first fund" on a broken deploy.
-  const [initialFunds, initialUsers]: [Fund[] | null, RosterUser[] | null] = db
-    ? await Promise.all([
-        db.fund
+  // Clerk is the roster; this app supplies only role and fund. The two halves
+  // fail independently and the screen distinguishes them, because a missing
+  // CLERK_SECRET_KEY and a missing DATABASE_URL send you to different variables.
+  const [directory, initialFunds, assignments] = await Promise.all([
+    listClerkAccounts(),
+    db
+      ? db.fund
           .findMany({
             orderBy: { id: "asc" },
-            include: { _count: { select: { users: true, deals: true } } },
+            include: { _count: { select: { roles: true, deals: true } } },
           })
           .then((rows) =>
             rows.map((f) => ({
@@ -57,35 +58,45 @@ export default async function FundUsersPage() {
               inceptionDate: f.inceptionDate
                 ? f.inceptionDate.toISOString().slice(0, 10)
                 : null,
-              userCount: f._count.users,
+              assignedCount: f._count.roles,
               dealCount: f._count.deals,
             })),
-          ),
-        db.user
-          .findMany({
-            orderBy: [{ fundId: "asc" }, { lastName: "asc" }, { firstName: "asc" }],
-            include: { fund: { select: { name: true } } },
-          })
-          .then((rows) =>
-            rows.map((u) => ({
-              id: u.id,
-              firstName: u.firstName,
-              lastName: u.lastName,
-              phone: u.phone,
-              role: u.role,
-              fundId: u.fundId,
-              fundName: u.fund.name,
-            })),
-          ),
-      ])
-    : [null, null];
+          )
+      : Promise.resolve(null),
+    db
+      ? db.userRole.findMany({ include: { fund: { select: { name: true } } } })
+      : Promise.resolve(null),
+  ]);
+
+  const byClerkId = new Map((assignments ?? []).map((a) => [a.clerkUserId, a]));
+
+  const initialPeople: Person[] | null = directory
+    ? directory.accounts.map((a) => {
+        const assigned = byClerkId.get(a.id);
+        return {
+          clerkUserId: a.id,
+          firstName: a.firstName,
+          lastName: a.lastName,
+          phone: a.phone,
+          email: a.email,
+          role: assigned?.role ?? null,
+          fundId: assigned?.fundId ?? null,
+          fundName: assigned?.fund.name ?? null,
+        };
+      })
+    : null;
 
   return (
     <PortalShell title="Fund & Users">
       <div className="px-5 py-8 md:px-8 md:py-10">
         <div className="flex flex-col" style={{ gap: 14 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Fund &amp; Users</div>
-          <FundUsersScreen initialFunds={initialFunds} initialUsers={initialUsers} />
+          <FundUsersScreen
+            initialFunds={initialFunds}
+            initialPeople={initialPeople}
+            truncated={directory?.truncated ?? false}
+            listLimit={CLERK_LIST_LIMIT}
+          />
         </div>
       </div>
     </PortalShell>

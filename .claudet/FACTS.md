@@ -28,10 +28,11 @@ investors needs an authorization layer that does not exist, because "signed in" 
 test today. `PLAYBOOKS/storage-r2.md` is the operational detail, and its GOTCHA 1 is the one
 that matters — the bucket's privacy is two dashboard toggles, not code.
 
-**A roster of funds and people exists in Postgres as of 2026-08-24** (`Fund`, `User`), and it
-is a RECORD ONLY — it creates no accounts, grants no access, and is read by nothing. Do not
-read the paragraph below as softened by it: the number of people who can actually sign in is
-still governed entirely by Clerk. `PLAYBOOKS/fund-users.md` § 1.
+**Clerk is the roster.** The app reads the account list from Clerk and stores only what Clerk
+has no opinion about — which fund and what role, in `UserRole`, keyed by Clerk user id
+(2026-08-24). It creates no accounts and grants no access, and **nothing reads the role yet**;
+enforcement is a separate, sequenced change. Do not read the paragraph below as softened by
+any of it: who can sign in is governed entirely by Clerk. `PLAYBOOKS/fund-users.md` § 1.
 
 **The authenticated user population is two people.** Not a growth curve — two. What scales
 is the **number of investments**, and modestly. It is enforced by Clerk being set to

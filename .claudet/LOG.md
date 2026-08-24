@@ -8,6 +8,27 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Clerk becomes the roster; the phone-keyed `User` table is dropped** (owner, 2026-08-24:
+  *"can we just read users from clerk?"*). Answered by reading the SDK rather than from
+  memory, and two of the three answers changed the design.
+  **Yes to reading from Clerk** — `users.getUserList()`. **No to inviting from the app**:
+  `createInvitation` requires `emailAddress` and has no phone field, and this instance
+  identifies people by phone, so an invite flow does not fit without changing how the
+  instance identifies people — the Clerk seat's call. Accounts stay Dashboard-invited.
+  **So the table shipped an hour earlier was the wrong shape** and is dropped. `UserRole`
+  replaces it: `clerkUserId`, `fundId`, `role`. Every row on the Users tab is now a real
+  account that can really sign in, with two dropdowns that save on change. Two lists of people
+  that nothing reconciles will disagree, and the one that gates sign-in is Clerk's.
+  **Still enforces nothing**, deliberately: the owner chose to collect assignments first, so
+  the enforcement change lands against data that exists. Agreed scope for it — an investor
+  sees their fund's investor-facing documents **and** that fund's portfolio; not the Deal Room.
+  `server-only` earned its place: it turned a client component importing the Clerk helper into
+  a build error instead of a runtime leak, and is now a declared dependency rather than a
+  transitive one. The constant it wanted is passed as a prop.
+  Migration diffed against `prisma migrate diff` — identical. Full CI path reproduced: `npm ci`
+  then `next build`, no `DATABASE_URL`, no `CLERK_SECRET_KEY`, no R2 keys.
+  **Not verified: no request has reached Clerk's backend API or Postgres from here.**
+
 - **Fund & Users: a roster that deliberately grants nothing** (owner, 2026-08-24). Second
   screen under Admin, with a Fund | Users toggle. Funds get a name and an optional inception
   date; users get first name, last name, phone, fund and role.

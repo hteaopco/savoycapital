@@ -6,6 +6,39 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **Clerk is the roster; this app stores only role and fund (owner, 2026-08-24).**
+  > "lets make role actually work...can we just read users from clerk? or do i need to add
+  > them here and send to clerk?"
+
+  Read from Clerk. The `User` table shipped hours earlier — first name, last name, phone —
+  is **dropped**, and `UserRole` replaces it: `clerkUserId`, `fundId`, `role`, nothing else.
+  - **Why the first shape was wrong.** Two lists of people that nothing reconciles will
+    disagree, and the one that gates sign-in is Clerk's. The other is decoration at best and
+    a lie about who has access at worst. Every row on the Users tab is now a real account
+    that can really sign in.
+  - **Inviting from the app does not fit this instance, and that is a checked fact.**
+    `createInvitation` takes `emailAddress` and has **no phone field** — read out of
+    `@clerk/backend`'s types — while this instance identifies people by phone (auth-clerk
+    GOTCHA 9). `users.createUser()` would work but mints an account rather than inviting one,
+    which is a different decision and the Clerk seat's. Accounts stay Dashboard-invited.
+  - **Keyed by `clerkUserId`, not phone.** Phone matching needs normalisation, and getting
+    that wrong on the field that decides what somebody sees fails quietly and in the
+    dangerous direction.
+  - **The migration drops the table and migrates nothing.** None of the old data maps: the
+    old rows key on a typed phone, the new ones on a Clerk account id the old table never
+    held.
+
+- **Enforcement ships AFTER the assignments exist, and an investor sees documents plus their
+  fund's portfolio (owner, 2026-08-24).** Two calls, both put to the owner rather than taken.
+  - **Scope.** An investor sees the investor-facing documents for their fund **and that
+    fund's portfolio** — size, allocation, positions. Not the Deal Room, not
+    management-facing files, not another fund. The middle option of three: narrower than
+    read-only-everything, which would have handed the Deal Room to every investor.
+  - **Sequencing.** This change collects assignments and enforces nothing. The alternative —
+    one PR that both assigns and enforces — has a failure mode with no recovery path from
+    here: if it deploys before the owner's own account has a row, a fail-closed check locks
+    the portal's owners out, and a sandbox cannot reach Railway's Postgres to undo it.
+
 - **The roster is a RECORD, not an access list, and the screen says so (owner, 2026-08-24).**
   "Fund & Users" adds `Fund.inceptionDate` and a `User` table — first name, last name, phone,
   fund, role. **None of it grants anything.**
