@@ -8,6 +8,33 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Cloudflare R2 document store, management-only** (2026-08-24). The owner created a bucket
+  for "investors and management" and asked what it needed. The storage half was
+  straightforward; the ask was not, and the useful part of this change was refusing to build
+  past the question.
+  **"Files for investors" collides with the model the app rests on.** `src/proxy.ts` asks one
+  question — is somebody signed in? — and there is deliberately no authorization layer behind
+  it, because sign-up is restricted and the population is two people who both see everything.
+  Give investors Clerk accounts under that model and every investor reaches
+  `/portal/portfolio`: fund size, every position, every amount, plus every other investor's
+  documents. Put to the owner rather than guessed; answer was management-only for now, so
+  `PREFIX.investors` is reserved and no route reads it.
+  Shipped: `src/lib/r2.ts` plus `/api/files` and `/api/files/[...key]`. Bytes stream through
+  the handlers rather than presigned URLs — a presigned URL is valid for its whole TTL to
+  whoever holds it, and streaming means the bucket needs **no CORS policy at all** because the
+  browser never talks to R2. Downloads are always `Content-Disposition: attachment`: an
+  uploaded HTML or SVG served inline would execute on our own origin against a signed-in
+  session. Out-of-prefix keys 404 rather than 403, because a distinct status confirms the
+  object exists.
+  The client is built lazily so `next build` still passes with no secrets — CI sets none on
+  purpose, and a module-scope `new S3Client()` would have quietly made the build need one.
+  Verified the two security-relevant pure functions against 15 cases including CRLF header
+  injection, a quote closing `filename=""` early, traversal, and a `management-private/`
+  prefix lookalike. Not verified in a browser: the app does not boot locally without a Clerk
+  key, so no request has actually reached the bucket from this machine.
+  **The privacy boundary is not in this repo** — it is the bucket's Public Development URL and
+  Custom Domain both being off. `PLAYBOOKS/storage-r2.md` GOTCHA 1.
+
 - **Post-login redirect sent users to `localhost:8080`** (2026-08-24). Caught by sweeping the
   live site immediately after the first deploy of the auth boundary, not by a report. The
   boundary itself was correct — `/portfolio` closed, public routes untouched — but the

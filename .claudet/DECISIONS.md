@@ -6,6 +6,34 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The document store is Cloudflare R2, management-only, with bytes served through the app
+  (owner, 2026-08-24).** The owner created the bucket and asked what it needed. Four calls
+  were made; these are the ones someone would otherwise re-litigate.
+  - **Management-only, and investors are a separate decision.** Asked rather than assumed,
+    because "files for investors and management" collides with the model this app rests on:
+    `src/proxy.ts` asks only whether somebody is signed in, and there is deliberately no
+    authorization layer behind it. Give investors Clerk accounts under that model and every
+    investor reaches `/portal/portfolio` — fund size, every position, every amount — plus
+    every other investor's documents. Owner chose management-only for now. **`PREFIX.investors`
+    is reserved and no route reads it**, so the eventual authorization layer lands without
+    rewriting keys that already exist.
+  - **Bytes stream through a route handler; no presigned URLs.** A presigned URL is valid for
+    its whole TTL to whoever holds it — browser history, a forwarded link, a referrer header.
+    A handler that re-checks the session every request leaves nothing that outlives the
+    request, and **the bucket needs no CORS policy at all** because the browser never talks to
+    R2 directly. The cost is our bandwidth, which at this volume is nothing.
+  - **The privacy boundary is two dashboard toggles, not this code.** The bucket's **Public
+    Development URL** and **Custom Domain** are what make it private by being off. Either one
+    enabled makes every object world-readable at a guessable URL with no auth and no expiry,
+    and nothing in this repo will notice. Same shape as the sign-up-mode risk in `CLAUDE.md`,
+    one layer down. `PLAYBOOKS/storage-r2.md` GOTCHA 1.
+  - **The endpoint is derived, and the client is built lazily.** Derived from `R2_ACCOUNT_ID`
+    rather than stored as a fifth variable, so two copies cannot disagree. Lazy because CI
+    runs `next build` with no secrets on purpose — a module-scope `new S3Client()` reading
+    absent env vars would make the build need a secret, which is precisely what that setup
+    exists to catch. Unconfigured, the file routes answer 503 and every other page is
+    unaffected.
+
 - **The carousel dots stay 24×44 on touch; they do not go to 44×44 (owner, 2026-08-24).**
   > "Leave them."
 

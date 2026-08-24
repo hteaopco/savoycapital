@@ -7,6 +7,24 @@ learning that). Keep this to a paragraph. Edit it only when the answer actually 
 
 ## Now
 
+**The document store is live in code, management-only** (owner, 2026-08-24). Cloudflare R2
+behind `/api/files` — list, upload, download, delete — with bytes streamed through
+authenticated route handlers rather than presigned URLs, so the bucket needs no CORS policy
+and nothing outlives a request. **No UI**: these are API routes, and a screen to drive them
+is UI scope needing the owner's go-ahead.
+
+**The part that is not code and cannot be checked by code:** the bucket's privacy is its
+**Public Development URL** and **Custom Domain** both being off. Either one enabled makes
+every object world-readable at a guessable URL, and nothing here will notice — the same shape
+as the sign-up-mode risk, one layer down. `PLAYBOOKS/storage-r2.md` GOTCHA 1.
+
+**Investor access is deliberately not built and is blocked on a person.** "Files for investors
+and management" collides with the model this app rests on: `src/proxy.ts` asks only whether
+somebody is signed in. Under that model an investor with a Clerk account reaches
+`/portal/portfolio` — fund size, every position, every amount. The owner chose management-only
+for now; `PREFIX.investors` is reserved and unread so the eventual authorization layer does
+not have to rewrite existing keys.
+
 **The design system has an owner now.** The design seat is commissioned (owner, 2026-08-24) —
 palette and pattern fidelity across both surfaces, the `design/` folder itself, and the gate.
 Charter in `AGENTS/DESIGN.md`, law in `.claude/rules/ui-governance.md`. **`npm run verify` is
