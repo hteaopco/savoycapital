@@ -16,7 +16,13 @@ export default async function PrivateLayout({
   const access = await checkAccess();
 
   if (!access.allowed) {
-    return <AccessRefused reason={access.reason} email={access.email} />;
+    return (
+      <AccessRefused
+        reason={access.reason}
+        phone={access.phone}
+        hint={access.hint}
+      />
+    );
   }
 
   return (
@@ -64,19 +70,23 @@ export default async function PrivateLayout({
 }
 
 /**
- * The two ways in can fail, told apart on screen. `unconfigured` is an
- * operator's problem and names the variable to set; `not-allowlisted` is a
- * person's problem and says so without leaking who IS on the list.
+ * The three ways in can fail, told apart on screen. Two are an operator's
+ * problem and name what to fix; only `not-allowlisted` is a person's problem,
+ * and it says so without leaking who IS on the list.
  */
 function AccessRefused({
   reason,
-  email,
+  phone,
+  hint,
 }: {
-  reason: "unconfigured" | "not-allowlisted";
-  email: string | null;
+  reason: "unconfigured" | "no-verified-phone" | "not-allowlisted";
+  phone: string | null;
+  hint?: string;
 }) {
-  const unconfigured = reason === "unconfigured";
-  const Icon = unconfigured ? ShieldAlert : ShieldX;
+  // Only an unauthorized PERSON is an error; the other two are misconfiguration
+  // and read as caution rather than rejection.
+  const misconfigured = reason !== "not-allowlisted";
+  const Icon = misconfigured ? ShieldAlert : ShieldX;
 
   return (
     <main>
@@ -104,9 +114,9 @@ function AccessRefused({
             gap: 10,
             padding: "12px 14px",
             borderRadius: 10,
-            background: unconfigured ? C.amberBg : C.redBg,
-            border: `1px solid ${unconfigured ? C.amberBorder : C.redBorder}`,
-            color: unconfigured ? C.amber : C.red,
+            background: misconfigured ? C.amberBg : C.redBg,
+            border: `1px solid ${misconfigured ? C.amberBorder : C.redBorder}`,
+            color: misconfigured ? C.amber : C.red,
             fontSize: 13,
             maxWidth: 640,
           }}
@@ -114,31 +124,44 @@ function AccessRefused({
           <Icon size={16} style={{ flexShrink: 0, marginTop: 1 }} />
           <div className="flex flex-col" style={{ gap: 4 }}>
             <div style={{ fontWeight: 700 }}>
-              {unconfigured
+              {reason === "unconfigured"
                 ? "The portfolio monitor is not configured yet."
-                : "This account cannot open the portfolio monitor."}
+                : reason === "no-verified-phone"
+                  ? "This account has no verified phone number."
+                  : "This account cannot open the portfolio monitor."}
             </div>
             <div>
-              {unconfigured ? (
+              {reason === "unconfigured" ? (
                 <>
                   No access list is set, so no one can be on it. Set{" "}
                   <code style={{ fontWeight: 700 }}>{ALLOWLIST_ENV_VAR}</code>{" "}
-                  on the deployment to the addresses that may sign in.
+                  on the deployment to the numbers that may sign in, in
+                  international format.
+                </>
+              ) : reason === "no-verified-phone" ? (
+                <>
+                  Access is granted by phone number, and this account carries
+                  none that is verified. That is usually a configuration
+                  problem rather than a permissions one — check that the Clerk
+                  instance collects and verifies phone numbers.
                 </>
               ) : (
                 <>
                   You are signed in
-                  {email ? (
+                  {phone ? (
                     <>
                       {" "}
-                      as <span style={{ fontWeight: 700 }}>{email}</span>
+                      as <span style={{ fontWeight: 700 }}>{phone}</span>
                     </>
                   ) : null}
-                  , which is not an authorized address. If that is wrong,
+                  , which is not an authorized number. If that is wrong,
                   contact Savoy Capital.
                 </>
               )}
             </div>
+            {hint ? (
+              <div style={{ fontSize: 12, opacity: 0.85 }}>{hint}</div>
+            ) : null}
           </div>
         </div>
 

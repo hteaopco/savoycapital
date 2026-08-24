@@ -34,8 +34,8 @@ own banner, `design/README.md`'s divergence table and `DECISIONS.md` all say so.
 
 **Clerk is wired up but not live.** The auth boundary is built and verified: `src/proxy.ts`
 protects everything except an enumerated public list, `/sign-in` is styled to the palette,
-and the `(private)` route group gates `/monitor` behind an email allowlist
-(`SAVOY_ALLOWED_EMAILS`) rather than behind "is signed in" — because whether a stranger can
+and the `(private)` route group gates `/monitor` behind a **phone-number** allowlist
+(`SAVOY_ALLOWED_PHONES`) rather than behind "is signed in" — because whether a stranger can
 create a Clerk account is a Dashboard setting nobody can verify from this repo. It **fails
 closed**: with no allowlist set, nobody gets in, the principals included.
 `PLAYBOOKS/auth-clerk.md` is the reference; DECISIONS carries the why.
@@ -51,10 +51,18 @@ intent.
 monitor's schema is built on. And the securities-marketing question in `FACTS.md`, which
 gates what the *public* page may say, not whether it may exist.
 
-**Blocked on the Clerk Dashboard** (four steps, `PLAYBOOKS/auth-clerk.md` § 2): create the
-application, **restrict sign-up to invitation-only**, invite Rodney and Jett, and set
-`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` and `SAVOY_ALLOWED_EMAILS` on
-Railway. `next build` passes without them, so the deploy will not break before they land —
+**Clerk instance is live and its DNS is half-fixed.** Production instance
+`ins_3IL2OO8W1HTVwmTMHtleVAjH2AV` on `clerk.savoycapital.io`, keys set on Railway (owner,
+2026-08-24). `clerk.` now serves real Clerk JSON; `accounts.` still returns a Cloudflare
+interstitial, consistent with that record still being proxied — it should be **DNS only**
+(GOTCHA 8).
+
+**Blocked on the Clerk Dashboard** (`PLAYBOOKS/auth-clerk.md` § 2): sign-up mode is still
+**`public`** on a live production instance — anyone reaching it can create an account, and
+only the allowlist stops them seeing anything. It needs setting to **Restricted**. Then
+invite Rodney and Jett, and set `SAVOY_ALLOWED_PHONES` on Railway — **it is not set, so
+`/monitor` currently refuses everyone**, which is the intended fail-closed behaviour, not a
+bug. `next build` passes without them, so the deploy will not break before they land —
 but the monitor refuses everyone until they do. Separately, the public nav's "Investor
 login" still points at `/coming-soon`; pointing it at `/sign-in` is a one-line owner call,
 left alone on purpose.

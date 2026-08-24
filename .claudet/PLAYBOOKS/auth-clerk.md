@@ -18,6 +18,8 @@ design exists to prevent.
 | Authentication | `src/proxy.ts` | Is *somebody* signed in? | Anonymous internet traffic |
 | Authorization | `src/lib/auth.ts` + `src/app/(private)/layout.tsx` | Is the signed-in person one of *ours*? | A stranger who signed themselves up |
 
+**The allowlist matches PHONE NUMBERS** (`SAVOY_ALLOWED_PHONES`), not emails — see GOTCHA 9.
+
 **Why the second layer exists.** Clerk answers only the first question. Whether a stranger
 can create an account is a **setting in the Clerk Dashboard** — not a fact anybody can
 verify by reading this repo. Code that treats "signed in" as "allowed in" is therefore only
@@ -56,8 +58,8 @@ refuses everyone, including the principals.
 3. **Invite Rodney and Jett** (Dashboard → Users → Invite). There is deliberately no
    `/sign-up` route in this app; see GOTCHA 4.
 4. **Set the environment variables** on the Railway service *and* in local `.env.local`.
-   `.env.example` documents all three. `SAVOY_ALLOWED_EMAILS` must contain the same
-   addresses the invitations went to.
+   `.env.example` documents all three. `SAVOY_ALLOWED_PHONES` must contain the same
+   numbers the invited users verify, **with country codes**.
 5. **For a production instance (`pk_live_`), add Clerk's DNS records** on
    `savoycapital.io` — and set them **DNS only** if the zone is on Cloudflare. See
    GOTCHA 8; getting this wrong is silent until someone tries to sign in.
@@ -73,7 +75,7 @@ at `/coming-soon` deliberately.
   to a `*.accounts.dev` host means GOTCHA 1 has regressed.
 - Signed in as an allowlisted user → the monitor shell renders with the user's name.
 - Signed in as anyone else → the red "cannot open" refusal, not the monitor.
-- With `SAVOY_ALLOWED_EMAILS` unset → the amber "not configured" refusal, for everyone.
+- With `SAVOY_ALLOWED_PHONES` unset → the amber "not configured" refusal, for everyone.
 
 ---
 
@@ -101,7 +103,7 @@ accepted cost of not leaking the private surface.
 
 **GOTCHA 3 — an unset allowlist locks out the owners.**
 *Symptom:* an invited, correctly signed-in principal sees "not configured yet".
-*Cause:* `SAVOY_ALLOWED_EMAILS` is unset or empty on that deployment.
+*Cause:* `SAVOY_ALLOWED_PHONES` is unset or empty on that deployment.
 *Fix:* set it. It is **fail-closed on purpose**: reading "unset" as "let any signed-in user
 through" would turn one forgotten deploy variable into an open door onto the fund's
 positions. The two failures are not equally bad, so the code picks the recoverable one and
@@ -148,6 +150,27 @@ itself are unaffected and may stay proxied.
 *Observed 2026-08-24* on `clerk.` and `accounts.` — this is not theoretical, it is what the
 first production DNS attempt produced.
 
+**GOTCHA 9 — the allowlist matches phone numbers because the instance has no emails.**
+*Symptom:* an email-based allowlist rejects everyone, principals included, with no obvious
+cause. The refusal reads "not authorized" while the truth is "there is nothing to match".
+*Cause:* this Clerk instance is configured phone-first —
+`identification_strategies: ["phone_number"]`, `email_address: off`,
+`email_address_verification_strategies: []` — so accounts carry no *verified* email.
+Confirmed by reading `https://clerk.savoycapital.io/v1/environment` directly, 2026-08-24.
+*Fix:* the allowlist reads verified **phone numbers** via `SAVOY_ALLOWED_PHONES`.
+`checkAccess` distinguishes `no-verified-phone` from `not-allowlisted` precisely so this
+class of misconfiguration is not mistaken for a permissions problem again.
+*If the instance ever switches to email*, this module changes with it — the identifier is
+not a detail, it is the boundary.
+
+**GOTCHA 10 — the country code is required in `SAVOY_ALLOWED_PHONES`.**
+*Symptom:* a correct-looking number is refused.
+*Cause:* comparison strips spaces, dashes, parens and `+`, but does not assume a country.
+`5551234567` and `+15551234567` are different strings, and treating them as equal would make
+the allowlist guess at identity.
+*Fix:* write numbers with the country code. A 10-digit entry raises an explicit hint on the
+refusal page rather than failing silently.
+
 ---
 
 ## 4. Deliberately not built
@@ -158,9 +181,10 @@ first production DNS attempt produced.
 - **Webhooks (`/api/webhooks/clerk`).** There is no local user table to sync into — no
   Prisma schema exists yet. Build this when there is something to keep in sync, not before.
 - **Tests.** The repo has no test framework. The allowlist decision logic *was* verified
-  during setup with a throwaway harness (12 cases: fail-closed on unset/empty/whitespace
-  allowlists, unverified addresses rejected, case and whitespace tolerance, secondary
-  verified addresses accepted, and a lookalike domain rejected). That verification is not
-  committed and therefore does not re-run. **`src/lib/auth.ts` is the first thing that
+  during setup with a throwaway harness (16 cases: fail-closed on unset/empty/punctuation-only
+  allowlists, unverified numbers rejected, human formatting tolerated on both sides, secondary
+  verified numbers accepted, missing country codes refused with a hint, and prefix/suffix
+  near-miss numbers rejected). That verification is not committed and therefore does not
+  re-run. **`src/lib/auth.ts` is the first thing that
   should get a real test when a framework lands** — it is the only code here where a silent
   regression is a data-exposure bug rather than a visual one.

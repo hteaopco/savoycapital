@@ -6,6 +6,24 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The allowlist matches phone numbers, not email addresses (owner, 2026-08-24).** The
+  Clerk instance identifies users by phone — `identification_strategies: ["phone_number"]`,
+  email off, no email verification strategies at all, read from the live instance rather than
+  assumed. An email allowlist against that instance rejects **everyone**, principals included,
+  because there is no verified email to match. `SAVOY_ALLOWED_PHONES` replaces
+  `SAVOY_ALLOWED_EMAILS`.
+  - **The identifier is the boundary, not a detail.** If the instance ever moves to email,
+    `src/lib/auth.ts` moves with it. The two must not drift, and the failure when they do is
+    silent — which is why `checkAccess` reports `no-verified-phone` separately from
+    `not-allowlisted`: a configuration mismatch should never read as a permissions verdict.
+  - **The cost, stated plainly.** A phone number is a weaker business identifier than an
+    email: it changes with carriers and handsets, it is awkward to keep straight for two
+    people, and it ties fund access to a SIM. Email was the recommendation for those reasons;
+    phone is what the instance is built on and the owner chose to keep it.
+  - **Country codes are required.** Comparison strips spaces, dashes, parens and `+`, but does
+    not infer a country — a 10-digit entry would make the allowlist guess at identity. A
+    likely-truncated entry raises an explicit hint instead of failing silently.
+
 - **The private surface is gated by an explicit email allowlist, not by "is signed in"
   (2026-08-23).** `SAVOY_ALLOWED_EMAILS` names the people who may open the portfolio
   monitor; `src/lib/auth.ts` checks it server-side against the **verified** addresses on the
