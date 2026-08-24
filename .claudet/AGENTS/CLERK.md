@@ -218,13 +218,15 @@ How to answer:
 - **The deployed site** — the real oracle. A route sweep against `savoycapital.io` answers
   more than any amount of reading.
 - **Repo** — branch `claude/clerk-setup-cqtsf0`, PRs to `main`. CI runs verify + build on
-  every PR. **Merge only when asked, each time** — see Open debts.
+  every PR. **Merge-on-green is standing authorization** (owner, 2026-08-24): when CI is
+  green and the PR is mergeable, merge it without asking.
+  **What the grant does not cover.** It is about not stalling on reversible work, not about
+  widening the seat. Anything that changes who can reach what still goes to the owner first
+  — an edit to `isPublicRoute`, a change to an instance setting, a new public route. Those
+  are permissions, and a green check says nothing about whether a permission should change.
 
 ## Open debts
 
-- **No standing merge authorization.** Every merge to date has been asked for
-  individually. Whether merge-on-green should be standing for this seat is an open
-  question with the owner; until he answers it, keep asking.
 - **Nothing watches `sign_up.mode`.** The entire access boundary is a dashboard toggle
   checked by hand. The honest fix is a scheduled job hitting the public environment
   endpoint and alerting when it stops reading `restricted`. That is this seat's most
