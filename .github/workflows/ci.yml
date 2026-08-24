@@ -35,7 +35,12 @@ jobs:
       # them. New rule → new fixture, same PR.
       - run: npm run lint:design -- --self-test
 
-      # typecheck + lint + design-lint
+      # Same contract for the mobile gate (#…, 2026-08-24). Its rules are proven
+      # to fire before the run that trusts them, and its own self-test is what
+      # caught a shared-masker bug on the day it was written.
+      - run: npm run lint:mobile -- --self-test
+
+      # typecheck + lint + design-lint + mobile-lint
       - run: npm run verify
 
       # `next build` is not redundant with typecheck. It is how this repo found

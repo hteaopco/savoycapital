@@ -48,6 +48,21 @@ Twelve rules, wired into `npm run verify` and therefore into CI on every PR.
 | `font-family-literal` | `fontFamily: "inherit"` everywhere but the root layout. |
 | `mirror` | `design/palette.ts` and `src/components/palette.ts` are byte-identical. **Hard — no baseline, no waiver.** |
 
+### `npm run lint:mobile` — the other lane
+
+Five rules, baseline `{}`, wired into `verify` and CI (2026-08-24). design-lint proves mobile
+work never breaks desktop; **mobile-lint proves desktop work never quietly breaks mobile.**
+
+| Rule | Proves |
+|---|---|
+| `tap-target` | A `<button>` / `<a>` / `<Link>` states the 44px touch floor. `globals.css` floors form controls only — `button` is excluded so § 0.8's 36px carve-out survives. |
+| `fixed-width` | No inline `minWidth ≥ 300` — it cannot fit a 375px phone's ~297px of usable width. `maxWidth` is safe and unchecked. |
+| `table-overflow` | A `<table>` has a scroll wrapper. Without one the whole **page** tears sideways — breakage, not an improvement. |
+| `table-label` | A table's first column is pinned, or it renders as cards. Scrolling ≠ broken, so this one is an improvement — but a new table owes it in the PR that adds it. |
+| `column-count` | `column-count` does not collapse on its own. In TSX it can never respond to a breakpoint at all. |
+
+Waivers are `// mobile-ok: <reason>`, reason required, same ratchet semantics.
+
 **The baseline is `{}` and stays `{}`.** Every rule sits at zero, so the next violation
 fails the build — that is the entire value. Waive a genuine exception at the call site with
 a reason:
@@ -107,9 +122,10 @@ Desktop and mobile are two seats and the dangerous direction runs both ways:
   `@media (max-width: 767px)` block. Never gate desktop styling behind a runtime mobile
   check — the desktop tree stays byte-identical, which is the whole safety model.
 - **Desktop work must not break mobile.** A new screen owes its ≤767px view in the same
-  PR. This repo has no `lint:mobile`, so that is held by review, not by a machine — and
-  it is the gap most likely to produce the 20–40-PR rework cycle the mobile seat exists to
-  prevent. Building `lint:mobile` closes it.
+  PR. **`npm run lint:mobile` now enforces the mechanical half of that** (2026-08-24): a new
+  `<table>` without a mobile answer, an unfloored control, an ungated hard `minWidth`. What
+  it cannot see — clipped controls, a flex child missing `minWidth: 0`, cards staying N-up,
+  chip-row overflow — is still held by review, and § 3's limits still apply to it.
 
 `md:` is the primary breakpoint. A second is allowed **above** it when derived from
 arithmetic and shown at the call site (`FundAllocation.tsx`'s `2xl:` is the standing
@@ -135,9 +151,13 @@ code is not an amendment — it is making the doc honest — but say which one y
 
 ## 6. Open
 
-- **No `lint:mobile`.** § 4's second bullet is held by review only.
-- **No `tap-target` rule.** A control's real hit area is CSS + layout + content, so a regex
-  cannot compute it. `min-h-[44px]` is greppable; a 6px-tall button inside a padded wrapper
-  is not. Reviewed by eye, per § 3.
+- ~~No `lint:mobile`.~~ **Built 2026-08-24** — five rules, baseline `{}`, self-tested in CI
+  ahead of the gate. It covers about half of `MOBILE_AUDIT_PLAYBOOK.md` § 3; the other half
+  is still a person at 375px.
+- **`tap-target` exists, and § 3's limit on it still stands.** mobile-lint checks that a
+  `<button>` / `<a>` / `<Link>` **states** the 44px floor — a mechanism, not a geometry. A
+  `min-h-[44px]` losing to a conflicting inline `height` passes the gate and is still wrong,
+  and a clickable `<div>` wrapping a whole card is deliberately out of scope because a regex
+  cannot tell it from a 6px one. Measured by eye at 375px, per § 3.
 - **No `spacing-scale` or `type-scale` rule**, and per § 3 that is a conclusion rather than a
   backlog item — both would encode a rule the canon does not hold itself to.
