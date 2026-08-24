@@ -7,6 +7,25 @@ learning that). Keep this to a paragraph. Edit it only when the answer actually 
 
 ## Now
 
+**The design system has an owner now.** The design seat is commissioned (owner, 2026-08-24) —
+palette and pattern fidelity across both surfaces, the `design/` folder itself, and the gate.
+Charter in `AGENTS/DESIGN.md`, law in `.claude/rules/ui-governance.md`. **`npm run verify` is
+now typecheck + eslint + `lint:design`**, so design drift fails CI instead of being noticed
+by a person. Baseline `{}` on every rule; the mirror gate has no baseline at all.
+
+**The first full audit is done and the app is clean on every mechanical rule** — zero raw
+hex, zero raw rgba, zero non-lucide icons, zero shadcn, zero Tailwind color classes, zero
+sub-768px breakpoints, palette mirror byte-identical. **What it is NOT clean on is the
+residue no gate reaches**, and that list is the open work: `C.green` means "Private Credit"
+in the portal and "positive/Current" on the public page; two cards ship at different radii;
+the carousel dots are 6px tall against a 44px floor; ~9 spacing values sit off the documented
+scale; and the public surface's display type scale exists only as duplicated literals in two
+components. **None of it was fixed** — every item is a UI-scope edit and Jett owns the UI.
+
+**`design/` contradicts itself in three places** (Tailwind-for-spacing, card radius, badge
+radius) and the code follows a different file for different ones. `DECISIONS.md` carries the
+detail. Resolving it is an owner call because it moves shipped pixels.
+
 **Auth has an owner now.** The Clerk seat is commissioned (owner, 2026-08-24) — the instance,
 `src/proxy.ts`, the sign-in surface, and the configuration and DNS behind them. **Not the
 site**, which belongs to other seats. Charter in `AGENTS/CLERK.md`; if you are here to change
@@ -77,9 +96,9 @@ homepage as "Investor login", serving fund size and position-level amounts to an
 the URL. Verified reachable at HTTP 200 before this change and 307-to-sign-in after it.
 
 **Deliberately still absent:** Prisma (no schema yet, so no client to generate), a `/sign-up`
-route (two users, invited from the Dashboard), Clerk webhooks (nothing to sync into yet),
-tests, and CI. `prisma/`, `scripts/`, `docs/` and `.github/workflows` are still empty by
-intent.
+route (two users, invited from the Dashboard), Clerk webhooks (nothing to sync into yet), and
+a test runner. `prisma/` and `docs/` are still empty by intent. **`.github/workflows` and
+`scripts/` are not** — CI landed in #15, and `scripts/` now holds `design-lint.mjs`.
 
 **Blocked on a person:** what an equity vs. debt position holds — the decision the portfolio
 monitor's schema is built on. And the securities-marketing question in `FACTS.md`, which

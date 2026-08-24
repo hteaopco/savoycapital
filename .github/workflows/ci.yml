@@ -29,7 +29,13 @@ jobs:
 
       - run: npm ci
 
-      # typecheck + lint
+      # A gate with a broken regex reads green forever, which is worse than no
+      # gate. This asserts every design-lint rule still fires on a violation and
+      # still stays silent on the sanctioned form — BEFORE the run that trusts
+      # them. New rule → new fixture, same PR.
+      - run: npm run lint:design -- --self-test
+
+      # typecheck + lint + design-lint
       - run: npm run verify
 
       # `next build` is not redundant with typecheck. It is how this repo found

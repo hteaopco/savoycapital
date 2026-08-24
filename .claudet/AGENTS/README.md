@@ -27,5 +27,6 @@ playbook → `.claudet/STATE.md` and the `DECISIONS.md` headers for the area you
 | File | Seat |
 |---|---|
 | `CLERK.md` | **Authentication.** The Clerk instance, the session boundary, the sign-in surface, and the configuration and DNS behind them. Not the site. |
+| `DESIGN.md` | **The design system, whole.** Palette and pattern fidelity across both surfaces, the `design/` folder itself, and the gate that enforces what a machine can (`npm run lint:design`). Owns the desktop/mobile contract; not the inside of the mobile lane. |
 | `CODER.md` | **The build.** Components, screens, content and the design decisions behind them, on both sides of the auth boundary. Not the boundary, and not mobile behaviour. |
 | `MOBILE.md` | **Mobile design.** How every screen behaves at ≤767px — layout, reflow, tap targets, drawers and sheets, and the breakpoints that switch between them. Both surfaces, public and portal. Not the data model or the auth boundary. |
