@@ -31,6 +31,20 @@ export const FUND_BUCKETS: AllocationBucket[] = [
     id: "credit",
     label: "Private Credit",
     tone: "green",
-    holdings: [{ name: "HTea Opco", amountCents: 101_000_000 }],
+    holdings: [
+      {
+        name: "HTea Opco",
+        amountCents: 101_000_000,
+        // Owner-supplied, 2026-08-23. The amount is NOT repeated here — the
+        // panel prints `amountCents` in its header, so there is one figure to
+        // change and no second copy to go stale against it.
+        detail: [
+          { label: "Date funded", value: "05/01/2026" },
+          { label: "Instrument", value: "Private Debt" },
+          { label: "Terms", value: "10% Rate, 1 Yr Balloon / 10 Yr Amort (1 option)" },
+          { label: "Fees", value: "1% fee on funding, 1% fee on renewal" },
+        ],
+      },
+    ],
   },
 ];

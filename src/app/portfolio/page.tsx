@@ -32,14 +32,9 @@ export default function Portfolio() {
 
       <div className="mx-auto max-w-[1120px] px-5 py-10 md:px-10 md:py-12">
         <div className="flex flex-col" style={{ gap: 14 }}>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Portfolio</div>
-            <div style={{ fontSize: 13, color: C.textMuted, maxWidth: 640 }}>
-              One fund, three positions.
-            </div>
-          </div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Portfolio</div>
 
-          <div style={{ maxWidth: 720 }}>
+          <div style={{ maxWidth: 600 }}>
             <FundAllocation
               fundSizeCents={FUND_SIZE_CENTS}
               buckets={FUND_BUCKETS}
