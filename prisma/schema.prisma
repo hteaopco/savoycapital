@@ -104,6 +104,22 @@ model DealDocument {
   filename String
   /// What the owner typed. The reason this table exists at all.
   description String
+
+  /// Optional grouping, as free text (owner, 2026-08-24: "add a folder that I
+  /// can collapse files into").
+  ///
+  /// A nullable column rather than a `Folder` table, deliberately. A folder here
+  /// has no properties of its own — no owner, no description, no permissions,
+  /// no nesting — so a table would be a join that buys nothing, and an empty
+  /// folder is not a state worth being able to represent. NULL means the
+  /// document sits at the top level of the deal, which is where the ones you
+  /// want in front of you live.
+  ///
+  /// The consequence to know: folders are matched by exact string, so
+  /// "UCC" and "UCC " are two folders. The upload form offers the deal's
+  /// existing names through a datalist to make picking beat typing.
+  folder String?
+
   sizeBytes   Int
   contentType String
 
@@ -112,4 +128,5 @@ model DealDocument {
   uploadedBy String
 
   @@index([dealId, audience])
+  @@index([dealId, folder])
 }

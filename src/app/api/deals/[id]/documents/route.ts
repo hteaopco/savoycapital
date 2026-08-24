@@ -5,7 +5,15 @@ import { getDb } from "@/lib/db";
 import { MAX_UPLOAD_BYTES, documentKey, getR2, safeFilename } from "@/lib/r2";
 
 /**
- * Upload one document into a deal. `multipart/form-data`: `file`, `description`.
+ * Upload one document into a deal. `multipart/form-data`: `file`, `description`,
+ * and an optional `folder`.
+ *
+ * **Still one file per request, even though the screen uploads several.** The
+ * client posts them one at a time and reports progress per file. A single
+ * request carrying eight files would buffer all of them at once against one
+ * 25MB-per-file ceiling, and one bad file would fail the batch with nothing
+ * uploaded — this way six succeed, two report why, and the retry is only the
+ * two.
  *
  * ## Order of writes, which is not arbitrary
  *
@@ -66,6 +74,9 @@ export async function POST(request: Request, { params }: Params) {
   const form = await request.formData();
   const file = form.get("file");
   const description = String(form.get("description") ?? "").trim();
+  // Empty string and absent both mean "top level". Normalised to null here so
+  // the column has one representation of that rather than two.
+  const folder = String(form.get("folder") ?? "").trim() || null;
 
   if (!(file instanceof File)) {
     return NextResponse.json(
@@ -79,6 +90,12 @@ export async function POST(request: Request, { params }: Params) {
   if (description.length > 500) {
     return NextResponse.json(
       { error: "Description is too long (500 characters max)." },
+      { status: 400 },
+    );
+  }
+  if (folder && folder.length > 120) {
+    return NextResponse.json(
+      { error: "Folder name is too long (120 characters max)." },
       { status: 400 },
     );
   }
@@ -125,6 +142,7 @@ export async function POST(request: Request, { params }: Params) {
       key,
       filename,
       description,
+      folder,
       sizeBytes: body.byteLength,
       contentType,
       uploadedBy: userId,
@@ -137,6 +155,7 @@ export async function POST(request: Request, { params }: Params) {
       key: doc.key,
       filename: doc.filename,
       description: doc.description,
+      folder: doc.folder,
       sizeBytes: doc.sizeBytes,
       contentType: doc.contentType,
       uploadedAt: doc.uploadedAt.toISOString(),

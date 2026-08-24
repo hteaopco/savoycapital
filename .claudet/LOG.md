@@ -8,6 +8,28 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Deal Room: folders, multi-file upload, and a collapsible upload form** (owner,
+  2026-08-24, after uploading 7-8 files one at a time). Three asks in one pass.
+  **Folders** are a nullable free-text column on `DealDocument`, not a table — a folder here
+  has no owner, description, permissions or nesting, so a table would be a join that buys
+  nothing and an empty folder is not a state worth representing. Folders render first and
+  closed; loose documents follow and stay visible, which is what the owner asked to protect.
+  **A PATCH route moves an existing document** into or out of a folder. Without it the feature
+  would only have helped files that did not exist yet — and there were ten sitting in the deal
+  that day, five plainly one folder and two another. A grouping feature you must re-upload to
+  use is not one.
+  **Multi-upload stages files with a description and folder each**, then posts them ONE AT A
+  TIME, continuing past a failure. Eight concurrent multipart posts is a thundering herd
+  against one container, and a batch that aborts on file three leaves you guessing which of
+  eight landed. Descriptions seed from the filename minus its extension, because
+  "PG - Stu Stover.pdf" already is the description.
+  **The upload card header collapses the form only, never the document list** — hiding the
+  documents would defeat the reason for collapsing.
+  Verified: `npm run verify` and a clean `next build` with no secrets, and the hand-written
+  migration checked against `prisma migrate diff --from-empty --to-schema` — same nullable
+  `"folder" TEXT`, same index name and definition. **Not verified: no request reached Postgres
+  or R2**, and the migration has not run anywhere.
+
 - **Portfolio: every bucket expands on landing, and the donut is driven by View Details**
   (owner, 2026-08-24). Two behaviours that used to be one click are now separate.
   `openId: string | null` becomes `openIds: Set<string>` seeded with every bucket that has

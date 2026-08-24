@@ -57,6 +57,7 @@ export async function GET(_request: Request, { params }: Params) {
       key: doc.key,
       filename: doc.filename,
       description: doc.description,
+      folder: doc.folder,
       sizeBytes: doc.sizeBytes,
       contentType: doc.contentType,
       uploadedAt: doc.uploadedAt.toISOString(),
