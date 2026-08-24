@@ -27,3 +27,4 @@ playbook → `.claudet/STATE.md` and the `DECISIONS.md` headers for the area you
 | File | Seat |
 |---|---|
 | `CLERK.md` | **Authentication.** The Clerk instance, the session boundary, the sign-in surface, and the configuration and DNS behind them. Not the site. |
+| `CODER.md` | **The build.** Components, screens, content and the design decisions behind them, on both sides of the auth boundary. Not the boundary itself. |

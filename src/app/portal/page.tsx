@@ -1,49 +1,27 @@
-import type { Metadata } from "next";
-import { C } from "@/components/palette";
-import { PortalShell } from "@/components/PortalShell";
+import { redirect } from "next/navigation";
 
 /**
- * The portal's landing page. Deliberately an empty shell (owner, 2026-08-24):
- * it exists so the sidebar's first link lands somewhere real, and what it opens
- * on has not been decided. Filling it with invented tiles would be guessing at
- * the product.
+ * Home — a redirect to Portfolio, on purpose and temporarily.
  *
- * `signInFallbackRedirectUrl` in src/app/layout.tsx points here, so this is the
- * page a successful sign-in arrives on — which is the other reason it cannot be
- * a dead route.
+ * > "point the 'home' button here https://savoycapital.io/portal/portfolio for
+ * > right now until we build out the site" — owner, 2026-08-24
+ *
+ * The sidebar's Home link still points at `/portal`, and `signInFallbackRedirectUrl`
+ * in `src/app/layout.tsx` still lands here after sign-in. Redirecting from the
+ * route rather than repointing the link is what keeps both of those honest: the
+ * nav stays semantic, sign-in cannot land on a dead page, and there is exactly
+ * one line to delete when Home gets built.
+ *
+ * It also avoids the alternative's bug — two nav entries pointing at the same
+ * href would both match the active check and light up together.
  *
  * **Authenticated.** `src/proxy.ts` requires a session for every route not on
  * its short public list, so protection comes from this path being ABSENT from
  * that list. Do not add it there.
+ *
+ * To restore Home: delete the redirect and put a page back. The shell that was
+ * here rendered `<PortalShell title="Home">` around a dashed empty-state card.
  */
-export const metadata: Metadata = {
-  title: "Home — Savoy Capital",
-  robots: { index: false, follow: false },
-};
-
 export default function PortalHome() {
-  return (
-    <PortalShell title="Home">
-      <div className="px-5 py-8 md:px-8 md:py-10">
-        <div className="flex flex-col" style={{ gap: 14 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Home</div>
-
-          <div
-            style={{
-              maxWidth: 720,
-              padding: 24,
-              borderRadius: 10,
-              border: `1px dashed ${C.borderStrong}`,
-              background: C.bgAlt,
-              color: C.textMuted,
-              fontSize: 13,
-              textAlign: "center",
-            }}
-          >
-            Nothing here yet — what the portal opens on hasn&rsquo;t been decided.
-          </div>
-        </div>
-      </div>
-    </PortalShell>
-  );
+  redirect("/portal/portfolio");
 }

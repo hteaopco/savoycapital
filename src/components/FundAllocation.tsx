@@ -87,7 +87,10 @@ const money = (cents: number): string =>
 
 /** `$10M`, `$1.01M` — the headline inside the ring, where width is scarce. */
 const abbrev = (cents: number): string => {
-  const millions = (cents / 100_000_000).toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+  const millions = (cents / 100_000_000)
+    .toFixed(2)
+    .replace(/0+$/, "")
+    .replace(/\.$/, "");
   return `$${millions}M`;
 };
 
@@ -131,15 +134,16 @@ const FADE_DELAY_MS = 50;
  *
  * It starts at the CARD's right border, not at the row's — the row ends 26px
  * short of it (18px of card padding, 8px of tray padding), so the connector is
- * pushed out by that much and the gap it then crosses is 40px. Those two are
- * summed into the panel's own offset: 26 + 40 = 66.
+ * pushed out by that much and the gap it then crosses is 72px, widened from 40
+ * on the owner's ask for more air between the card and the panel. Those two are
+ * summed into the panel's own offset: 26 + 72 = 98.
  *
  * All three live in Tailwind classes written out in full rather than in
  * constants. Tailwind scans source text, so a class assembled from a variable
  * looks tidier and silently never reaches the stylesheet — which is exactly
  * what happened on the first draft of this panel.
- *   line   `min-[1440px]:left-[calc(100%+26px)]` `min-[1440px]:w-[40px]`
- *   panel  `min-[1440px]:left-[calc(100%+66px)]` `min-[1440px]:w-[320px]`
+ *   line   `2xl:left-[calc(100%+26px)]` `2xl:w-[72px]`
+ *   panel  `2xl:left-[calc(100%+98px)]` `2xl:w-[320px]`
  */
 const CONNECTOR_WEIGHT = 1;
 const EDGE_WEIGHT = 2;
@@ -152,21 +156,21 @@ const numCell: React.CSSProperties = {
 /**
  * The terms panel for an opened position, plus the line that runs out to it.
  *
- * Two layouts, one DOM node: from 1440px up it floats to the right of the card
- * on the end of the connector, which is the shape this was asked for. Narrower
- * than that it drops inline under the row and the connector is hidden, because
- * a floating panel running off the side of the screen is worse than one that
- * stacks.
+ * Two layouts, one DOM node: from `2xl` (1536px) up it floats to the right of
+ * the card on the end of the connector. Narrower than that it drops inline under
+ * the row and the connector is hidden, because a floating panel running off the
+ * side of the screen is worse than one that stacks.
  *
- * The breakpoint is a RESULT of the arithmetic, not a preference, and it is not
- * a Tailwind default because the sum does not land on one. The portal's sidebar
- * takes 240px before the page has any content at all; the shell's padding takes
- * 64; the card is 720, clearing it and crossing the gap costs 66, and the panel
- * is 320. That comes to 1410, so it floats from 1440 and stacks below.
+ * The breakpoint is a RESULT of the arithmetic, and it has moved every time one
+ * of the five numbers did — lg, then xl, then 1440, now 2xl. The sum today:
+ * 240 sidebar + 64 shell padding + 780 card + 98 clearance + 320 panel = 1502,
+ * which fits 1536 with 34px to spare.
  *
- * It sat at `xl` (1280) while there was no sidebar. Change ANY of those five
- * numbers and re-do the sum before trusting the breakpoint — the failure mode
- * is a panel hanging off the right edge, which only shows up at one width.
+ * Widening the card and the gap is what pushed it out this far, and that trade
+ * is the owner's to revisit: a narrower card, a tighter gap or a narrower panel
+ * each buy back the room to float on smaller screens. Change ANY of the five and
+ * re-do the sum — the failure mode is a panel hanging off the right edge, and it
+ * is invisible at every width except the one where it happens.
  *
  * Mounted only while open, so the sweep replays on every open rather than
  * firing once for the life of the page.
@@ -192,7 +196,7 @@ function HoldingDetail({ holding }: { holding: Holding }) {
     <>
       <div
         aria-hidden
-        className="hidden min-[1440px]:block min-[1440px]:w-[40px] min-[1440px]:left-[calc(100%+26px)]"
+        className="hidden 2xl:block 2xl:w-[72px] 2xl:left-[calc(100%+26px)]"
         style={{
           ...sweep,
           height: CONNECTOR_WEIGHT,
@@ -203,7 +207,7 @@ function HoldingDetail({ holding }: { holding: Holding }) {
       />
 
       <div
-        className="mt-2 min-[1440px]:mt-0 min-[1440px]:absolute min-[1440px]:top-1/2 min-[1440px]:-translate-y-1/2 min-[1440px]:z-10 min-[1440px]:w-[320px] min-[1440px]:left-[calc(100%+66px)]"
+        className="mt-2 2xl:mt-0 2xl:absolute 2xl:top-1/2 2xl:-translate-y-1/2 2xl:z-10 2xl:w-[320px] 2xl:left-[calc(100%+98px)]"
         style={{
           borderRadius: 10,
           border: `1px solid ${C.border}`,
@@ -216,15 +220,27 @@ function HoldingDetail({ holding }: { holding: Holding }) {
       >
         <div
           aria-hidden
-          style={{ ...sweep, height: EDGE_WEIGHT, transition: `transform ${EDGE_MS}ms ease-out` }}
+          style={{
+            ...sweep,
+            height: EDGE_WEIGHT,
+            transition: `transform ${EDGE_MS}ms ease-out`,
+          }}
         />
 
         <div
           className="flex items-baseline justify-between"
-          style={{ gap: 10, padding: "10px 12px", borderBottom: `1px solid ${C.border}` }}
+          style={{
+            gap: 10,
+            padding: "10px 12px",
+            borderBottom: `1px solid ${C.border}`,
+          }}
         >
-          <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>{holding.name}</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: C.text, ...numCell }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>
+            {holding.name}
+          </span>
+          <span
+            style={{ fontSize: 12, fontWeight: 700, color: C.text, ...numCell }}
+          >
             {money(holding.amountCents)}
           </span>
         </div>
@@ -250,7 +266,15 @@ function HoldingDetail({ holding }: { holding: Holding }) {
             </div>
             {/* Terms wrap; § 0.7 truncates labels and names, never values that
                 must be read in full, and a rate or an amort schedule is one. */}
-            <div style={{ fontSize: 12, color: C.text, marginTop: 1, ...numCell, whiteSpace: "normal" }}>
+            <div
+              style={{
+                fontSize: 12,
+                color: C.text,
+                marginTop: 1,
+                ...numCell,
+                whiteSpace: "normal",
+              }}
+            >
               {row.value}
             </div>
           </div>
@@ -260,7 +284,11 @@ function HoldingDetail({ holding }: { holding: Holding }) {
   );
 }
 
-export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationProps) {
+export function FundAllocation({
+  fundSizeCents,
+  buckets,
+  asOf,
+}: FundAllocationProps) {
   const hatchId = useId();
   const [openId, setOpenId] = useState<string | null>(buckets[0]?.id ?? null);
   const [pickedId, setPickedId] = useState<string | null>(null);
@@ -308,7 +336,8 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
   const arcs = segments.map((s) => {
     // A negative remainder (over-committed) cannot be drawn; the legend still
     // reports it, in red, rather than the chart quietly rounding it away.
-    const length = s.amountCents > 0 ? (CIRCUMFERENCE * s.amountCents) / fundSizeCents : 0;
+    const length =
+      s.amountCents > 0 ? (CIRCUMFERENCE * s.amountCents) / fundSizeCents : 0;
     const arc = {
       id: s.id,
       stroke: s.stroke,
@@ -329,9 +358,14 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
         padding: "16px 18px 18px",
       }}
     >
-      <div className="flex items-start justify-between flex-wrap" style={{ gap: 12 }}>
+      <div
+        className="flex items-start justify-between flex-wrap"
+        style={{ gap: 12 }}
+      >
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>Fund Allocation</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>
+            Fund Allocation
+          </div>
           <div style={{ fontSize: 12, color: C.textMuted, ...numCell }}>
             As of {fmtDate(asOf)}
           </div>
@@ -357,7 +391,14 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
         className="flex items-start flex-wrap"
         style={{ gap: 26, marginTop: 18 }}
       >
-        <div style={{ position: "relative", width: 208, height: 208, flexShrink: 0 }}>
+        <div
+          style={{
+            position: "relative",
+            width: 208,
+            height: 208,
+            flexShrink: 0,
+          }}
+        >
           <svg
             width={208}
             height={208}
@@ -376,7 +417,14 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
                 patternTransform="rotate(45)"
               >
                 <rect width="6" height="6" fill={C.bgRow} />
-                <line x1="0" y1="0" x2="0" y2="6" stroke={C.borderStrong} strokeWidth="2.5" />
+                <line
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="6"
+                  stroke={C.borderStrong}
+                  strokeWidth="2.5"
+                />
               </pattern>
             </defs>
             <g transform="rotate(-90 100 100)">
@@ -389,7 +437,9 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
                     r={RADIUS}
                     fill="none"
                     stroke={arc.stroke}
-                    strokeWidth={pickedId === arc.id ? ARC_WIDTH_ACTIVE : ARC_WIDTH}
+                    strokeWidth={
+                      pickedId === arc.id ? ARC_WIDTH_ACTIVE : ARC_WIDTH
+                    }
                     strokeDasharray={arc.dash}
                     strokeDashoffset={arc.offset}
                     opacity={!pickedId || pickedId === arc.id ? 1 : 0.35}
@@ -435,13 +485,25 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
             >
               {abbrev(picked ? picked.amountCents : fundSizeCents)}
             </div>
-            <div style={{ minHeight: 16, fontSize: 11, color: C.textMuted, ...numCell }}>
-              {picked ? `${pct(picked.amountCents, fundSizeCents)} of fund` : ""}
+            <div
+              style={{
+                minHeight: 16,
+                fontSize: 11,
+                color: C.textMuted,
+                ...numCell,
+              }}
+            >
+              {picked
+                ? `${pct(picked.amountCents, fundSizeCents)} of fund`
+                : ""}
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col" style={{ flex: "1 1 280px", minWidth: 280 }}>
+        <div
+          className="flex flex-col"
+          style={{ flex: "1 1 280px", minWidth: 280 }}
+        >
           {segments.map((s) => {
             const isOpen = openId === s.id && s.holdings.length > 0;
             const isPicked = pickedId === s.id;
@@ -500,9 +562,27 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
                       background: s.chip,
                     }}
                   />
-                  <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: C.text }}>
+                  <span
+                    style={{
+                      flex: 1,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: C.text,
+                    }}
+                  >
                     {s.label}
                   </span>
+                  {/*
+                    Empty twin of the holding rows' action column. Without it a
+                    bucket's amount sits 104px right of a holding's and the two
+                    money columns do not line up — which is the whole reason the
+                    button was moved out of the end of the row.
+                  */}
+                  <span
+                    aria-hidden
+                    className="hidden md:block md:w-[104px]"
+                    style={{ flexShrink: 0 }}
+                  />
                   <span
                     style={{
                       fontSize: 13,
@@ -542,8 +622,11 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
                       return (
                         <div
                           key={h.name}
-                          className="min-[1440px]:relative"
-                          style={{ borderLeft: `1px solid ${C.borderStrong}`, paddingLeft: 12 }}
+                          className="2xl:relative"
+                          style={{
+                            borderLeft: `1px solid ${C.borderStrong}`,
+                            paddingLeft: 12,
+                          }}
                         >
                           {/*
                             The ROW is inert; the button is the only control on
@@ -565,9 +648,64 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
                             style={{ gap: 9, padding: "5px 0" }}
                           >
                             <span
-                              style={{ flex: 1, fontSize: 12, fontWeight: 500, color: C.textMuted }}
+                              className="min-w-0"
+                              style={{
+                                flex: 1,
+                                fontSize: 12,
+                                fontWeight: 500,
+                                color: C.textMuted,
+                              }}
                             >
                               {h.name}
+                            </span>
+
+                            {/*
+                              A fixed column, not the end of the row (owner,
+                              2026-08-24). Sitting last, the button pushed this
+                              row's money left of every bucket's; in a column of
+                              its own the amounts and percentages line up down
+                              the whole table.
+
+                              It only fits as a column from md up. At 390px the
+                              tray gives ~260px and the four cells want ~354, so
+                              below md the slot goes full-width and orders last —
+                              the button drops to its own line rather than
+                              squeezing the name to nothing. § 0.7 lets a name
+                              truncate but never a money value.
+
+                              Only a position we actually hold terms for gets a
+                              button, so the control cannot open an empty box.
+                              § 7's floor lands on the button now that it is what
+                              a thumb hits: 44px on touch, the tray's density
+                              from md up.
+                            */}
+                            <span
+                              className="order-last w-full md:order-none md:w-[104px] flex justify-end"
+                              style={{ flexShrink: 0 }}
+                            >
+                              {hasDetail ? (
+                                <button
+                                  onClick={() =>
+                                    setOpenHolding(isDetailOpen ? null : key)
+                                  }
+                                  aria-expanded={isDetailOpen}
+                                  className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+                                  style={{
+                                    padding: "4px 10px",
+                                    borderRadius: 6,
+                                    border: `1px solid ${isDetailOpen ? C.accent : C.border}`,
+                                    background: isDetailOpen ? C.accent : C.bg,
+                                    color: isDetailOpen ? C.onSolid : C.accent,
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    fontFamily: "inherit",
+                                    whiteSpace: "nowrap",
+                                    transition: `background ${TRANSITION}, color ${TRANSITION}, border-color ${TRANSITION}`,
+                                  }}
+                                >
+                                  View Details
+                                </button>
+                              ) : null}
                             </span>
                             <span
                               style={{
@@ -590,35 +728,6 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
                             >
                               {pct(h.amountCents, fundSizeCents)}
                             </span>
-
-                            {/*
-                              Only a position we actually hold terms for gets a
-                              button, so the control cannot open an empty box.
-                              § 7's floor lands on the button now that it is what
-                              a thumb hits: 44px on touch, the tray's density
-                              from md up.
-                            */}
-                            {hasDetail ? (
-                              <button
-                                onClick={() => setOpenHolding(isDetailOpen ? null : key)}
-                                aria-expanded={isDetailOpen}
-                                className="ml-auto inline-flex items-center justify-center min-h-[44px] md:min-h-0"
-                                style={{
-                                  padding: "4px 10px",
-                                  borderRadius: 6,
-                                  border: `1px solid ${isDetailOpen ? C.accent : C.border}`,
-                                  background: isDetailOpen ? C.accent : C.bg,
-                                  color: isDetailOpen ? C.onSolid : C.accent,
-                                  fontSize: 11,
-                                  fontWeight: 600,
-                                  fontFamily: "inherit",
-                                  whiteSpace: "nowrap",
-                                  transition: `background ${TRANSITION}, color ${TRANSITION}, border-color ${TRANSITION}`,
-                                }}
-                              >
-                                View Details
-                              </button>
-                            ) : null}
                           </div>
 
                           {isDetailOpen ? <HoldingDetail holding={h} /> : null}
@@ -631,7 +740,10 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
             );
           })}
 
-          <div className="flex items-center" style={{ gap: 9, padding: "11px 8px 0" }}>
+          <div
+            className="flex items-center"
+            style={{ gap: 9, padding: "11px 8px 0" }}
+          >
             <span style={{ width: 14, flexShrink: 0 }} />
             <span style={{ width: 10, flexShrink: 0 }} />
             <span
@@ -646,7 +758,14 @@ export function FundAllocation({ fundSizeCents, buckets, asOf }: FundAllocationP
             >
               Total fund
             </span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: C.text, ...numCell }}>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                color: C.text,
+                ...numCell,
+              }}
+            >
               {money(fundSizeCents)}
             </span>
             <span

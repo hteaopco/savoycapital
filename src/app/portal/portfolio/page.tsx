@@ -36,7 +36,7 @@ export default function Portfolio() {
         <div className="flex flex-col" style={{ gap: 14 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Portfolio</div>
 
-          <div style={{ maxWidth: 720 }}>
+          <div style={{ maxWidth: 780 }}>
             <FundAllocation
               fundSizeCents={FUND_SIZE_CENTS}
               buckets={FUND_BUCKETS}
