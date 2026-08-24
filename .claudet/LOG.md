@@ -8,6 +8,25 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Fund & Users: a roster that deliberately grants nothing** (owner, 2026-08-24). Second
+  screen under Admin, with a Fund | Users toggle. Funds get a name and an optional inception
+  date; users get first name, last name, phone, fund and role.
+  **The load-bearing part is what it does NOT do.** Creating a user does not create a Clerk
+  account, send an invitation, or let anyone sign in; deleting one revokes nothing. Access is
+  still restricted sign-up plus a Dashboard invitation. A people table beside a Role column
+  reads as a permissions system, and the failure that invites — believing somebody was removed
+  when they were not — is silent, so the warning is on the screen and not only in a doc.
+  `phone` is unique and unnormalised: it is the join to a Clerk identity, which identifies by
+  phone rather than email, and guessing a country code wrong there is worse than storing what
+  was typed. A collision answers 409 naming whose number it is, checked before the insert and
+  caught after it.
+  `inceptionDate` is a nullable `DATE` — fund 1 predates the column and an inception date is a
+  fund figure this repo may not invent.
+  The migration was hand-written and **diffed against `prisma migrate diff` to a byte**, which
+  is how a migration gets verified with no database to run it against. Full CI path reproduced
+  locally: `npm ci` then `next build` with no `DATABASE_URL` and no R2 keys.
+  **Not verified: nothing has been written to Postgres.** The migration has not run anywhere.
+
 - **The carousel photo goes back to `cover`, and the crop is now a settled decision** (owner,
   2026-08-24: "that looks worse, lets just revert...it looked better before"). Shipped as
   `contain` so nothing was cut off, looked at on the deployed site, and reverted within the
