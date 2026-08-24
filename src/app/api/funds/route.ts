@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { parseDollarsToCents } from "@/lib/money";
 import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
@@ -55,6 +56,7 @@ export async function GET() {
       // Date only. `@db.Date` comes back as a Date at UTC midnight; slicing the
       // ISO string keeps it the calendar day it was entered as, which
       // `toLocaleDateString` would shift westward.
+      sizeCents: f.sizeCents === null ? null : Number(f.sizeCents),
       inceptionDate: f.inceptionDate ? f.inceptionDate.toISOString().slice(0, 10) : null,
       assignedCount: f._count.roles,
       dealCount: f._count.deals,
@@ -108,14 +110,25 @@ export async function POST(request: Request) {
     inceptionDate = parsed;
   }
 
+  // Optional at creation, like the date — a fund can be named before anyone has
+  // looked its size up, which is the same reason the column is nullable.
+  const sizeRaw = typeof (body as { sizeCents?: unknown })?.sizeCents === "string"
+    ? ((body as { sizeCents: string }).sizeCents).trim()
+    : "";
+  const sizeCents = sizeRaw ? parseDollarsToCents(sizeRaw) : null;
+  if (sizeRaw && sizeCents === null) {
+    return NextResponse.json({ error: "That fund size is not a number." }, { status: 400 });
+  }
+
   const fund = await db.fund.create({
-    data: { name, inceptionDate },
+    data: { name, inceptionDate, sizeCents: sizeCents === null ? null : BigInt(sizeCents) },
   });
 
   return NextResponse.json(
     {
       id: fund.id,
       name: fund.name,
+      sizeCents: fund.sizeCents === null ? null : Number(fund.sizeCents),
       inceptionDate: fund.inceptionDate ? fund.inceptionDate.toISOString().slice(0, 10) : null,
       assignedCount: 0,
       dealCount: 0,

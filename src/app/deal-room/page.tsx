@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { C } from "@/components/palette";
-import { DealRoom as DealRoomScreen, type Deal } from "@/components/DealRoom";
+import {
+  DealRoom as DealRoomScreen,
+  type Deal,
+  type FundOption,
+} from "@/components/DealRoom";
 import { PortalShell } from "@/components/PortalShell";
 import { DEFAULT_FUND_ID, getDb } from "@/lib/db";
 import { getViewer, isManagement } from "@/lib/authz";
@@ -54,28 +58,50 @@ export default async function DealRoomPage() {
   // `null` means "not configured", which the screen reports as such. An empty
   // array means "configured, no deals yet" — a different thing, and conflating
   // the two would show "create your first deal" on a broken deploy.
-  const initialDeals: Deal[] | null = db
-    ? (
-        await db.deal.findMany({
-          where: { fundId: DEFAULT_FUND_ID },
-          orderBy: { createdAt: "desc" },
-          include: { _count: { select: { documents: true } } },
-        })
-      ).map((d) => ({
-        id: d.id,
-        fundId: d.fundId,
-        name: d.name,
-        createdAt: d.createdAt.toISOString(),
-        documentCount: d._count.documents,
-      }))
-    : null;
+  // The fund list feeds the picker; the deal list is scoped to one fund
+  // server-side (owner, 2026-08-24: "select the fund to view investments in that
+  // fund only - default current fund"). Scoped in the query rather than filtered
+  // in the browser, so another fund's deals are never sent and merely hidden.
+  const [funds, initialDeals]: [FundOption[], Deal[] | null] = db
+    ? await Promise.all([
+        db.fund
+          .findMany({ orderBy: { id: "asc" }, select: { id: true, name: true } })
+          .then((rows) => rows.map((f) => ({ id: f.id, name: f.name }))),
+        db.deal
+          .findMany({
+            where: { fundId: DEFAULT_FUND_ID },
+            orderBy: { createdAt: "desc" },
+            include: { _count: { select: { documents: true } } },
+          })
+          .then((rows) =>
+            rows.map((d) => ({
+              id: d.id,
+              fundId: d.fundId,
+              name: d.name,
+              // BigInt does not cross the server boundary and is not
+              // JSON-serialisable; cents stay exact as a Number to about $90
+              // trillion, so the width lives in the column and not on the wire.
+              amountCents: d.amountCents === null ? null : Number(d.amountCents),
+              investmentDate: d.investmentDate
+                ? d.investmentDate.toISOString().slice(0, 10)
+                : null,
+              createdAt: d.createdAt.toISOString(),
+              documentCount: d._count.documents,
+            })),
+          ),
+      ])
+    : [[], null];
 
   return (
     <PortalShell title="Deal Room" isManagement>
       <div className="px-5 py-8 md:px-8 md:py-10">
         <div className="flex flex-col" style={{ gap: 14 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Deal Room</div>
-          <DealRoomScreen initialDeals={initialDeals} />
+          <DealRoomScreen
+            initialDeals={initialDeals}
+            funds={funds}
+            initialFundId={DEFAULT_FUND_ID}
+          />
         </div>
       </div>
     </PortalShell>

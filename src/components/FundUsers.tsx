@@ -2,6 +2,7 @@
 
 import { useCallback, useId, useState } from "react";
 import { Building2, ChevronDown, Plus, TriangleAlert, Users } from "lucide-react";
+import { centsToDollarInput, formatCents } from "@/lib/money";
 import { C } from "./palette";
 
 /**
@@ -41,6 +42,8 @@ import { C } from "./palette";
 export type Fund = {
   id: number;
   name: string;
+  /** Integer cents, or `null` until somebody sets it. */
+  sizeCents: number | null;
   inceptionDate: string | null;
   assignedCount: number;
   dealCount: number;
@@ -260,6 +263,7 @@ export function FundUsers({
 
 function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }) {
   const [name, setName] = useState("");
+  const [sizeCents, setSizeCents] = useState("");
   const [inceptionDate, setInceptionDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -272,6 +276,7 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
    */
   const [formOpen, setFormOpen] = useState(false);
   const nameId = useId();
+  const sizeId = useId();
   const dateId = useId();
 
   const create = async () => {
@@ -282,11 +287,12 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
       const res = await fetch("/api/funds", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), inceptionDate }),
+        body: JSON.stringify({ name: name.trim(), sizeCents, inceptionDate }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body?.error ?? "Could not create the fund.");
       setName("");
+      setSizeCents("");
       setInceptionDate("");
       onChanged();
     } catch (e) {
@@ -354,7 +360,29 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
                 style={input}
               />
             </div>
-            <div className="flex flex-col md:w-[200px]" style={{ gap: 6 }}>
+            <div className="flex flex-col md:w-[170px]" style={{ gap: 6 }}>
+              <label htmlFor={sizeId} style={label}>
+                Fund size
+              </label>
+              {/*
+                A text input with a numeric inputMode, which the design gate
+                requires for money. The reason is that a spinner control can be
+                scrolled or arrowed into a different figure by a stray gesture
+                over a focused field — on a fund size, silently. Dollars in,
+                cents stored; parseDollarsToCents is the one place that
+                converts, on both sides of the wire.
+              */}
+              <input
+                id={sizeId}
+                type="text"
+                inputMode="numeric"
+                value={sizeCents}
+                onChange={(e) => setSizeCents(e.target.value)}
+                placeholder="10,000,000"
+                style={{ ...input, ...numCell }}
+              />
+            </div>
+            <div className="flex flex-col md:w-[170px]" style={{ gap: 6 }}>
               <label htmlFor={dateId} style={label}>
                 Inception date
               </label>
@@ -384,8 +412,8 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
             </button>
           </div>
           <div style={{ fontSize: 11, color: C.textMuted }}>
-            The inception date is optional — a fund can exist here before anyone has
-            looked it up.
+            Size and inception date are both optional — a fund can be named before
+            anyone has looked them up, and filled in from its row afterwards.
           </div>
         </div>
       </div>
@@ -402,27 +430,170 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
         ) : (
           <div className="flex flex-col">
             {funds.map((f) => (
-              <div
-                key={f.id}
-                className="flex flex-wrap items-center"
-                style={{ gap: 12, padding: "12px 16px", borderTop: `1px solid ${C.border}` }}
-              >
-                <div className="min-w-0 flex-1">
-                  <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{f.name}</div>
-                  <div style={{ fontSize: 11, color: C.textMuted, ...numCell }}>
-                    Fund {f.id}
-                    {f.inceptionDate ? ` · inception ${f.inceptionDate}` : " · no inception date"}
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: C.textMuted, ...numCell }}>
-                  {f.assignedCount} assigned · {f.dealCount}{" "}
-                  {f.dealCount === 1 ? "deal" : "deals"}
-                </div>
-              </div>
+              <FundRow key={f.id} fund={f} onChanged={onChanged} />
             ))}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * One fund, with an editor for the two figures Clerk and the deal table cannot
+ * supply: size and inception date.
+ *
+ * **Opens by default when either is missing** (owner, 2026-08-24: "can you make
+ * it to where i can backfill the values on first load"). Fund 1 predates both
+ * columns, so the first time this screen loads the fields that need filling are
+ * already in front of you rather than behind a chevron. Once both are set the
+ * row collapses to a summary, because at that point the figures are worth
+ * reading and the inputs are not.
+ */
+function FundRow({ fund, onChanged }: { fund: Fund; onChanged: () => void }) {
+  const needsBackfill = fund.sizeCents === null || fund.inceptionDate === null;
+  const [open, setOpen] = useState(needsBackfill);
+  const [size, setSize] = useState(centsToDollarInput(fund.sizeCents));
+  const [inception, setInception] = useState(fund.inceptionDate ?? "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const sizeId = useId();
+  const dateId = useId();
+
+  const save = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    setSaved(false);
+    try {
+      const res = await fetch(`/api/funds/${fund.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        // Both keys always sent: the route treats an absent key as "leave
+        // alone" and an empty string as "clear", so sending both means the form
+        // says exactly what it shows.
+        body: JSON.stringify({ sizeCents: size, inceptionDate: inception }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error ?? "Could not save.");
+      setSaved(true);
+      onChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col" style={{ borderTop: `1px solid ${C.border}` }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex flex-wrap items-center min-h-[44px] md:min-h-0"
+        style={{
+          gap: 12,
+          padding: "12px 16px",
+          width: "100%",
+          border: "none",
+          background: "transparent",
+          fontFamily: "inherit",
+          textAlign: "left",
+        }}
+      >
+        <ChevronDown
+          size={14}
+          color={C.textMuted}
+          style={{
+            flexShrink: 0,
+            transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+            transition: "transform 160ms ease",
+          }}
+        />
+        <div className="min-w-0 flex-1">
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{fund.name}</div>
+          <div style={{ fontSize: 11, color: C.textMuted, ...numCell }}>
+            Fund {fund.id} · {formatCents(fund.sizeCents)}
+            {fund.inceptionDate ? ` · inception ${fund.inceptionDate}` : ""}
+          </div>
+        </div>
+        {/*
+          Amber, and only while something is genuinely missing. A permanent
+          badge would be decoration; this one disappears the moment the backfill
+          is done, which is what makes it worth looking at.
+        */}
+        {needsBackfill ? (
+          <span
+            style={{
+              padding: "3px 8px",
+              borderRadius: 4,
+              border: `1px solid ${C.amberBorder}`,
+              background: C.amberBg,
+              color: C.amber,
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: ".06em",
+              flexShrink: 0,
+            }}
+          >
+            Needs values
+          </span>
+        ) : null}
+        <div style={{ fontSize: 11, color: C.textMuted, flexShrink: 0, ...numCell }}>
+          {fund.assignedCount} assigned · {fund.dealCount}{" "}
+          {fund.dealCount === 1 ? "deal" : "deals"}
+        </div>
+      </button>
+
+      {open ? (
+        <div
+          className="flex flex-col"
+          style={{ gap: 12, padding: "0 16px 16px 42px", background: C.bgAlt }}
+        >
+          {error ? <Notice tone="error">{error}</Notice> : null}
+          <div className="flex flex-col gap-3 md:flex-row md:items-end">
+            <div className="flex flex-col md:w-[200px]" style={{ gap: 6 }}>
+              <label htmlFor={sizeId} style={label}>
+                Fund size
+              </label>
+              <input
+                id={sizeId}
+                type="text"
+                inputMode="numeric"
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+                placeholder="10,000,000"
+                style={{ ...input, ...numCell }}
+              />
+            </div>
+            <div className="flex flex-col md:w-[200px]" style={{ gap: 6 }}>
+              <label htmlFor={dateId} style={label}>
+                Inception date
+              </label>
+              <input
+                id={dateId}
+                type="date"
+                value={inception}
+                onChange={(e) => setInception(e.target.value)}
+                style={input}
+              />
+            </div>
+            <button
+              onClick={() => void save()}
+              disabled={busy}
+              className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+              style={{ ...primaryButton, opacity: busy ? 0.5 : 1 }}
+            >
+              {busy ? "Saving…" : saved ? "Saved" : "Save"}
+            </button>
+          </div>
+          <div style={{ fontSize: 11, color: C.textMuted }}>
+            Dollars, stored as cents. Clearing a field removes the value.
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

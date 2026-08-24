@@ -67,6 +67,10 @@ export default async function FundUsersPage() {
               // Date only. `@db.Date` arrives as a Date at UTC midnight;
               // slicing the ISO string keeps the calendar day that was entered,
               // which `toLocaleDateString` would shift westward.
+              // BigInt is not JSON-serialisable and does not cross the server
+              // boundary; cents stay exact as a Number to about $90 trillion,
+              // so the width lives in the column and not on the wire.
+              sizeCents: f.sizeCents === null ? null : Number(f.sizeCents),
               inceptionDate: f.inceptionDate
                 ? f.inceptionDate.toISOString().slice(0, 10)
                 : null,

@@ -54,6 +54,27 @@ model Fund {
   id   Int    @id @default(autoincrement())
   name String
 
+  /// Committed capital, in integer cents (owner, 2026-08-24: "fund size ($)").
+  ///
+  /// NULLABLE, like `inceptionDate` and for the same reason: fund 1 predates the
+  /// column and this repo may not invent a fund figure. There IS a fund size in
+  /// `src/content/fund-allocation.ts` today, but backfilling from it would mean
+  /// a migration writing a money figure onto the fund every deal belongs to.
+  /// It is set from the screen instead.
+  ///
+  /// **The Portfolio screen still reads the content module, not this column**
+  /// (owner: "we'll make these database driven in a future phase"). Two sources
+  /// of the fund size exist as of this change, and only one is rendered — say
+  /// that plainly rather than letting the next reader assume the DB is live.
+  ///
+  /// **`BigInt`, not `Int`, and that is not premature.** A Postgres `INTEGER`
+  /// stops at 2,147,483,647 — which in cents is **$21,474,836**. This fund is
+  /// already at $10M, so half the ceiling, and the failure mode is a write that
+  /// errors or silently wraps on a figure nobody would expect to be a limit.
+  /// Cents stay exact as a JS `number` up to ~$90 trillion, so the API sends
+  /// `Number(...)` and only the column is wide.
+  sizeCents BigInt?
+
   /// When the fund started (owner, 2026-08-24: "name of fund + inception date").
   ///
   /// NULLABLE, and that is not laziness. Fund 1 already exists and this repo is
@@ -138,6 +159,20 @@ model Deal {
   /// years is a real thing, and a uniqueness error on a name is a worse
   /// experience than two rows the owner can tell apart.
   name String
+
+  /// What was invested, in integer cents (owner, 2026-08-24: "investment size").
+  /// Nullable — the deal that already exists predates the column.
+  ///
+  /// `BigInt` for the same reason as `Fund.sizeCents`: `INTEGER` cents cap at
+  /// $21,474,836, which is not a limit a fund's deal table should carry.
+  amountCents BigInt?
+
+  /// When it was invested (owner: "investment date (date picker)").
+  ///
+  /// A `DATE`, not a timestamp, for the same reason as `Fund.inceptionDate`: an
+  /// investment lands on a calendar day, and a time component invites a timezone
+  /// to move it across midnight.
+  investmentDate DateTime? @db.Date
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
