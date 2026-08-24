@@ -64,9 +64,12 @@ The portal is closed only when **both** hold:
 1. **The route is absent from `isPublicRoute` in `src/proxy.ts`.** Protection is
    deny-by-default: the *public* routes are enumerated and everything else requires a
    session. Nothing on a private page marks it private.
-2. **Clerk's `sign_up.mode` is `restricted`.** An account cannot exist unless a principal
-   invited it, which is what makes "signed in" mean "allowed in". There is no second
+2. **Clerk's `sign_up.mode` is `restricted`.** An account cannot come into existence unless
+   a principal made it, which is what makes "signed in" mean "allowed in". There is no second
    authorization layer in the app — that was removed deliberately (DECISIONS, 2026-08-24).
+   Accounts are created directly in the Dashboard rather than invited (owner, 2026-08-24);
+   that does not move this half, because what `restricted` blocks is a *stranger* creating
+   an account, not which admin gesture created a real one.
 
 Half one fails → the route is served to the internet. Half two fails → anyone who signs up
 walks in through a correctly-working gate. **The second failure is completely silent and no
@@ -217,7 +220,9 @@ How to answer:
   site, which is usually enough to tell whether a variable landed.
 - **The deployed site** — the real oracle. A route sweep against `savoycapital.io` answers
   more than any amount of reading.
-- **Repo** — branch `claude/clerk-setup-cqtsf0`, PRs to `main`. CI runs verify + build on
+- **Repo** — a feature branch per task, PRs to `main`. (Do not look for one named here: this
+  line used to name a specific branch and it went stale the next time the seat was handed a
+  task.) CI runs verify + build on
   every PR. **Merge-on-green is standing authorization** (owner, 2026-08-24): when CI is
   green and the PR is mergeable, merge it without asking.
   `CLAUDE.md` holds the canonical statement and the precise definition of green

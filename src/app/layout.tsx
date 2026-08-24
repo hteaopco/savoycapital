@@ -52,7 +52,8 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     // No `signUpUrl` and no sign-up route: the authenticated population is two
-    // named people, provisioned by invitation from the Clerk Dashboard. See
+    // named people, created directly in the Clerk Dashboard. The owner
+    // reaffirmed this on 2026-08-24 ("no sign up needed"). See
     // .claudet/PLAYBOOKS/auth-clerk.md before adding one.
     <ClerkProvider
       appearance={clerkAppearance}
