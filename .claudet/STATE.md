@@ -19,9 +19,16 @@ trusting a mobile doc: **`design/MOBILE_REFERENCE.md` and `MOBILE_AUDIT_PLAYBOOK
 carried from theAPlink and describe machinery this repo does not have** — no `lint:mobile`, no
 `useIsMobile()`, no `mobile-cards.tsx`, and **no `@media (max-width:767px)` block in
 `globals.css`, so nothing is auto-floored to a tap-target size.** Their coverage tables are
-theAPlink's numbers, not ours; mobile here is **unmeasured**. Where the two inherited docs
-disagree, `DESIGN_SYSTEM.md` wins (mobile-first, 44px floor, more than one breakpoint allowed)
-— which is what the code already does. Not yet an owner-recorded decision.
+theAPlink's numbers, not ours; mobile here is **unmeasured** — not "zero".
+
+**Those two docs are now amended to say all of that themselves** (owner, 2026-08-24). Each
+carries a divergence banner, `design/README.md`'s table names every change, and `DECISIONS.md`
+records the reasoning. `DESIGN_SYSTEM.md` won each conflict — mobile-first, a 44px floor
+written per component, and more than one breakpoint allowed when derived — because the code
+had already resolved them that way. **`design/` is now three-tenths divergent from theAPlink
+rather than one-tenth**; that cost is recorded and accepted. **Anyone building the missing
+machinery — a `useIsMobile()` hook, `mobile-cards.tsx`, a `@media (max-width:767px)` block, a
+mobile lint — falsifies a row in those banners and must update them in the same PR.**
 
 **The site is live on Railway** (owner-confirmed 2026-08-23). Next.js 16 + React 19 +
 TypeScript + Tailwind (layout only), the public landing page at `/`, and a dependency-free

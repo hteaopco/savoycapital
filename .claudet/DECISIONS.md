@@ -6,6 +6,51 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The mobile docs are amended to describe this repo, and `DESIGN_SYSTEM.md` wins where the
+  carried docs disagree (owner, 2026-08-24).** `design/MOBILE_REFERENCE.md` and
+  `design/MOBILE_AUDIT_PLAYBOOK.md` were carried byte-for-byte from theAPlink and described a
+  mobile surface this product does not have. Each now carries a divergence banner, and
+  `design/README.md`'s table names every change. Three conflicts, resolved the same way each
+  time — **toward `DESIGN_SYSTEM.md`, because the code had already resolved them that way:**
+  - **Posture: mobile-first, not frozen-desktop.** `MOBILE_REFERENCE.md` treats desktop as
+    frozen and mobile as an additive layer; `DESIGN_SYSTEM.md` § 1.1 says "every component is
+    designed at 375px first." The freeze is a **remediation** stance — theAPlink adopted it
+    after accumulating 87 unadapted tables, to keep a mobile retrofit from disturbing a large
+    existing surface. **Nothing here is frozen, and importing that stance would license
+    building desktop-first and bolting mobile on, which is how that backlog was created.**
+  - **Breakpoints: `md:` is primary, a second is allowed when derived.** `MOBILE_REFERENCE.md`
+    § 1 permits exactly one and says lint rejects any other. `DESIGN_SYSTEM.md` § 3.x uses
+    `sm:`/`lg:` throughout, and `FundAllocation.tsx` already ships `min-[1440px]:` off a
+    documented sum. The condition is that a second breakpoint be **derived from arithmetic and
+    shown at the call site**, and never reach below 768px.
+  - **Tap targets: 44px, per component.** `MOBILE_REFERENCE.md` § 6 says `globals.css` floors
+    controls to 40px so "you usually need no per-component work." **`src/app/globals.css` has
+    no `@media (max-width:767px)` block at all**, and `DESIGN_SYSTEM.md` § 0.8 / § 9 say ≥44.
+    So the floor is 44 and it is written at each call site as `min-h-[44px] md:min-h-0`.
+  - **Why amend rather than override in the charter.** The charter already recorded the
+    resolution, but a resolution living only in an agent's identity doc leaves `design/`
+    quietly contradicting the code — the same failure mode the 400ms crossfade decision
+    legislated against. Changing the rule where the rule lives is the honest version.
+  - **The cost, stated plainly: `design/` is now three-tenths divergent rather than
+    one-tenth.** That erodes the property the folder exists for — being checkably the same
+    look as theAPlink. It is accepted because the alternative is worse: two documents that
+    instruct an agent to protect a frozen desktop that does not exist and to rely on a lint,
+    a hook and a primitives library that do not exist either. **Patterns and vocabulary were
+    kept verbatim; only claims about *this repo* were corrected.**
+  - **A related overstatement was fixed in the same pass.** `design/README.md` said the
+    carried files were identical "verified by checksum." There is **no theAPlink checkout here
+    to checksum against**, so that was never computable — it is a convention held by hand, and
+    now says so (`.claudet/README.md` rule 3).
+  - **What would reopen this:** building any of the missing machinery. A `useIsMobile()` hook,
+    `mobile-cards.tsx`, a `@media (max-width:767px)` block, or `lint:mobile` each falsify a
+    row in the banners the day it lands. **Update the banner in the same PR as the machinery.**
+
+- **Merge-on-green is standing authorization for the mobile seat (owner, 2026-08-24).**
+  Required checks green, mergeable, no change-requested review — the seat merges without
+  asking, each time. It is bounded by what it does not cover, which is the part worth
+  remembering: **a `design/` amendment and a design-intent call still come to the owner.**
+  Merge authority is about not stalling on reversible presentational work, not about widening
+  what the seat may decide alone.
 - **Light only. There is no theme toggle and no dark theme (owner, 2026-08-24).**
   > "no theme needed, light only"
 
