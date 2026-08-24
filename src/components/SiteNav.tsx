@@ -14,12 +14,29 @@ import { C } from "./palette";
 export type SiteNavProps = {
   /** The right-hand link. Omit for a bar with no action. */
   action?: { href: string; label: string };
+  /**
+   * Content width, which must match the page's own shell or the wordmark sits
+   * off the edge of the content under it. The public site is `standard` and
+   * stays that way — it is signed off. The monitor is `wide`, because a screen
+   * with a card and a panel beside it needs the room.
+   */
+  width?: "standard" | "wide";
 };
 
-export function SiteNav({ action }: SiteNavProps) {
+/**
+ * Written out in full rather than interpolated: Tailwind scans source text, so
+ * a class built from a variable never reaches the stylesheet.
+ */
+const SHELL: Record<"standard" | "wide", string> = {
+  standard:
+    "mx-auto flex max-w-[1120px] items-center justify-between gap-6 px-5 py-4 md:px-10 md:py-5",
+  wide: "mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-5 py-4 md:px-10 md:py-5",
+};
+
+export function SiteNav({ action, width = "standard" }: SiteNavProps) {
   return (
     <div style={{ borderBottom: `1px solid ${C.border}`, background: C.bg }}>
-      <div className="mx-auto flex max-w-[1120px] items-center justify-between gap-6 px-5 py-4 md:px-10 md:py-5">
+      <div className={SHELL[width]}>
         <div
           style={{
             fontSize: 13,

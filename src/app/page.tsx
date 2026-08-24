@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <main>
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <SiteNav action={{ href: "/portfolio", label: "Investor login" }} />
+      <SiteNav action={{ href: "/portfolio", label: "Investor Portal" }} />
 
       {/* ── Portfolio — the whole page, for now ─────────────────────────── */}
       <RecentInvestments />

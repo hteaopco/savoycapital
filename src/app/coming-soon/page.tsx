@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { C } from "@/components/palette";
 
 export const metadata: Metadata = {
-  title: "Investor Login — Savoy Capital",
+  title: "Investor Portal — Savoy Capital",
   description: "The Savoy Capital investor portal is not yet available.",
   // Nothing here is worth indexing, and a "coming soon" page ranking for the
   // firm's name would be worse than no result at all.
@@ -41,7 +41,7 @@ export default function ComingSoon() {
             color: C.accent,
           }}
         >
-          Investor Login
+          Investor Portal
         </div>
 
         <h1

@@ -9,7 +9,7 @@ import {
 } from "@/content/fund-allocation";
 
 /**
- * The portfolio monitor. Reached from "Investor login" (owner, 2026-08-23).
+ * The portfolio monitor. Reached from "Investor Portal" (owner, 2026-08-23).
  *
  * **This route is not authenticated.** There is no auth in the repo yet; the
  * owner's call was to ship it open on the grounds that nobody is visiting the
@@ -28,13 +28,13 @@ export const metadata: Metadata = {
 export default function Portfolio() {
   return (
     <main>
-      <SiteNav action={{ href: "/", label: "Public site" }} />
+      <SiteNav width="wide" action={{ href: "/", label: "Public site" }} />
 
-      <div className="mx-auto max-w-[1120px] px-5 py-10 md:px-10 md:py-12">
+      <div className="mx-auto max-w-[1600px] px-5 py-10 md:px-10 md:py-12">
         <div className="flex flex-col" style={{ gap: 14 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Portfolio</div>
 
-          <div style={{ maxWidth: 600 }}>
+          <div style={{ maxWidth: 720 }}>
             <FundAllocation
               fundSizeCents={FUND_SIZE_CENTS}
               buckets={FUND_BUCKETS}
