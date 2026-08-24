@@ -8,6 +8,30 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Logos were clipped and off-centre; the frame is now `fill` + `contain`** (owner,
+  2026-08-24). The logo branch sized the image from its intrinsic 520x360 and relied on
+  `max-height: 100%` to clamp it — a percentage that has to resolve through a stretched grid
+  item to the slide's content box. When it does not resolve, the image keeps its width-driven
+  height (414px of content width on a 520x360 logo wants 287px against 216px of room) and
+  `overflow: hidden` cuts the difference off the bottom, which is exactly what it looked like.
+  Replaced with an absolutely-inset box and `fill` + `objectFit: contain`. `contain` scales
+  an image to fit entirely inside its box and centres it on both axes — it cannot clip and
+  cannot sit off-centre by construction, rather than by a chain of resolved percentages. The
+  inset box takes its size from the slide's padding box directly, so no percentage height is
+  left anywhere in the chain. Checked that the classes reached the stylesheet first: they had,
+  so the Tailwind-drops-arbitrary-values theory was ruled out rather than assumed.
+  Marucci keeps `cover` — it is a photograph filling the frame, which is a different job.
+
+- **"Public Page" in the portal nav, above Portfolio** (owner, 2026-08-24). Points at **`/`,
+  not the absolute `https://savoycapital.io/`** the owner supplied: in production they are the
+  same page, and a relative href cannot go stale against a domain change and will not send a
+  preview or a local build off to production to show you the wrong build. Rendered as a plain
+  `<a target="_blank" rel="noopener noreferrer">` rather than a `next/link` — prefetching and
+  client-side swapping a link whose purpose is to LEAVE the portal is wrong, and without
+  `noopener` the opened page gets a handle on this one via `window.opener`. A trailing glyph
+  marks the jump before the click. It never lights up as active, correctly: the test is
+  `pathname === href` and this leaves the app.
+
 - **The TOTAL FUND row was left 104px right of every other row, and is now aligned**
   (owner, 2026-08-24). **A regression from the previous change, not a pre-existing defect.**
   Moving the View Details column from before the money to after the percentage moved the

@@ -273,9 +273,10 @@ export function RecentInvestments() {
                 <div
                   key={investment.name}
                   aria-hidden={i !== index}
-                  className={`relative flex items-center justify-center ${
-                    isPhoto ? "p-0" : "p-5 md:p-8"
-                  }`}
+                  // The logo's breathing room moved into its own inset box
+                  // above, so the slide itself no longer carries padding —
+                  // leaving it here would inset the absolute box twice.
+                  className="relative flex items-center justify-center"
                   style={stackedSlide(i === index, reducedMotion)}
                 >
                   {isPhoto ? (
@@ -287,21 +288,41 @@ export function RecentInvestments() {
                       style={{ objectFit: "cover" }}
                     />
                   ) : (
-                    <Image
-                      src={investment.image.src}
-                      alt={investment.name}
-                      width={investment.image.width}
-                      height={investment.image.height}
-                      priority={i === 0}
-                      style={{
-                        display: "block",
-                        width: "auto",
-                        height: "auto",
-                        maxWidth: "100%",
-                        maxHeight: "100%",
-                        objectFit: "contain",
-                      }}
-                    />
+                    /*
+                      A logo is `fill` + `contain` inside an absolutely INSET
+                      box, not an intrinsically-sized <Image> capped by
+                      `maxHeight: 100%` (owner, 2026-08-24: "the logos are not
+                      centered and are being clipped by the box they sit in").
+
+                      What was wrong: the old version sized the image from its
+                      intrinsic 520x360 and relied on `max-height: 100%` to
+                      clamp it. That percentage has to resolve through a
+                      stretched grid item to the slide's content box, and when
+                      it does not resolve the image keeps its width-driven
+                      height — 414px of content width on a 520x360 logo wants
+                      287px against 216px of room — and `overflow: hidden` on
+                      the frame cuts the difference off the bottom. Which is
+                      exactly what it looked like.
+
+                      Why this construction instead: `contain` scales the image
+                      to fit ENTIRELY inside its box and centres it on both
+                      axes. It cannot clip and it cannot sit off-centre, by
+                      definition rather than by a chain of resolved
+                      percentages. The `inset` box is absolute so its size comes
+                      from the slide's padding box directly, with no percentage
+                      height anywhere in the chain. `inset-5`/`md:inset-8` are
+                      the p-5/md:p-8 this replaces, to the pixel — 20 and 32.
+                    */
+                    <div className="absolute inset-5 md:inset-8">
+                      <Image
+                        src={investment.image.src}
+                        alt={investment.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 520px"
+                        priority={i === 0}
+                        style={{ objectFit: "contain" }}
+                      />
+                    </div>
                   )}
                 </div>
               );

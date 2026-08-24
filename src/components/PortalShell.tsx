@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton, useClerk, useUser } from "@clerk/nextjs";
 import {
+  ExternalLink,
+  Globe,
   Handshake,
   LayoutDashboard,
   LogOut,
@@ -27,9 +29,9 @@ import { C } from "./palette";
  *
  * **What is deliberately not built: the bottom tab bar.** § 2 describes one for
  * "the feature-gated daily drivers", and then says the drawer is the complete
- * nav and anything else living there is fine. With two destinations across two
- * groups a tab bar would duplicate the whole menu rather than shortcut part of
- * it — and it has no way to express the grouping. Add one when there are enough
+ * nav and anything else living there is fine. With three destinations across
+ * two groups — one of which leaves the portal — a tab bar would duplicate the
+ * whole menu rather than shortcut part of it — and it has no way to express the grouping. Add one when there are enough
  * screens for the shortcut to mean something.
  *
  * There is no entity switcher under the title. theAPlink has one because it
@@ -58,6 +60,12 @@ type NavItem = {
   href: string;
   label: string;
   Icon: typeof PieChart;
+  /**
+   * Leaves the portal. Rendered as a plain `<a target="_blank">` rather than a
+   * `next/link`, and marked with a trailing glyph so the jump is visible before
+   * the click rather than after it.
+   */
+  external?: boolean;
 };
 
 type NavSection = {
@@ -104,6 +112,22 @@ const NAV: NavSection[] = [
       // `/portal` still redirects to Portfolio, which matters more now, not
       // less: `signInFallbackRedirectUrl` in src/app/layout.tsx lands there
       // after sign-in, and Portfolio is the only portal screen left to land on.
+      // The public marketing site (owner, 2026-08-24).
+      //
+      // `/` rather than the absolute `https://savoycapital.io/` the owner gave.
+      // In production they are the same page, and a relative href cannot go
+      // stale against a domain change and does not send a preview or a local
+      // build off to production to show you the wrong build. Say the word and
+      // it becomes the absolute URL — it is one line.
+      //
+      // It never lights up as active, which is correct: the active test is
+      // `pathname === href` and this leaves the portal entirely.
+      {
+        href: "/",
+        label: "Public Page",
+        Icon: Globe,
+        external: true,
+      },
       { href: "/portal/portfolio", label: "Portfolio", Icon: PieChart },
     ],
   },
@@ -262,12 +286,22 @@ function NavBody({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
               borderLeft: `1px solid ${C.border}`,
             }}
           >
-            {section.items.map(({ href, label, Icon }) => {
-              const active = pathname === href;
+            {section.items.map(({ href, label, Icon, external }) => {
+              const active = !external && pathname === href;
+              // An external entry is a plain <a> in a new tab. `next/link`
+              // would prefetch it into the router cache and swap it in
+              // client-side, which is wrong for a link whose whole purpose is
+              // to leave the portal — and `rel` is not optional beside
+              // target="_blank": without `noopener` the opened page gets a
+              // handle on this one through `window.opener`.
+              const Tag = external ? "a" : Link;
+              const linkProps = external
+                ? { href, target: "_blank" as const, rel: "noopener noreferrer" }
+                : { href };
               return (
-                <Link
+                <Tag
                   key={href}
-                  href={href}
+                  {...linkProps}
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className="flex items-center min-h-[44px] md:min-h-0"
@@ -287,8 +321,11 @@ function NavBody({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
                   }}
                 >
                   <Icon size={16} />
-                  {label}
-                </Link>
+                  <span style={{ flex: 1 }}>{label}</span>
+                  {external ? (
+                    <ExternalLink size={12} color={C.textDim} aria-hidden />
+                  ) : null}
+                </Tag>
               );
             })}
           </div>
