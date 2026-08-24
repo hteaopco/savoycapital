@@ -361,11 +361,18 @@ export function RecentInvestments() {
                   {investment.blurb}
                 </p>
 
+                {/*
+                  A standalone control, not a link inside prose — it sits on its own
+                  line under the write-up, so § 7's floor applies to it the way it
+                  applies to any other control a thumb hits. Measured 20px tall before
+                  this. 44 on touch, its own density from md up, same split the rest of
+                  this file runs on.
+                */}
                 <a
                   href={investment.website.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center self-start"
+                  className="inline-flex items-center self-start min-h-[44px] md:min-h-0"
                   style={{
                     gap: 6,
                     color: C.accent,

@@ -17,8 +17,14 @@ export default function ComingSoon() {
     <main>
       <div style={{ borderBottom: `1px solid ${C.border}`, background: C.bg }}>
         <div className="mx-auto flex max-w-[1120px] items-center justify-between gap-6 px-5 py-4 md:px-10 md:py-5">
+          {/*
+            A real link here (SiteNav's wordmark is deliberately a <div> and stays
+            one), so it is a control and owes § 7's floor. Measured 137x20 before
+            this. 44 on touch, its own density from md up.
+          */}
           <Link
             href="/"
+            className="inline-flex items-center min-h-[44px] md:min-h-0"
             style={{
               fontSize: 13,
               fontWeight: 800,

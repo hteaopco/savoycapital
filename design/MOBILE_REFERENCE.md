@@ -412,10 +412,45 @@ in the component, or eslint's rules-of-hooks fails.
 > rule 1 exists to prevent. Until a sweep or a gate produces a number, the honest sentence is
 > *"mobile has not been measured."*
 >
-> What is known without a gate, as of 2026-08-24: **no `<table>` exists in `src/`**, so the
-> entire table backlog this section is about is empty by construction; the portal shell has a
-> working drawer; and `FundAllocation` and `PortalShell` carry deliberate 44px floors. That
-> is a starting position, not a clean bill of health.
+> **First sweep run 2026-08-24 — so there is now a number, and it is measured, not read.**
+> Every page rendered in Chromium at 320 / 360 / 375 / 390 / 414 / 767px (prerendered HTML
+> with the real stylesheet inlined, JS off — all branching here is CSS, so the layout is the
+> layout). Method and the self-check that makes it trustworthy: § 9a below.
+>
+> | | at the sweep |
+> |---|---|
+> | Pages horizontally clean (no page tear) | **4 of 4**, every width |
+> | Elements bursting their container | **1 → 0** (`FundAllocation`'s legend column) |
+> | Interactive elements under the 44px floor | **5 → 2**, both known and deliberate |
+>
+> The two that remain are the carousel arrows at 36×36 (the owner's § 9 carve-out, which they
+> qualify for) and the carousel dots at 24×44 — a deliberate prior fix from 6px, passing WCAG
+> 2.2 AA's 24×24, short of the house floor on the width axis only. Closing that last gap
+> visibly spreads the dot row, so it is a design-intent call and is the owner's, not the
+> seat's.
+>
+> Also still true: **no `<table>` exists in `src/`**, so the entire table backlog this section
+> is about is empty by construction; the portal shell has a working drawer; and
+> `FundAllocation` and `PortalShell` carry deliberate 44px floors.
+>
+> ### 9a. How to re-run this, and the trap in it
+>
+> The portal is behind auth and the app **will not boot without a Clerk publishable key** —
+> every route 500s, `/api/health` included. So a sweep cannot simply point a browser at
+> `localhost`. What works, without opening a protected route:
+>
+> 1. `npm run build`, then read the **prerendered HTML** Next writes to
+>    `.next/server/app/**/*.html`. The portal pages are static, so this is the real component
+>    tree, not a mock.
+> 2. Inline the real stylesheet from `.next/static/**/*.css` and strip the `<script>` tags —
+>    otherwise the page tries to hydrate and navigate out from under the measurement.
+> 3. Launch Chromium with `proxy: { server: 'direct://' }`. **This is the trap.** Without it
+>    the sandbox's HTTPS proxy intercepts `localhost` and the browser measures the *proxy's
+>    own error page*: the first run of this sweep reported "clean at every width" and flagged
+>    tap targets named "Reload" and "Checking the proxy" — a check that could not fail.
+> 4. **Assert the stylesheet actually applied** before believing any number. An unstyled page
+>    never overflows, so "clean" and "broken measurement" look identical. The self-check that
+>    caught this is one line: confirm a Tailwind utility resolved to a real computed value.
 >
 > **Read the rest of § 9 as the case study it is.** Its lesson is the durable part: the
 > problem was concentrated in one pattern nobody was required to adapt, which made it a
