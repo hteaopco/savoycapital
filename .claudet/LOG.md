@@ -8,6 +8,30 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **The portal nav is grouped: Admin over a rule, then Portal Home** (2026-08-24). Owner's
+  spec, with a screenshot of theAPlink's own sidebar as the pattern. Two sections with a
+  lucide icon and a titled label, children indented behind a vertical spine, one hairline
+  rule between the groups. Home moves to **`/home`** — a coming-soon placeholder — and
+  **Deal Room** lands at `/deal-room` as a placeholder shell, deliberately empty because the
+  owner's instruction was to build the nav first and the screen after.
+  `/portal` still redirects to Portfolio and was NOT repointed: `signInFallbackRedirectUrl`
+  lands there after sign-in, that prop is the Clerk seat's, and dropping someone onto a
+  placeholder the moment they sign in is worse than landing them on a real screen. No nav
+  entry points at `/portal` now, which also keeps `pathname === href` from lighting two rows.
+  **`design/` has no nav-group-label spec**, so this followed the artifact rather than
+  inventing a reading of the canon — `DESIGN_SYSTEM.md` § 2's "Section header 14/800/uppercase"
+  is the panel header inside a card, and at that size beside a 15px wordmark in a 240px rail
+  it would out-shout the wordmark. Recorded here rather than as a `design/` amendment,
+  because nothing in `design/` was changed.
+  Verified off the **emitted HTML** rather than the diff, since the app cannot boot locally
+  without a Clerk key: both new pages prerender, so `.next/server/app/{home,deal-room}.html`
+  carry the real markup — six icons, correct link order, one rule, two spines, the 44px touch
+  floor on all four links, and exactly one accent-filled row per page with `aria-current`
+  landing on the right one. **Not verified: anything requiring a browser** — spine alignment,
+  the ≤767px drawer, real tap geometry.
+  The per-item ticks in the owner's screenshot are not drawn; the spine alone carries the
+  grouping.
+
 - **Cloudflare R2 document store, management-only** (2026-08-24). The owner created a bucket
   for "investors and management" and asked what it needed. The storage half was
   straightforward; the ask was not, and the useful part of this change was refusing to build

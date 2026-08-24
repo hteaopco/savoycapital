@@ -4,7 +4,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton, useClerk, useUser } from "@clerk/nextjs";
-import { History, Home, LogOut, Menu, PieChart, UserRound, X } from "lucide-react";
+import {
+  Handshake,
+  History,
+  Home,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  PieChart,
+  Shield,
+  UserRound,
+  X,
+} from "lucide-react";
 import { C } from "./palette";
 
 /**
@@ -18,9 +29,10 @@ import { C } from "./palette";
  *
  * **What is deliberately not built: the bottom tab bar.** § 2 describes one for
  * "the feature-gated daily drivers", and then says the drawer is the complete
- * nav and anything else living there is fine. With three destinations a tab bar
- * would duplicate the whole menu rather than shortcut part of it. Add one when
- * there are enough screens for the shortcut to mean something.
+ * nav and anything else living there is fine. With four destinations across two
+ * groups a tab bar would duplicate the whole menu rather than shortcut part of
+ * it — and it has no way to express the grouping. Add one when there are enough
+ * screens for the shortcut to mean something.
  *
  * There is no entity switcher under the title. theAPlink has one because it
  * serves many companies; `FACTS.md` is explicit that Savoy is one fund, and a
@@ -50,10 +62,51 @@ type NavItem = {
   Icon: typeof Home;
 };
 
-const NAV: NavItem[] = [
-  { href: "/portal", label: "Home", Icon: Home },
-  { href: "/portal/portfolio", label: "Portfolio", Icon: PieChart },
-  { href: "/portal/historical", label: "Historical", Icon: History },
+type NavSection = {
+  title: string;
+  Icon: typeof Home;
+  items: NavItem[];
+};
+
+/**
+ * The nav, grouped (owner, 2026-08-24) — an "Admin" section over a rule, then
+ * "Portal Home".
+ *
+ * The shape is copied from the screenshot the owner supplied of theAPlink's own
+ * sidebar: a titled group with a lucide icon, its children indented behind a
+ * vertical spine, and the active child filled with `C.accentBg`. **`design/` has
+ * no nav-group-label spec to copy instead** — `DESIGN_SYSTEM.md` § 2's "Section
+ * header 14px/800/uppercase" is the panel header inside a card (see its § 3.4
+ * bottom-sheet entry, which is where that line is sourced from), and
+ * `AP_DESIGN_REFERENCE.md` § "Nav" says only that the sidebar is `hidden md:flex`.
+ * So this follows the artifact rather than inventing a reading of the canon, and
+ * the label sits at the body size the links use rather than at 14/800/uppercase,
+ * which beside a 15px wordmark in a 240px rail would out-shout the wordmark.
+ *
+ * ONE array for both the desktop sidebar and the mobile drawer, as before —
+ * `MOBILE_REFERENCE.md` § 2 requires the drawer's nav body to be the same source
+ * the sidebar renders, so the two cannot drift.
+ */
+const NAV: NavSection[] = [
+  {
+    title: "Admin",
+    Icon: Shield,
+    items: [{ href: "/deal-room", label: "Deal Room", Icon: Handshake }],
+  },
+  {
+    title: "Portal Home",
+    Icon: LayoutDashboard,
+    items: [
+      // `/home`, not `/portal` (owner, 2026-08-24). `/portal` still redirects to
+      // Portfolio, which is deliberate: `signInFallbackRedirectUrl` in
+      // src/app/layout.tsx lands there after sign-in, that prop is the Clerk
+      // seat's, and dropping a user onto a coming-soon page after they sign in
+      // would be worse than landing them on the real screen.
+      { href: "/home", label: "Home", Icon: Home },
+      { href: "/portal/portfolio", label: "Portfolio", Icon: PieChart },
+      { href: "/portal/historical", label: "Historical", Icon: History },
+    ],
+  },
 ];
 
 const wordmark: React.CSSProperties = {
@@ -163,38 +216,84 @@ function AccountBlock() {
   );
 }
 
+/** Group label — the row that titles a section. Not a link and not focusable. */
+const sectionTitle: React.CSSProperties = {
+  gap: 8,
+  padding: "6px 10px",
+  color: C.text,
+  fontSize: 13,
+  fontWeight: 800,
+  fontFamily: "inherit",
+  letterSpacing: "-0.01em",
+};
+
 function NavBody({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   return (
-    <nav className="flex flex-col" style={{ gap: 2, padding: "8px 8px" }}>
-      {NAV.map(({ href, label, Icon }) => {
-        const active = pathname === href;
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavigate}
-            aria-current={active ? "page" : undefined}
-            className="flex items-center min-h-[44px] md:min-h-0"
+    <nav className="flex flex-col" style={{ padding: "8px 8px" }}>
+      {NAV.map((section, sectionIndex) => (
+        <div key={section.title} className="flex flex-col">
+          {/* The rule the owner asked for, between the groups rather than around
+              each one — so it reads as one separator, not a boxed list. Drawn on
+              the section rather than as a sibling <hr> so it cannot drift out of
+              step if a third group is added. */}
+          {sectionIndex > 0 ? (
+            <div
+              aria-hidden
+              style={{ borderTop: `1px solid ${C.border}`, margin: "8px 2px" }}
+            />
+          ) : null}
+
+          <div className="flex items-center" style={sectionTitle}>
+            <section.Icon size={16} color={C.textMuted} />
+            {section.title}
+          </div>
+
+          {/* The children's spine. `AP_DESIGN_REFERENCE.md` has no token for this,
+              so it is C.border at 1px — the same hairline every other divider in
+              the app uses. The per-item ticks in the owner's screenshot are NOT
+              drawn: they need an absolutely-positioned element per row, and the
+              spine alone already carries the grouping. */}
+          <div
+            className="flex flex-col"
             style={{
-              gap: 10,
-              padding: "8px 10px",
-              borderRadius: 8,
-              // The active row is filled and carries an accent edge, which is
-              // how theAPlink marks it. Copied rather than reinterpreted.
-              borderLeft: `2px solid ${active ? C.accent : "transparent"}`,
-              background: active ? C.accentBg : "transparent",
-              color: active ? C.accent : C.textMuted,
-              fontSize: 13,
-              fontWeight: active ? 700 : 600,
-              textDecoration: "none",
-              transition: `background ${TRANSITION}, color ${TRANSITION}`,
+              gap: 2,
+              marginLeft: 17,
+              paddingLeft: 9,
+              borderLeft: `1px solid ${C.border}`,
             }}
           >
-            <Icon size={16} />
-            {label}
-          </Link>
-        );
-      })}
+            {section.items.map(({ href, label, Icon }) => {
+              const active = pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  className="flex items-center min-h-[44px] md:min-h-0"
+                  style={{
+                    gap: 10,
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    // The active row is filled and carries an accent edge, which is
+                    // how theAPlink marks it. Copied rather than reinterpreted.
+                    borderLeft: `2px solid ${active ? C.accent : "transparent"}`,
+                    background: active ? C.accentBg : "transparent",
+                    color: active ? C.accent : C.textMuted,
+                    fontSize: 13,
+                    fontWeight: active ? 700 : 600,
+                    textDecoration: "none",
+                    transition: `background ${TRANSITION}, color ${TRANSITION}`,
+                  }}
+                >
+                  <Icon size={16} />
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </nav>
   );
 }
