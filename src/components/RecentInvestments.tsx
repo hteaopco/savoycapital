@@ -240,6 +240,11 @@ export function RecentInvestments() {
 
   // Rendered in two places — top right, and flanking the dots below the card.
   const arrow = (direction: "prev" | "next") => (
+    // mobile-ok: § 0.8's 36px carve-out, granted by the owner 2026-08-23 for a
+    // spaced secondary control — secondary, 8px clear of its neighbours, not
+    // repeated in a dense list. `h-9 w-9` is that 36px, deliberately, and the
+    // arrows are why the carve-out was written. This is also why globals.css
+    // floors form controls but NOT `button`: a blanket rule would overrule it.
     <button
       type="button"
       onClick={direction === "prev" ? prev : next}

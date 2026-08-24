@@ -37,9 +37,14 @@ but say which one you are doing.
   driver adapter (`src/lib/db.ts`). Do not "fix" the missing `url` by adding one back.
 
 ## Pre-Push Gate
-Run **`npm run verify`** before every push: **typecheck + eslint + design-lint**
-(`scripts/design-lint.mjs`). CI (`.github/workflows/ci.yml`) runs that chain plus
-`npm run lint:design -- --self-test` and `npm run build` on every PR and on `main`.
+Run **`npm run verify`** before every push: **typecheck + eslint + design-lint + mobile-lint**
+(`scripts/design-lint.mjs`, `scripts/mobile-lint.mjs`). CI (`.github/workflows/ci.yml`) runs
+that chain plus **both** gates' `--self-test` and `npm run build` on every PR and on `main`.
+
+**Two gates, two lanes.** design-lint proves mobile work never breaks desktop; mobile-lint
+proves desktop work never quietly breaks mobile — a new `<table>` or an unfloored control
+arrives with its mobile answer in the same PR, or the build fails. Both baselines are `{}`
+and stay `{}`; mobile waivers are `// mobile-ok: <reason>`.
 
 `next build` is **not** redundant with `tsc` — it is how this repo found its first two
 failures. CI deliberately sets **no secrets**: the build passes without the Clerk keys, so a
@@ -142,7 +147,8 @@ all**, so a change that makes the build require one is a change worth noticing.
 **Deliberately absent — do not scaffold these because theAPlink has them:** multi-tenancy
 (one fund, two users — `FACTS.md` is explicit that *"what does adding client #27 cost?"* does
 **not** apply here), QuickBooks, a test runner, a `/sign-up` route, Clerk webhooks,
-`useIsMobile()`, `mobile-cards.tsx`, and `lint:mobile`.
+`useIsMobile()`, and `mobile-cards.tsx`. **`lint:mobile` is no longer on this list — it
+was built on the owner's instruction, 2026-08-24.**
 
 **`Fund` in the schema is NOT a retraction of that.** It carries a `fundId` on the owner's
 explicit call (2026-08-24) because investors will be scoped by fund, and it is one column and
@@ -191,9 +197,11 @@ do even that if nobody says:
 - `src/proxy.ts` — the auth perimeter and its public allowlist. The one control behind "the
   fund's numbers are not on the internet."
 - `design/**` — the source of truth for every screen. An amendment here is still an owner call.
-- `.github/workflows/**` and `scripts/design-lint.mjs` — CI and the design gate. **An agent
-  editing its own gate is the change no gate can catch**, and the design seat owns that gate,
-  which is precisely why it is on this list.
+- `.github/workflows/**`, `scripts/design-lint.mjs` and `scripts/mobile-lint.mjs` — CI and the
+  two gates. **An agent editing its own gate is the change no gate can catch**, and each gate
+  is owned by the seat it constrains, which is precisely why they are on this list.
+  `scripts/lib/mask-comments.mjs` is shared by both: a change there moves what *either* gate
+  can see.
 - `.claude/rules/**` and this file — what every future agent is told. It propagates to all
   seats invisibly.
 

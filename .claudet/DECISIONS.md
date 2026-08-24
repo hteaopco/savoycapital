@@ -6,6 +6,55 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **`lint:mobile` is built, with five rules and two deliberate departures from theAPlink's
+  (owner, 2026-08-24).** `scripts/mobile-lint.mjs`, baseline `{}`, wired into `npm run verify`
+  and into CI with `--self-test` ahead of the gate. It closes the gap
+  `.claude/rules/ui-governance.md` § 4 had been holding by review alone.
+  - **Why now.** theAPlink accumulated 87 unadapted tables because every feature added one and
+    nothing required a mobile answer in the same PR — a *process* gap, which is why periodic
+    sweeps never fixed it for long. This repo has not accumulated that debt yet, so the gate
+    costs nothing to adopt and prevents the cycle rather than cleaning up after it.
+  - **`tap-target` is INVERTED from upstream's.** theAPlink floors `button` in `globals.css`
+    and its rule therefore hunts sub-40px *non-buttons*. Here `globals.css` floors **form
+    controls and not `button`** (so § 0.8's 36px carve-out survives), so the rule checks that a
+    `<button>`/`<a>`/`<Link>` **states** a 44px floor. A clickable `<div>` is deliberately out
+    of scope: a card-sized one and a 6px one are indistinguishable to a regex, and
+    `ui-governance.md` § 6 already says so.
+  - **`fixed-width` checks `minWidth` only, not `width`.** A numeric `width` collides with
+    `next/image` intrinsic dimensions (`width: 520` in `RecentInvestments`'s data is a real
+    image size). A rule that fires on honest code teaches that waivers are for false positives,
+    which is the failure `MOBILE_REFERENCE.md` § 9 warns about. `maxWidth` is inherently safe
+    on a phone and is not checked.
+  - **`modal-width` is deliberately NOT built.** No modal exists here to exercise it against,
+    and a rule that has never run on real code reads green forever. It goes in with the first
+    modal. Same reasoning that keeps design-lint from having a `spacing-scale` rule.
+  - **The cost, stated plainly.** Two gates now sit between a UI change and `main`, and both
+    are owned by the seats they constrain — the arrangement `CLAUDE.md` flags as "the change no
+    gate can catch". The mitigation is that each gate's rules are fixture-tested and the
+    self-tests run in CI *before* the gates, so a rule that stops firing fails loudly.
+
+- **The shared comment masker was under-masking after any interpolated template literal, and
+  `design-lint` had the bug too (2026-08-24).** `scripts/lib/mask-comments.mjs` broke out of a
+  template at `${` and never resumed, so the template's **closing** backtick was read as the
+  **opening** backtick of a new string — and everything after it, to the next backtick or EOF,
+  was skipped instead of masked.
+  - **How it surfaced.** mobile-lint's `tap-target` rule fired on three *comments* that
+    contain the words "`<button>`" and "`<a>`". The rule was right and the masker was wrong.
+    `DealRoom.tsx` has ``border: `1px solid ${C.border}` `` in a style const near the top,
+    which desynced everything below it.
+  - **The direction of the failure matters:** it was UNDER-masking, so it produced false
+    **positives**, never missed violations. `design-lint` was green only because none of its
+    patterns happened to appear in an affected comment — a `#ffffff` written in prose after any
+    interpolated template would have failed the build with nothing wrong in the code. Proven
+    before fixing, not assumed.
+  - **The fix** tracks open templates on a stack so an interpolation is scanned as code (a
+    comment inside `${…}` is still masked) and the closing backtick pops instead of opening a
+    phantom string. A quoted string now also bails at a newline, because a JS string literal
+    cannot span one — without that, an apostrophe in JSX text (`don't`) opens a string that
+    swallows real code. Both are covered by a fixture in mobile-lint's self-test.
+  - **`scripts/lib/` is shared by both gates.** A change there moves what *either* gate can
+    see, which is why it is now named in `CLAUDE.md`'s say-when-you-touch-it list.
+
 - **The mobile tap-target floor is global for form controls and per-component for buttons
   (2026-08-24).** `src/app/globals.css` gains its first `@media (max-width: 767px)` block,
   flooring `input` / `select` / `textarea` to **44px**. `button` is deliberately **not** in it.

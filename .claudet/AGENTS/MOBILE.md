@@ -77,8 +77,11 @@ appearing on a row, the exception has been misread.
 enforcement that doesn't execute). **Each of these is now flagged in the docs themselves, so
 a future agent hits the warning at the point of use rather than only here:**
 
-- **No `npm run lint:mobile`.** No `scripts/mobile-lint.mjs`, no mobile baseline, no
-  ratchet. Every rubric item in § 3 is caught by eye or not at all.
+- **`npm run lint:mobile` EXISTS as of 2026-08-24** — `scripts/mobile-lint.mjs`, five rules,
+  baseline `{}`, self-tested in CI ahead of the gate. It covers roughly half of
+  `MOBILE_AUDIT_PLAYBOOK.md` § 3. The other half — clipped controls, a flex child missing
+  `minWidth: 0`, cards staying N-up, chip-row overflow, long unbroken strings — is still a
+  person at 375px, and **a green run means mobile is not getting worse, not that it is done.**
 - **`npm run lint:design` DOES exist** as of #20 (2026-08-24) — `scripts/` is no longer
   empty, and the palette mirror is a hard gate rather than a convention. Two of its rules
   reach into this lane: `breakpoint-floor` fails any breakpoint below 768px, and
@@ -196,6 +199,12 @@ preamble. Tables for state, prose for judgment.
   Still no mobile lint and no tests.
 - **Browser:** Chromium in the session sandbox — the only way to make a measured claim.
   A real handset, keyboard overlap, and safe-area insets are the owner's to check.
+- **`scripts/mobile-lint.mjs`** — my ratchet. `--report` prints the coverage profile,
+  `--update` rewrites the baseline (only after genuinely fixing things), `--self-test` proves
+  the rules still fire. Its own logic is guarded by fixtures, because a gate with a broken
+  regex reads green forever — and that is not theoretical here: its first run flagged three
+  comments as markup, which turned out to be a bug in the shared `scripts/lib/mask-comments.mjs`
+  that `design-lint` had too. **When a rule looks wrong, suspect the gate before the code.**
 - **Subagents:** `Explore` for read-only audits when the surface outgrows one context.
   Every returned diff hunk gets read by me before it ships.
 - **No access to:** the Clerk Dashboard, Railway, or DNS. Not my seat.

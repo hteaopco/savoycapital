@@ -354,15 +354,25 @@ are lucide only.
 
 ## 8. Enforcement — `npm run lint:mobile`
 
-> ### ⚠️ savoycapital: this gate does not exist. Everything in § 8 is a blueprint, not a state.
+> ### ✅ savoycapital: this gate NOW EXISTS (2026-08-24). Read the differences before trusting § 8's table.
 >
-> There is no `scripts/mobile-lint.mjs` and no mobile baseline. **`scripts/` is no longer
-> empty** — it holds `design-lint.mjs` (#20, 2026-08-24), which ratchets *design* rules at a
-> baseline of `{}` and is the working model for a mobile one. `npm run verify` is
-> **typecheck + eslint + design-lint**; CI adds `npm run build`. So the rule this file
-> opens with — *a screen owes its mobile view in the same PR that adds it* — is real and
-> binding, but it is **held by hand**, and `.claudet/README.md` rule 3 forbids describing it
-> as enforced.
+> `scripts/mobile-lint.mjs` is real, wired into `npm run verify` (typecheck + eslint +
+> design-lint + mobile-lint) and into CI, with `--self-test` running ahead of it. **The rule
+> this file opens with — *a screen owes its mobile view in the same PR that adds it* — is now
+> enforced rather than held by hand**, for the mechanical half.
+>
+> **The rule set is FIVE, not this section's six, and they are not all the same rules:**
+>
+> | this file | savoycapital |
+> |---|---|
+> | `table-overflow`, `table-label` | Same, same split, same reasoning. |
+> | `tap-target` — sub-40px on a clickable *non-button* | **Inverted.** Here `globals.css` floors form controls and **not** `button`, so the rule checks that a `<button>`/`<a>`/`<Link>` **states** a 44px floor. A clickable `<div>` is deliberately out of scope — a regex cannot tell a card-sized one from a 6px one. |
+> | `fixed-width` — a hard width ≥300px | **`minWidth` only.** A numeric `width` collides with `next/image` intrinsic dimensions, and a rule that fires on honest code teaches that waivers are for false positives. |
+> | `column-count` | Same in CSS. In TSX there is no clean inline form at all — an inline style cannot honor a media query. |
+> | `modal-width` | **Not built.** No modal exists here to exercise it against, and a rule that has never run on real code reads green forever. Add it with the first modal. |
+>
+> Waivers are `// mobile-ok: <reason>`. There is exactly one in the tree: the carousel arrows,
+> on § 0.8's 36px carve-out.
 >
 > That makes the discipline matter *more*, not less. theAPlink pooled the cost of skipping
 > mobile and paid it back every 20–40 PRs; the gate is what made it immediate. Here it is
@@ -415,10 +425,13 @@ in the component, or eslint's rules-of-hooks fails.
 
 ## 9. Where mobile actually stands
 
-> ### ⚠️ savoycapital: every number below is theAPlink's. Ours is *unmeasured*.
+> ### ⚠️ savoycapital: every number below is theAPlink's. Ours is now *measured, and zero*.
 >
-> Not "zero" — **unmeasured**. There is no gate to produce a count, and no audit has been run
-> against this repo's screens. Quoting "100% coverage" or "baseline `{}`" here would report
+> As of 2026-08-24 there IS a gate and it reports **five rules at zero, baseline `{}`** — so
+> unlike before, "zero" here is a produced number rather than an absence of one. Two sweeps
+> have also run by eye. What that zero does **not** mean: the gate covers about half the § 3
+> rubric, and `<table>` count in `src/` is still 0, so the table rules are gating a category
+> that has not appeared yet rather than one that was cleaned up. Quoting "100% coverage" or "baseline `{}`" here would report
 > another product's health as this one's, which is the precise failure `.claudet/README.md`
 > rule 1 exists to prevent. Until a sweep or a gate produces a number, the honest sentence is
 > *"mobile has not been measured."*
