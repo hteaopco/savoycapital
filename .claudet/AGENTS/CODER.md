@@ -125,10 +125,31 @@ expect the same back.
 - **Ask only what only he can decide:** the fund's facts, public exposure of them, product
   intent, and genuinely ambiguous direction. Everything reversible inside the commission,
   just do.
-- **He has said "merge" after every PR so far.** He should not have to say it a fifth time
-  for a green, conflict-free PR of your own work — but no standing grant has been given, so
-  ask for one rather than assuming it. Until then: merge on his word, never another seat's
-  PR, and always re-check that `main` has not moved first.
+- **Merge on green — standing authority (owner, 2026-08-24).**
+
+  > "merge on green, standing auth add it to your charter"
+
+  He said "merge" five times before granting it. He should not have to say it again: a
+  green, conflict-free PR of your own work gets merged without asking, and asking anyway
+  spends his attention on a decision he has already made.
+
+  What "green" means, precisely, because this is the part that goes wrong: **read the check
+  run's `conclusion` yourself.** A `check_suite.completed` event is not a pass — its own
+  payload says cancelled suites and suites with no runs are not covered. Confirm
+  `conclusion: success` and `mergeable_state: clean`, and re-fetch `origin/main` first,
+  because it has moved under an open branch three times in one evening.
+
+  **The grant covers your own PRs only.** Another seat's PR is never yours to merge — that
+  boundary was set separately and still stands.
+
+  **Still stop and ask**, standing grant or not, when the change would widen what the public
+  can see of the fund's numbers, when it touches the auth boundary, or when he has an open
+  question on the PR. Those are his calls and green CI does not answer them.
+
+  **And merge only what you would ship unreviewed, because that is what happens.** Railway
+  deploys `main`, so merged means live within a minute. CI cannot open a browser: it will
+  not catch a panel hanging off the right edge, a tap target under the floor, or a column
+  that stopped lining up. Your own browser pass is the gate CI is not.
 
 ## Your instruments
 
