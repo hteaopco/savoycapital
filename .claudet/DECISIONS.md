@@ -20,8 +20,8 @@ Newest first.
     building desktop-first and bolting mobile on, which is how that backlog was created.**
   - **Breakpoints: `md:` is primary, a second is allowed when derived.** `MOBILE_REFERENCE.md`
     § 1 permits exactly one and says lint rejects any other. `DESIGN_SYSTEM.md` § 3.x uses
-    `sm:`/`lg:` throughout, and `FundAllocation.tsx` already ships `min-[1440px]:` off a
-    documented sum. The condition is that a second breakpoint be **derived from arithmetic and
+    `sm:`/`lg:` throughout, and `FundAllocation.tsx` already ships `2xl:` off a documented
+    sum (1502 required, 1536 available). The condition is that a second breakpoint be **derived from arithmetic and
     shown at the call site**, and never reach below 768px.
   - **Tap targets: 44px, per component.** `MOBILE_REFERENCE.md` § 6 says `globals.css` floors
     controls to 40px so "you usually need no per-component work." **`src/app/globals.css` has

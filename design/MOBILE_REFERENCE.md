@@ -59,8 +59,12 @@ across the 767/768 line into the frozen surface.
 > **savoycapital: 767/768 is the primary line, but it is not the only one allowed.** There is
 > no lint to reject a second breakpoint, `DESIGN_SYSTEM.md` § 3.x uses `sm:` / `lg:`
 > throughout, and this repo already ships one: `FundAllocation.tsx` floats its terms panel
-> from `min-[1440px]:`, a number **derived** rather than chosen (240 sidebar + 64 shell
-> padding + 720 card + 66 connector + 320 panel = 1410, so it floats at 1440). The condition
+> from `2xl:` — the width it needs is **derived** rather than chosen (240 sidebar + 64 shell
+> padding + 780 card + 98 clearance + 320 panel = 1502, which fits `2xl`'s 1536 with 34px to
+> spare), and the arithmetic is written out at the call site. **Those digits move**: that
+> breakpoint has been `lg`, `xl`, `min-[1440px]` and now `2xl`, once per change to any of the
+> five inputs. Read the sum in the file; never quote it from a doc, this one included. The
+> condition
 > is that a second breakpoint must be **derived from arithmetic and shown at the call site**,
 > and must not reach below 768px. A breakpoint picked because it looked about right is still
 > wrong. theAPlink's rationale — protecting a frozen surface — does not apply to a surface
@@ -217,7 +221,7 @@ A detail that renders inline (AP Home) or as a centered modal (Vendors) becomes 
 > `src/components/`, with these names and this API. Until then the pattern is written by
 > hand — and the part to get right is the one this section names: drop fixed *heights* and
 > side gaps, keep widths `min(Npx, 100%)`. The one detail-on-a-line pattern this repo does
-> ship — `FundAllocation`'s terms panel — already stacks inline below its row under 1440px
+> ship — `FundAllocation`'s terms panel — already stacks inline below its row under `2xl`
 > rather than floating, which is the same instinct applied to a desktop breakpoint.
 
 - **Inline → sheet.** Wrap in `position:fixed; inset:0; background:C.bg; overflowY:auto`

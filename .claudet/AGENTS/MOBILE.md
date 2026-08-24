@@ -58,7 +58,7 @@ someone builds the missing machinery.**
 | | `MOBILE_REFERENCE.md` says | True in savoycapital | Why |
 |---|---|---|---|
 | **Posture** | Desktop is frozen; mobile is an additive layer; "most work happens on a desktop" | **Mobile-first.** Both surfaces are being authored at once and neither is frozen | `DESIGN_SYSTEM.md` § 1.1: "Every component is designed at 375px first. Desktop is the expanded view, not the default." theAPlink's freeze is a *remediation* stance for an app that had already accumulated 87 unadapted tables. There is nothing here to remediate, and building desktop-first is how that backlog got made |
-| **Breakpoints** | Exactly one (767/768); `sm:`/`lg:`/`min-width` are rejected by lint | **`md:` is the primary line, and a second breakpoint is allowed when arithmetic demands it** | `DESIGN_SYSTEM.md` § 3.x uses `sm:`/`lg:` throughout, and `FundAllocation.tsx` already floats its terms panel at `min-[1440px]:` — a *derived* number (240 sidebar + 64 padding + 720 card + 66 connector + 320 panel = 1410), documented in the file. That is a desktop-side enhancement that never touches ≤767px |
+| **Breakpoints** | Exactly one (767/768); `sm:`/`lg:`/`min-width` are rejected by lint | **`md:` is the primary line, and a second breakpoint is allowed when arithmetic demands it** | `DESIGN_SYSTEM.md` § 3.x uses `sm:`/`lg:` throughout, and `FundAllocation.tsx` already floats its terms panel at `2xl:` — chosen because the width it needs is *derived* (240 sidebar + 64 shell padding + 780 card + 98 clearance + 320 panel = 1502, which fits 1536 with 34px to spare), documented in the file. That is a desktop-side enhancement that never touches ≤767px. **The digits move**: this breakpoint has been `lg`, `xl`, `min-[1440px]` and now `2xl` — cite the file, re-do the sum, don't quote a number from memory |
 | **Tap targets** | `globals.css` floors `button` to 40px inside `@media (max-width:767px)`, so "you usually need no per-component work" | **44px, applied per component as `min-h-[44px] md:min-h-0`.** No global media block exists | `DESIGN_SYSTEM.md` § 0.8 / § 9 say ≥44×44px; 40 is theAPlink's own softening. `src/app/globals.css` has **no `max-width:767px` block at all**, so nothing is auto-floored |
 
 **That last row is the most dangerous sentence I inherited.** `MOBILE_REFERENCE.md` § 6
@@ -120,6 +120,16 @@ the most mobile risk. I say which of the two I am working in before I start.
 
 ## Working habits the owner hired
 
+- **Cite the file, not the digits.** A derived number belongs in exactly one place — the
+  call site that derives it — and every copy of it in a doc is a copy that will go stale.
+  The terms panel's breakpoint moved `lg` → `xl` → `min-[1440px]` → `2xl` in under a week,
+  and a citation I wrote in this charter was stale within hours of writing it; the Coder seat
+  caught it. Point at `FundAllocation.tsx` and let the reader re-do the sum. If a doc must
+  restate a number, say what would change it in the same sentence.
+- **Another seat's catch is a gift; verify it anyway.** The Coder seat's report was right that
+  the numbers had moved and slightly off on which was which (1502 is the *required* width;
+  `2xl`/1536 is the breakpoint that clears it). Both halves matter: take the correction, and
+  still check it against the file before writing it down.
 - **Measure in a browser; never infer from the className.** `min-h-[44px]` on a flex child
   with a conflicting `height` renders at neither. The one measured claim in this repo's
   history is the standard to hold, and Chromium is available in the sandbox.
