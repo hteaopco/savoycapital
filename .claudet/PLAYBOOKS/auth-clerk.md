@@ -34,7 +34,7 @@ that opens the door, and it is silent — GOTCHA 3.
 | Layer | File | Question it answers |
 |---|---|---|
 | Authentication | `src/proxy.ts` | Is somebody signed in? |
-| Authorization | *(none — see below)* | Answered by the invitation, in Clerk |
+| Authorization | *(none — see below)* | Answered by the account existing, in Clerk |
 
 **Route protection is deny-by-default.** `src/proxy.ts` holds an exhaustive list of PUBLIC
 routes; everything else requires a session. The inverse — list the private routes, leave the
@@ -66,14 +66,21 @@ GOTCHA 3 is how to check it.
 
 ---
 
-## 2. Bring-up — the four steps only a person can do
+## 2. Bring-up — the five steps only a person can do
 
-Nothing below can be done from this repo. Until all four are complete, `/monitor` correctly
-refuses everyone, including the principals.
+**Status: done. Steps 1–4 are complete and the owner has signed in (2026-08-24); step 5 is
+half-done — `clerk.` is correct, `accounts.` is still proxied.** Kept as the runbook for a
+rebuild or a second instance, not as an outstanding checklist.
+
+Nothing below can be done from this repo. Until they are complete, `/portal` correctly
+refuses everyone, including the principals. (This said `/monitor` until 2026-08-24 — a route
+name that has been `/monitor` → `/portfolio` → `/portal`. GOTCHA 12 is the rename checklist.)
 
 1. **Create the Clerk application** and copy its API keys (Dashboard → API keys).
-2. **Restrict sign-up to invitation only.** Dashboard → Configure → **Restrictions** → set
-   sign-up mode to **Restricted**. Clerk's default allows anyone to create an account.
+2. **Restrict sign-up.** Dashboard → Configure → **Restrictions** → set sign-up mode to
+   **Restricted**. Clerk's default allows anyone to create an account; `restricted` stops
+   self-serve sign-up outright. Clerk's UI frames this as invitation-only, but an admin
+   creating a user directly works just as well under it — see § 1.
    **This is the entire access boundary** — there is no second lock behind it. Done
    2026-08-24; GOTCHA 3 says how to confirm it is still true.
 3. **Create Rodney's and Jett's accounts** (Dashboard → Users → Create user). Phone number
@@ -101,7 +108,7 @@ route, but nothing links to it any more.
 - Signed out, `/portal` → 307 to `/sign-in?redirect_url=...` **on this domain**. A redirect
   to a `*.accounts.dev` host means GOTCHA 1 has regressed. Check `/portal/portfolio` and
   `/portal/historical` too: each is protected on its own, not by the section prefix.
-- Signed in as an invited user → `/portal` redirects to `/portal/portfolio`, which renders
+- Signed in as a provisioned user → `/portal` redirects to `/portal/portfolio`, which renders
   the allocation. Sign-out is in **`PortalShell`'s own account block at the foot of the
   sidebar** — not Clerk's `<UserButton />`, which the owner replaced on 2026-08-24. The
   portal does not render `SiteNav` at all.
@@ -292,7 +299,7 @@ out, a deep link to `/deal-room` returned 307 and the full anonymous route sweep
 - **A `/sign-up` route** — GOTCHA 4.
 - **Organizations / roles / permissions.** Clerk has them; two people with identical access
   do not need them. Revisit only if a third kind of user appears — that is also the point at
-  which "everyone invited sees everything" stops being an acceptable model.
+  which "everyone with an account sees everything" stops being an acceptable model.
 - **An in-app allowlist.** Removed 2026-08-24; see § 1. If one ever comes back, put it in
   Clerk `privateMetadata` rather than an env var, so adding a person is not a redeploy.
 - **Webhooks (`/api/webhooks/clerk`).** There is no local user table to sync into — no

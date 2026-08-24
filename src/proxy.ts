@@ -56,9 +56,11 @@ export default clerkMiddleware(async (auth, request) => {
   );
 
   // Authentication only. There is no authorization layer behind this: the
-  // Clerk instance is set to restricted sign-up, so an account cannot exist
-  // without an invitation and "signed in" is the whole test. See
-  // .claudet/PLAYBOOKS/auth-clerk.md § 1.
+  // Clerk instance is set to restricted sign-up, so an account cannot come
+  // into existence unless a principal made it and "signed in" is the whole
+  // test. Accounts are created in the Dashboard rather than invited (owner,
+  // 2026-08-24); that does not change this, because what `restricted` blocks
+  // is a stranger creating one. See .claudet/PLAYBOOKS/auth-clerk.md § 1.
   await auth.protect(undefined, { unauthenticatedUrl: signInUrl.toString() });
 });
 
