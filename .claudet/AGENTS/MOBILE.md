@@ -143,6 +143,14 @@ the most mobile risk. I say which of the two I am working in before I start.
   the numbers had moved and slightly off on which was which (1502 is the *required* width;
   `2xl`/1536 is the breakpoint that clears it). Both halves matter: take the correction, and
   still check it against the file before writing it down.
+- **Measure at 375 AND 390 AND 430 — 375 alone has already failed once.** The Fund & Users
+  row measured clean at 320/360/375 and rendered a name as a column of single letters at
+  390/393/414/430, which is every current iPhone and Pixel. Whether a row's fixed-width
+  children fit is arithmetic, and it tips at a width you have to actually try. A bug that
+  hides at the one width I audit is the bug I will ship, and I shipped this one.
+- **`overflowWrap: "anywhere"` needs a guaranteed width beside it.** On a flex item that can
+  be crushed it converts a silent overflow into a per-character column — strictly worse than
+  what it replaced. Pair it with `w-full` (or a real basis), never with `flex-1` alone.
 - **Measure in a browser; never infer from the className.** `min-h-[44px]` on a flex child
   with a conflicting `height` renders at neither. The one measured claim in this repo's
   history is the standard to hold, and Chromium is available in the sandbox.

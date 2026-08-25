@@ -534,3 +534,11 @@ things to hold onto:
    still applies is the intent: know which surface each changed line affects, and say so.
    `npm run verify` is typecheck + eslint + design-lint; CI adds `npm run build`.
 6. Look at it at 375px wide. Desktop must be **identical** at ≥768px.
+   **savoycapital: 375 ALONE IS NOT ENOUGH, proven the hard way (2026-08-25).** A crushed
+   flex item on the Fund & Users row measured fine at 320, 360 and 375 and rendered a name
+   as a column of single letters at **390, 393, 414 and 430** — every current iPhone and
+   Pixel. Whether a row's fixed-width children fit is arithmetic, and the answer flips at a
+   width the canonical 375 happens to sit below. **Check 375 AND 390 AND 430 at minimum**;
+   when a row carries two or more fixed-width children, sweep the range rather than sampling
+   it. The one number that matters is the width where the arithmetic tips, and it is never
+   the width you already tested.

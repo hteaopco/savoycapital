@@ -6,6 +6,36 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **Mobile is audited at 375, 390 and 430 — not 375 alone (2026-08-25).** The canonical
+  "look at it at 375px" from `MOBILE_REFERENCE.md` § 10 is necessary and **not sufficient**,
+  proven by shipping a defect through it.
+  - **What happened.** #51 added `overflowWrap: "anywhere"` to four user-entered names so a
+    long token could not tear a row. On the Fund & Users row the name block is
+    `min-w-0 flex-1`, i.e. flex-basis 0, sitting beside two selects with `minWidth` 150 and
+    140. At a 390px viewport those selects plus their gaps take 314 of the row's ~316px and
+    the name is left about **two pixels** — so `overflowWrap: anywhere` broke "Rodney Savoy"
+    at every character, 165px tall, one letter per line. Reported from a real handset with a
+    screenshot.
+  - **Why every check passed.** `lint:mobile` was clean (nothing here is a `minWidth ≥ 300`,
+    an unfloored control or a table), `verify` and `build` were green, and the width I audit —
+    375 — is one of the widths where it does **not** reproduce. Measured across real devices:
+    clean at 320 / 360 / 375, broken at **390 / 393 / 414 / 430**. That is every current
+    iPhone and Pixel and none of the widths in the canon.
+  - **The mechanism, stated so it is not re-learned.** 375 is the *tightest* common width,
+    which makes it right for overflow. This bug is the opposite shape: it needs *enough* room
+    for every fixed-width child to sit on one line, and only then does the flexible child get
+    squeezed to nothing. A tighter viewport wraps the selects and hides it.
+  - **`overflowWrap: "anywhere"` is only safe with a guaranteed width.** On a crushable flex
+    item it converts a silent overflow into an unreadable column — worse than the bug it
+    fixed. The repair keeps the wrap and adds `w-full md:w-auto`, because dropping the wrap
+    would just restore a long-name tear.
+  - **Not mechanized, deliberately.** A rule for "sum of sibling `minWidth`s exceeds the row"
+    needs layout, not text — the gate would have to know the container's width, its padding
+    and its gaps. Writing a fragile version would fire on honest code, which
+    `MOBILE_REFERENCE.md` § 9 names as the way a ratchet loses its meaning. This one is held
+    by measuring at more than one width, and that is now written into the charter and both
+    mobile docs rather than left as a habit.
+
 - **A connected panel shares its MOTION and never its GEOMETRY (2026-08-24).**
   `src/components/panel-motion.ts` holds the six timing and weight constants; each call site
   keeps its own offsets, widths and float breakpoint.
