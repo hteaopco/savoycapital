@@ -23,6 +23,30 @@ Newest first.
     from a variable looks tidier and never reaches the stylesheet. Checked against the emitted
     CSS rather than the diff, which is the only way this is actually knowable.
 
+- **The holding panel is a CHAIN, and the middle breakpoint is the whole design (2026-08-24).**
+  `card ──── detail panel ──── Why We Like It`, on the owner's ask to have the thesis "off the
+  card to the right ... the line on the right side of card and the why we like it box after
+  that."
+  - **Three layouts, not two.** ≥1860px the full chain; 1536–1860 the tray floats right of the
+    card with the panels **stacked**; below 1536 it drops inline under the row. The middle state
+    is not a compromise nobody wanted — it is what stops the change costing something. Pushing
+    the whole tray out to 1860 would take the floating detail panel away from everyone between
+    1536 and 1860 who has it today; letting the chain run at 1536 would hang the second panel
+    off the right edge. A tray that is a flex **column** until it has room to be a flex **row**
+    gets both, and needs no JavaScript to decide.
+  - **1860 is arithmetic**: `240 + 64 + 780 + 98 + 320 + 72 + 280 = 1854`, six pixels of slack.
+    The thesis panel is **280 and not 320 because that is what the sum had left** — if the
+    chain should reach narrower screens, that is the number to spend and 1860 moves with it.
+  - **This is a THIRD breakpoint on one component** (`md`, `2xl`, `min-[1860px]`), and
+    `.claude/rules/ui-governance.md` § 4 says "a second is allowed above it when derived from
+    arithmetic and shown at the call site." Both extras here are derived and shown, so the
+    spirit holds — but the letter says *a second*, and amending that rule is an owner call, so
+    it is flagged rather than edited.
+  - **The second connector is a flex ITEM, the first is absolutely positioned.** Not an
+    inconsistency: the first has to reach across a gap between two independent boxes, while the
+    second only fills space inside a row that already exists. Making them the same would mean
+    giving the second one absolute coordinates it does not need.
+
 - **"Why We Like It" IS shown to investors — decided, then reversed the same day (2026-08-24).**
   Written in the Deal Room, read on the Portfolio drill-down.
   - **It shipped management-only first, and that was deliberate.** The reasoning then: a
@@ -38,9 +62,8 @@ Newest first.
     typed in the Deal Room is read by that fund's investors, with no draft state and no second
     copy. `src/lib/authz.ts` still scopes Portfolio by fund, so an investor sees their own
     fund's deals and no others — that is the only boundary around this text.
-  - Rendered as a `prose` detail row: no `tabular-nums` (a column mechanism, wrong in a
-    sentence), real leading, and a 220px scroll ceiling so a long entry scrolls inside the
-    panel instead of stretching it past the card it is pinned to.
+  - Rendered as **its own panel**, second in a chain off the card — *superseded the same day;
+    it was briefly a `prose` detail row inside the first panel.* See the entry above.
 
 - **The Portfolio chart reads Postgres. There is one source for a fund figure (2026-08-24).**
   `src/lib/portfolio.ts` builds it from `Fund.sizeCents` and each `Deal.amountCents`, grouped

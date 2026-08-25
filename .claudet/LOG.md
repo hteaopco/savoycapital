@@ -8,6 +8,32 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **The holding panel became a chain** (owner, 2026-08-24: *"i would like tfor the 'why we like
+  it' to be off the card to the right. have the line on the right side of card and the why we
+  like it box after that"*). `card ──── detail panel ──── Why We Like It`.
+  **Three layouts, and the middle one is the point.** ≥1860px the full chain; 1536–1860 the
+  tray floats right of the card with the panels **stacked**; below 1536 it drops inline under
+  the row. Pushing the whole tray out to 1860 would have taken the floating detail panel away
+  from everyone between 1536 and 1860 who has it today, and running the chain at 1536 would
+  hang the second panel off the right edge. A tray that is a flex column until it has room to
+  be a flex row gets both, with no JavaScript deciding anything.
+  **1860 is arithmetic**, same convention as the existing sum:
+  `240 + 64 + 780 + 98 + 320 + 72 + 280 = 1854`, six pixels of slack. The thesis panel is 280
+  rather than 320 because that is what the sum had left — spend that number if the chain should
+  reach narrower screens, and move 1860 with it.
+  **A third breakpoint on one component**, which `ui-governance.md` § 4 permits in spirit
+  ("derived from arithmetic and shown at the call site") but describes as "a second". Flagged
+  for the owner rather than edited — amending that file is not this seat's call.
+  **Two claims from hours earlier are now false and are fixed here**: `DetailRow.prose` is gone
+  (the flag existed only to make a paragraph survive inside the figures panel, which is exactly
+  the problem its own panel solves) and the `DECISIONS` bullet describing it.
+  **Verified against the emitted CSS, twice over.** All nine `min-[1860px]:` classes are
+  present, every `2xl:` class the existing panel needs is still present, and — the one that
+  could have failed silently — the `min-width:1860px` block is emitted **after** the
+  `min-width:1536px` block, so `w-[672px]` wins over `w-[320px]` on the tray. Had Tailwind
+  ordered them the other way, 672px of content would sit in a 320px box, at one width, with
+  every gate green.
+
 - **"Why We Like It" moved onto Portfolio, for investors** (owner, 2026-08-24: *"it needs to
   be on portfolio. its for the investors, a quick snippet of why we like it"*).
   A fifth row on the holding drill-down, last, after the facts — the panel header already
@@ -17,12 +43,8 @@ Reverse-chronological log of notable changes.
   and answered by the person entitled to answer it. Five statements said the opposite and all
   five are corrected here — the schema comment, the `DealRoom` type, the PATCH route header,
   `DECISIONS.md` and the previous LOG entry.
-  **`DetailRow` gains `prose?`.** Every other row on that panel is a figure, a date or a short
-  clause and carries `tabular-nums` — fixed-width numerals that make a column line up, and
-  which read mechanical in a sentence. A prose row drops them, takes real leading, and gets a
-  220px **scroll ceiling rather than a truncation**: a few sentences never reach it and show no
-  scrollbar, while a long entry scrolls inside the panel instead of stretching it past the card
-  it is centred on. An investor-facing thesis is the last thing to cut off with an ellipsis.
+  **`DetailRow` gained `prose?`** to render it — *reverted the same day; the thesis became its
+  own panel and the flag went with it. See the entry above.*
   **The consequence worth carrying: the Deal Room field is no longer a scratchpad.** What is
   typed there is read by that fund's investors, with no draft state and no second copy.
   `src/lib/authz.ts` still scopes Portfolio by fund, so an investor sees their own fund's deals
