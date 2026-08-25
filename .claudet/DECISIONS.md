@@ -6,6 +6,31 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **A connected panel shares its MOTION and never its GEOMETRY (2026-08-24).**
+  `src/components/panel-motion.ts` holds the six timing and weight constants; each call site
+  keeps its own offsets, widths and float breakpoint.
+  - **Why share the motion.** The Deal Room's "Why We Like It" panel is the second of these.
+    Left alone it would have been a second copy of four magic numbers on a second screen —
+    `ui-governance.md` § 3's "two screens that disagree", which it names as permanently the
+    reviewer's job because consistency is cross-file and the lint is per-file. Two connected
+    panels that animate differently read as two mechanisms.
+  - **Why NOT share the geometry.** The breakpoint is a *result*: Portfolio floats at `2xl:`
+    because `240 + 64 + 780 + 98 + 320 = 1502`; the Deal Room floats at `min-[1640px]:` because
+    its card is 900 wide and the sum is 1596. A shared constant here would make one screen's
+    layout silently depend on the other's card width, and the failure — a panel hanging off the
+    right edge — is invisible at every width except the one where it happens.
+  - **The classes stay written out in full.** Tailwind scans source text, so a class assembled
+    from a variable looks tidier and never reaches the stylesheet. Checked against the emitted
+    CSS rather than the diff, which is the only way this is actually knowable.
+
+- **"Why We Like It" is management-facing, and that was a choice (2026-08-24).**
+  The column exists, the Deal Room edits it, and the Portfolio drill-down does **not** show it.
+  Portfolio is the surface an investor sees; a written investment thesis in front of investors
+  is a different kind of statement from a note management keeps, and `FACTS.md` already flags
+  that what this fund says about a deal is not a question to answer by reflex. Adding it to
+  that panel is one line whenever the owner asks for it — the point is that it is asked for
+  rather than arriving as a side effect of adding a column.
+
 - **The Portfolio chart reads Postgres. There is one source for a fund figure (2026-08-24).**
   `src/lib/portfolio.ts` builds it from `Fund.sizeCents` and each `Deal.amountCents`, grouped
   by `Deal.instrument`. `src/content/fund-allocation.ts` keeps only the as-of date.
