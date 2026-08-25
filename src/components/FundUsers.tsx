@@ -755,7 +755,9 @@ function PersonRow({
       style={{ gap: 12, padding: "12px 16px", borderTop: `1px solid ${C.border}` }}
     >
       <div className="min-w-0 flex-1">
-        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+        {/* Comes from Clerk, so its length is not ours to bound — same
+            treatment as the deal and holding names. */}
+        <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflowWrap: "anywhere" }}>
           {personLabel(person)}
         </div>
         <div
