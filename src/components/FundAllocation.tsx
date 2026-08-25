@@ -46,6 +46,19 @@ import {
 export type DetailRow = {
   label: string;
   value: string;
+  /**
+   * Render this row as PROSE rather than as a data value.
+   *
+   * Every other row here is a figure, a date or a short clause, so the default
+   * carries `tabular-nums` — the fixed-width numerals that make a column line
+   * up. In running prose those same numerals are wrong: they are a table
+   * mechanism, and a sentence set in them reads spaced-out and mechanical.
+   * A prose row also gets real leading and a scroll ceiling.
+   *
+   * Added 2026-08-24 for "Why We Like It", which is the first row here that is
+   * a paragraph rather than a value.
+   */
+  prose?: boolean;
 };
 
 /** A single position inside a bucket. */
@@ -272,15 +285,33 @@ function HoldingDetail({ holding }: { holding: Holding }) {
               {row.label}
             </div>
             {/* Terms wrap; § 0.7 truncates labels and names, never values that
-                must be read in full, and a rate or an amort schedule is one. */}
+                must be read in full, and a rate or an amort schedule is one.
+                Neither is a thesis, which is why a prose row scrolls at a
+                ceiling rather than being cut off with an ellipsis. */}
             <div
-              style={{
-                fontSize: 12,
-                color: C.text,
-                marginTop: 1,
-                ...numCell,
-                whiteSpace: "normal",
-              }}
+              style={
+                row.prose
+                  ? {
+                      fontSize: 12,
+                      color: C.text,
+                      marginTop: 3,
+                      whiteSpace: "pre-wrap",
+                      lineHeight: 1.6,
+                      // A ceiling, not a truncation. A few sentences never
+                      // reach it and see no scrollbar at all; a pasted essay
+                      // scrolls inside the panel instead of stretching it past
+                      // the card it is pinned to the middle of.
+                      maxHeight: 220,
+                      overflowY: "auto",
+                    }
+                  : {
+                      fontSize: 12,
+                      color: C.text,
+                      marginTop: 1,
+                      ...numCell,
+                      whiteSpace: "normal",
+                    }
+              }
             >
               {row.value}
             </div>

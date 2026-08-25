@@ -8,6 +8,26 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **"Why We Like It" moved onto Portfolio, for investors** (owner, 2026-08-24: *"it needs to
+  be on portfolio. its for the investors, a quick snippet of why we like it"*).
+  A fifth row on the holding drill-down, last, after the facts — the panel header already
+  carries the name and the amount, so the figures read first and the narrative closes.
+  **This reverses the call made hours earlier on the same field**, and the reversal is recorded
+  rather than papered over: the useful fact is that a disclosure question was put to the owner
+  and answered by the person entitled to answer it. Five statements said the opposite and all
+  five are corrected here — the schema comment, the `DealRoom` type, the PATCH route header,
+  `DECISIONS.md` and the previous LOG entry.
+  **`DetailRow` gains `prose?`.** Every other row on that panel is a figure, a date or a short
+  clause and carries `tabular-nums` — fixed-width numerals that make a column line up, and
+  which read mechanical in a sentence. A prose row drops them, takes real leading, and gets a
+  220px **scroll ceiling rather than a truncation**: a few sentences never reach it and show no
+  scrollbar, while a long entry scrolls inside the panel instead of stretching it past the card
+  it is centred on. An investor-facing thesis is the last thing to cut off with an ellipsis.
+  **The consequence worth carrying: the Deal Room field is no longer a scratchpad.** What is
+  typed there is read by that fund's investors, with no draft state and no second copy.
+  `src/lib/authz.ts` still scopes Portfolio by fund, so an investor sees their own fund's deals
+  and no others — that is the only boundary around this text.
+
 - **"Why We Like It" — a thesis panel on a line off the Investment card** (owner, 2026-08-24:
   *"lets add a 'Why We Like It' modal to the right of the deal info card ... have another line
   coming off the card to the right with a modal just like the investment info. it will be a
@@ -33,9 +53,9 @@ Reverse-chronological log of notable changes.
   depend on the other's.
   The refactor moved no values — the diff on `FundAllocation.tsx` is deletions only, and the
   `2xl:` block in the emitted CSS is byte-for-byte the same set of rules.
-  **Management-facing only.** It is not on the Portfolio drill-down, which is the surface an
-  investor sees. Putting a thesis in front of investors is a call to make deliberately, not a
-  side effect of adding a column.
+  **Management-facing only** — *reversed hours later by the owner; see the entry above.* The
+  call at the time was that a thesis in front of investors should be asked for rather than
+  arrive as a side effect of adding a column. It was then asked for.
   Migration `20260824214500_deal_why_we_like_it` confirmed identical to `prisma migrate diff`.
   **Not verified: nothing has been written to Postgres from here.**
 

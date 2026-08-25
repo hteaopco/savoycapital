@@ -196,8 +196,12 @@ rejection can carry a message, not in the column type.
 `DealFigures`' state and its Save button. Two Save buttons on one card is how half a deal
 gets saved.
 
-**It is management-facing and is NOT on the Portfolio drill-down.** That surface is what an
-investor sees. `DECISIONS.md` records why that was a choice rather than an oversight.
+**It is INVESTOR-VISIBLE.** It renders on the Portfolio drill-down as the last row of a
+holding's panel (owner, 2026-08-24 — reversing the management-only call made hours earlier;
+`DECISIONS.md` records both). **So this box is not a scratchpad**: what is typed here is read
+by that fund's investors, with no draft state and no second copy. `src/lib/authz.ts` scopes
+Portfolio by fund, so an investor sees their own fund's deals and no others — that is the only
+boundary around this text.
 
 **The panel floats at `min-[1640px]:`, and that number is arithmetic:**
 

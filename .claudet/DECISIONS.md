@@ -23,13 +23,24 @@ Newest first.
     from a variable looks tidier and never reaches the stylesheet. Checked against the emitted
     CSS rather than the diff, which is the only way this is actually knowable.
 
-- **"Why We Like It" is management-facing, and that was a choice (2026-08-24).**
-  The column exists, the Deal Room edits it, and the Portfolio drill-down does **not** show it.
-  Portfolio is the surface an investor sees; a written investment thesis in front of investors
-  is a different kind of statement from a note management keeps, and `FACTS.md` already flags
-  that what this fund says about a deal is not a question to answer by reflex. Adding it to
-  that panel is one line whenever the owner asks for it — the point is that it is asked for
-  rather than arriving as a side effect of adding a column.
+- **"Why We Like It" IS shown to investors — decided, then reversed the same day (2026-08-24).**
+  Written in the Deal Room, read on the Portfolio drill-down.
+  - **It shipped management-only first, and that was deliberate.** The reasoning then: a
+    written investment thesis in front of investors is a different kind of statement from a
+    note management keeps, so it should be asked for rather than arrive as a side effect of
+    adding a column. The owner then asked for it — *"it needs to be on portfolio. its for the
+    investors, a quick snippet of why we like it"* — which is the decision, and it stands.
+  - **Recorded as a reversal rather than silently rewritten**, because the useful part is not
+    which way it landed but that a disclosure question was put and answered by the person
+    entitled to answer it. A future agent finding only the current state would have no way to
+    tell a considered call from an unexamined default.
+  - **The consequence the code now has to carry: the field is not a scratchpad.** Whatever is
+    typed in the Deal Room is read by that fund's investors, with no draft state and no second
+    copy. `src/lib/authz.ts` still scopes Portfolio by fund, so an investor sees their own
+    fund's deals and no others — that is the only boundary around this text.
+  - Rendered as a `prose` detail row: no `tabular-nums` (a column mechanism, wrong in a
+    sentence), real leading, and a 220px scroll ceiling so a long entry scrolls inside the
+    panel instead of stretching it past the card it is pinned to.
 
 - **The Portfolio chart reads Postgres. There is one source for a fund figure (2026-08-24).**
   `src/lib/portfolio.ts` builds it from `Fund.sizeCents` and each `Deal.amountCents`, grouped
