@@ -8,6 +8,37 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **"Why We Like It" — a thesis panel on a line off the Investment card** (owner, 2026-08-24:
+  *"lets add a 'Why We Like It' modal to the right of the deal info card ... have another line
+  coming off the card to the right with a modal just like the investment info. it will be a
+  paragraph in the investments section"*).
+  `Deal.whyWeLikeIt`, a nullable TEXT column capped at **2,000** characters at the route —
+  four times `terms`/`fees`, because those render as one line each and this is prose. Both caps
+  are product rules about what fits the panel, which is why neither is a `VARCHAR(n)`.
+  **It is one form, not two.** The panel is part of `DealFigures` and saves with the existing
+  Save button. Two Save buttons on one card is how half a deal gets saved.
+  **The breakpoint is arithmetic, re-done from THIS screen's widths.** The Deal Room card is
+  900 wide where Portfolio's is 780, so the same 72px gap and 320px panel need more room:
+  `240 + 64 + 900 + 72 + 320 = 1596`, which is why it floats at `min-[1640px]:` and not at
+  `2xl:`. Below that it stacks inline in the card and the connector is hidden.
+  **Verified against the emitted CSS, not the diff.** All nine arbitrary Tailwind classes and
+  the `@media (min-width:1640px)` block are in `.next/static/chunks/*.css`. This repo has been
+  bitten before by a class assembled from a variable that silently never reaches the
+  stylesheet, so the classes are written out in full and then checked.
+  **`panel-motion.ts` is new**, holding the six motion/weight constants both connected panels
+  use. `FundAllocation` had them as local literals; a second panel would have made two copies
+  of four magic numbers on two screens — the exact cross-file drift `ui-governance.md` § 3
+  says the lint cannot see. **Geometry is deliberately NOT shared**: each screen's offsets and
+  breakpoint come from its own card width, and sharing those would make one screen's layout
+  depend on the other's.
+  The refactor moved no values — the diff on `FundAllocation.tsx` is deletions only, and the
+  `2xl:` block in the emitted CSS is byte-for-byte the same set of rules.
+  **Management-facing only.** It is not on the Portfolio drill-down, which is the surface an
+  investor sees. Putting a thesis in front of investors is a call to make deliberately, not a
+  side effect of adding a column.
+  Migration `20260824214500_deal_why_we_like_it` confirmed identical to `prisma migrate diff`.
+  **Not verified: nothing has been written to Postgres from here.**
+
 - **Portfolio reads the database, and amounts carry commas** (owner, 2026-08-24: *"lets tie
   the porfolio values to the values in fund and investments"*, *"use the comma separator..IE
   instead of 10000000 make it 10,000,000"*).

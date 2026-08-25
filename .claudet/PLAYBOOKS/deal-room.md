@@ -186,6 +186,39 @@ holds — rate, term, amortisation for debt; ownership and basis for equity — 
 on a person. A typed schema written to look thorough now is one the real schema starts by
 undoing.
 
+### "Why We Like It" — the thesis panel
+
+`Deal.whyWeLikeIt` is a sixth column, capped at **2,000** characters rather than 500 because
+it is a paragraph and the others are one line each. Both caps live at the route, where a
+rejection can carry a message, not in the column type.
+
+**It is part of the Investment form, not a second one** — the panel beside the card shares
+`DealFigures`' state and its Save button. Two Save buttons on one card is how half a deal
+gets saved.
+
+**It is management-facing and is NOT on the Portfolio drill-down.** That surface is what an
+investor sees. `DECISIONS.md` records why that was a choice rather than an oversight.
+
+**The panel floats at `min-[1640px]:`, and that number is arithmetic:**
+
+```
+240 sidebar + 64 shell padding + 900 card + 72 gap + 320 panel = 1596
+```
+
+`min-[1640px]:` clears it with 44px to spare. **Change any of the five and re-do the sum.**
+The failure is a panel hanging off the right edge, and it is invisible at every width except
+the one where it happens. Below the breakpoint the panel stacks inline in the card and the
+connector is hidden.
+
+It floats *later* than the Portfolio's identical-looking panel (`2xl:`, i.e. 1536) purely
+because this card is 900 wide and that one is 780. **Motion is shared** via
+`src/components/panel-motion.ts` so the two cannot drift apart; **geometry is not**, because
+sharing it would make one screen's layout depend on the other's card width.
+
+The Tailwind classes are written out in full at the call site. Tailwind scans source text, so
+a class assembled from a variable looks tidier and silently never reaches the stylesheet —
+verify a change to them against the emitted CSS in `.next/static/chunks/*.css`, not the diff.
+
 **Amounts are typed as dollars and stored as cents.** `parseDollarsToCents` is the only
 converter and it runs on both sides of the wire; the input re-groups with commas on blur
 only, never per keystroke (a caret that jumps mid-figure is worse than an ungrouped one).

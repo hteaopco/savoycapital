@@ -199,6 +199,20 @@ model Deal {
   terms String?
   fees  String?
 
+  /// The investment thesis, as a paragraph (owner, 2026-08-24: "lets add a
+  /// 'Why We Like It' modal to the right of the deal info card ... it will be a
+  /// paragraph in the investments section").
+  ///
+  /// Longer cap than `terms` and `fees` (2,000 vs 500) because those are one
+  /// line each and this is prose. Still capped: an unbounded TEXT column
+  /// feeding a fixed-width panel is how a "paragraph" becomes a pasted memo.
+  ///
+  /// **Management-facing only today.** It is edited and shown in the Deal Room
+  /// and is NOT on the Portfolio drill-down, which is the surface an investor
+  /// sees. Putting a thesis in front of investors is the owner's call to make
+  /// deliberately, not a side effect of adding a column.
+  whyWeLikeIt String?
+
   /// When it was invested (owner: "investment date (date picker)").
   ///
   /// A `DATE`, not a timestamp, for the same reason as `Fund.inceptionDate`: an

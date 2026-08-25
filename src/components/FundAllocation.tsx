@@ -3,6 +3,14 @@
 import { useEffect, useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { C } from "./palette";
+import {
+  CONNECTOR_MS,
+  CONNECTOR_WEIGHT,
+  EDGE_MS,
+  EDGE_WEIGHT,
+  FADE_DELAY_MS,
+  FADE_MS,
+} from "./panel-motion";
 
 /**
  * Fund Allocation — how the fund's committed capital is split across
@@ -124,10 +132,9 @@ const TRANSITION = "160ms ease";
  * — slowing the edge further means taking it out of the connector, not adding
  * to the total.
  */
-const CONNECTOR_MS = 100;
-const EDGE_MS = 200;
-const FADE_MS = 150;
-const FADE_DELAY_MS = 50;
+// Moved to `panel-motion.ts` on 2026-08-24, when the Deal Room grew a second
+// connected panel and two copies of these numbers became a drift risk. The
+// values are unchanged and the argument above moved with them.
 
 /**
  * The line's weight, and where it begins.
@@ -145,8 +152,6 @@ const FADE_DELAY_MS = 50;
  *   line   `2xl:left-[calc(100%+26px)]` `2xl:w-[72px]`
  *   panel  `2xl:left-[calc(100%+98px)]` `2xl:w-[320px]`
  */
-const CONNECTOR_WEIGHT = 1;
-const EDGE_WEIGHT = 2;
 
 const numCell: React.CSSProperties = {
   fontVariantNumeric: "tabular-nums",

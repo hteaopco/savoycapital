@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   ArrowLeft,
   ChevronDown,
@@ -16,6 +16,14 @@ import {
 } from "lucide-react";
 import { C } from "./palette";
 import { centsToDollarInput, formatCents, groupDollarInput } from "@/lib/money";
+import {
+  CONNECTOR_MS,
+  CONNECTOR_WEIGHT,
+  EDGE_MS,
+  EDGE_WEIGHT,
+  FADE_DELAY_MS,
+  FADE_MS,
+} from "./panel-motion";
 
 /**
  * Deal Room — create a deal, then upload its documents (owner, 2026-08-24).
@@ -100,6 +108,8 @@ type Staged = {
 type DealDetail = Omit<Deal, "documentCount"> & {
   terms: string | null;
   fees: string | null;
+  /** The investment thesis, as a paragraph. Management-facing only. */
+  whyWeLikeIt: string | null;
   documents: DealDocument[];
 };
 
@@ -540,6 +550,151 @@ function DealDetailView({
  * would defeat the thing being asked for. Open by default: "if needed" is not
  * "usually".
  */
+
+/**
+ * "Why We Like It" — the investment thesis, on a line off the Investment card's
+ * right edge (owner, 2026-08-24: *"lets add a 'Why We Like It' modal to the
+ * right of the deal info card ... have another line coming off the card to the
+ * right with a modal just like the investment info. it will be a paragraph in
+ * the investments section"*).
+ *
+ * Same vocabulary as `FundAllocation`'s holding panel — connector, edge sweep,
+ * crossfade — because the owner asked for "just like the investment info" and
+ * two connected panels that animate differently read as two mechanisms. The
+ * motion lives in `panel-motion.ts` so they cannot drift; the GEOMETRY below is
+ * this screen's own and shares nothing with that one.
+ *
+ * ## The breakpoint is a RESULT, not a choice
+ *
+ * Re-done from the Deal Room's widths, which are NOT the Portfolio's — this
+ * card is 900 wide where that one is 780, so this panel needs more room and
+ * floats later:
+ *
+ *   240 sidebar + 64 shell padding + 900 card + 72 gap + 320 panel = 1596
+ *
+ * `min-[1640px]:` clears that with 44px to spare. **Change any of the five and
+ * re-do the sum** — the failure is a panel hanging off the right edge, and it
+ * is invisible at every width except the one where it happens.
+ *
+ * Below the breakpoint it drops inline into the card and the connector is
+ * hidden. A floating panel running off the side of the screen is worse than one
+ * that stacks, and at ≤767px inline is the only thing that could work.
+ *
+ * The connector starts at the card's own right border — unlike the Portfolio's,
+ * which starts 26px out because its row ends short of the card. Nothing to push
+ * past here, so the gap and the panel's offset are the same 72.
+ *
+ * All three geometry values are written out as full Tailwind classes rather
+ * than assembled from constants. Tailwind scans source text: a class built from
+ * a variable looks tidier and silently never reaches the stylesheet.
+ *   line   `min-[1640px]:left-full` `min-[1640px]:w-[72px]`
+ *   panel  `min-[1640px]:left-[calc(100%+72px)]` `min-[1640px]:w-[320px]`
+ */
+function WhyWeLikeItPanel({
+  value,
+  onChange,
+  fieldId,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  fieldId: string;
+}) {
+  const [revealed, setRevealed] = useState(false);
+
+  // One frame of un-revealed paint is what gives the transition something to
+  // move from. Setting this in render, or in a bare effect, lands in the same
+  // frame and the sweep never plays.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setRevealed(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const sweep: React.CSSProperties = {
+    background: C.accent,
+    transformOrigin: "left center",
+    transform: revealed ? "scaleX(1)" : "scaleX(0)",
+  };
+
+  return (
+    <>
+      <div
+        aria-hidden
+        className="hidden min-[1640px]:block min-[1640px]:left-full min-[1640px]:w-[72px]"
+        style={{
+          ...sweep,
+          height: CONNECTOR_WEIGHT,
+          position: "absolute",
+          top: "50%",
+          transition: `transform ${CONNECTOR_MS}ms ease-out`,
+        }}
+      />
+
+      <div
+        className="min-[1640px]:absolute min-[1640px]:top-1/2 min-[1640px]:-translate-y-1/2 min-[1640px]:z-10 min-[1640px]:w-[320px] min-[1640px]:left-[calc(100%+72px)]"
+        style={{
+          // 12 = card/panel on `DESIGN_SYSTEM.md` § 2's radius scale, which
+          // supersedes AP § 3's "10 cards / 12 modals" (owner, 2026-08-24).
+          borderRadius: 12,
+          border: `1px solid ${C.border}`,
+          background: C.bg,
+          boxShadow: C.shadowSm,
+          overflow: "hidden",
+          opacity: revealed ? 1 : 0,
+          transition: `opacity ${FADE_MS}ms ease-out ${FADE_DELAY_MS}ms`,
+        }}
+      >
+        <div
+          aria-hidden
+          style={{
+            ...sweep,
+            height: EDGE_WEIGHT,
+            transition: `transform ${EDGE_MS}ms ease-out`,
+          }}
+        />
+
+        <label
+          htmlFor={fieldId}
+          className="flex items-center"
+          style={{
+            gap: 10,
+            padding: "10px 12px",
+            borderBottom: `1px solid ${C.border}`,
+            fontSize: 12,
+            fontWeight: 800,
+            color: C.text,
+          }}
+        >
+          Why We Like It
+        </label>
+
+        <div style={{ padding: 12 }}>
+          {/*
+            A textarea, not a text input: this is the one field on the screen
+            that is prose, and a single-line box that scrolls sideways is how a
+            paragraph gets written as a sentence. Four rows is roughly what the
+            panel shows without scrolling at 320px wide; it grows a scrollbar
+            rather than the card, so opening the thesis cannot move the fields
+            beside it.
+          */}
+          <textarea
+            id={fieldId}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            rows={6}
+            maxLength={2000}
+            placeholder="The thesis, in a paragraph. Why this deal, why now, and what has to be true."
+            style={{
+              ...input,
+              lineHeight: 1.6,
+              resize: "vertical",
+            }}
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
 /**
  * A deal's investment size and date.
  *
@@ -564,6 +719,7 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
   const [instrument, setInstrument] = useState<Instrument | "">(deal.instrument ?? "");
   const [terms, setTerms] = useState(deal.terms ?? "");
   const [fees, setFees] = useState(deal.fees ?? "");
+  const [why, setWhy] = useState(deal.whyWeLikeIt ?? "");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -572,6 +728,7 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
   const instrumentId = useId();
   const termsId = useId();
   const feesId = useId();
+  const whyId = useId();
 
   const save = async () => {
     if (busy) return;
@@ -585,12 +742,15 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
         // Both keys always sent: the route treats an absent key as "leave
         // alone" and an empty string as "clear", so the form says exactly what
         // it shows rather than blanking the field it did not touch.
+        // The panel beside the card is part of THIS form, not a second one.
+        // Two Save buttons on one card is how half a deal gets saved.
         body: JSON.stringify({
           amountCents: amount,
           investmentDate: date,
           instrument,
           terms,
           fees,
+          whyWeLikeIt: why,
         }),
       });
       const body = await res.json();
@@ -605,7 +765,10 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
   };
 
   return (
-    <div style={card}>
+    // `relative` is what the connected panel positions against. Nothing else on
+    // this card is absolutely positioned, so this establishes the context for
+    // exactly one child.
+    <div style={{ ...card, position: "relative" }}>
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -747,6 +910,17 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
               />
             </div>
           </div>
+
+          {/*
+            Rendered here so that BELOW the float breakpoint it stacks in a
+            sensible reading order — the figures, then the thesis, then Save.
+            Above it, the panel is absolutely positioned and this spot in the
+            DOM stops mattering.
+
+            Mounted only while the section is open, so the sweep replays on each
+            open rather than firing once for the life of the page.
+          */}
+          <WhyWeLikeItPanel value={why} onChange={setWhy} fieldId={whyId} />
 
           <div className="flex items-center" style={{ gap: 12 }}>
             <button
