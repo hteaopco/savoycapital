@@ -108,7 +108,11 @@ type Staged = {
 type DealDetail = Omit<Deal, "documentCount"> & {
   terms: string | null;
   fees: string | null;
-  /** The investment thesis, as a paragraph. Management-facing only. */
+  /**
+   * The investment thesis, as a paragraph. **Read by investors** — it is shown
+   * on the Portfolio drill-down as of 2026-08-24, so this box is not a
+   * scratchpad and has no draft state.
+   */
   whyWeLikeIt: string | null;
   documents: DealDocument[];
 };
@@ -564,6 +568,11 @@ function DealDetailView({
  * motion lives in `panel-motion.ts` so they cannot drift; the GEOMETRY below is
  * this screen's own and shares nothing with that one.
  *
+ * **What is typed here is read by investors** — it renders on the Portfolio
+ * drill-down as of 2026-08-24. The note under the field says so, because the
+ * only thing that stops an internal remark landing in an investor-facing field
+ * is the person knowing before they type it.
+ *
  * ## The breakpoint is a RESULT, not a choice
  *
  * Re-done from the Deal Room's widths, which are NOT the Portfolio's — this
@@ -689,6 +698,15 @@ function WhyWeLikeItPanel({
               resize: "vertical",
             }}
           />
+          {/*
+            Said at the box, not in a playbook. As of 2026-08-24 this text is
+            on the Portfolio drill-down, so an investor in this fund reads it —
+            and the one thing that stops somebody leaving an internal note here
+            is knowing that before they type it, not after.
+          */}
+          <div style={{ marginTop: 8, fontSize: 11, color: C.textMuted, lineHeight: 1.5 }}>
+            Shown to investors on Portfolio.
+          </div>
         </div>
       </div>
     </>

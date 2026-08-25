@@ -1,5 +1,5 @@
 import "server-only";
-import type { AllocationBucket } from "@/components/FundAllocation";
+import type { AllocationBucket, DetailRow } from "@/components/FundAllocation";
 import { getDb } from "./db";
 
 /**
@@ -111,7 +111,25 @@ export async function loadPortfolio(fundId: number): Promise<PortfolioResult> {
       { label: "Instrument", value: meta.label },
       deal.terms ? { label: "Terms", value: deal.terms } : null,
       deal.fees ? { label: "Fees", value: deal.fees } : null,
-    ].filter((r): r is { label: string; value: string } => r !== null);
+      /*
+        The thesis, last and as prose (owner, 2026-08-24: "it needs to be on
+        portfolio. its for the investors, a quick snippet of why we like it").
+
+        **This is investor-visible**, which reverses the call made when the
+        column landed a few hours earlier — that entry in `DECISIONS.md` is
+        rewritten rather than left standing. The concern was raised and the
+        owner decided; what matters now is that the next reader knows an
+        investor reads this field, so it is not a scratchpad.
+
+        Last, after the facts: the panel's header already carries the name and
+        the amount, so the figures read first and the narrative closes. `prose`
+        turns off the tabular numerals every other row wants — they are a
+        column mechanism and a sentence set in them reads mechanical.
+      */
+      deal.whyWeLikeIt
+        ? { label: "Why We Like It", value: deal.whyWeLikeIt, prose: true }
+        : null,
+    ].filter((r): r is DetailRow => r !== null);
 
     byInstrument.get(key)!.holdings.push({
       name: deal.name,

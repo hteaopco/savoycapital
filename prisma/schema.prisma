@@ -207,10 +207,16 @@ model Deal {
   /// line each and this is prose. Still capped: an unbounded TEXT column
   /// feeding a fixed-width panel is how a "paragraph" becomes a pasted memo.
   ///
-  /// **Management-facing only today.** It is edited and shown in the Deal Room
-  /// and is NOT on the Portfolio drill-down, which is the surface an investor
-  /// sees. Putting a thesis in front of investors is the owner's call to make
-  /// deliberately, not a side effect of adding a column.
+  /// **INVESTOR-VISIBLE.** Edited in the Deal Room, and shown on the Portfolio
+  /// drill-down (owner, 2026-08-24: "it needs to be on portfolio. its for the
+  /// investors, a quick snippet of why we like it"). It shipped management-only
+  /// for a few hours first; the owner reversed that deliberately, which is the
+  /// point — it was decided rather than defaulted.
+  ///
+  /// **So this column is not a scratchpad.** Whatever is typed here is read by
+  /// the investors in that fund. Access is still scoped by fund through
+  /// `src/lib/authz.ts` — an investor sees their own fund's deals and no
+  /// others — but within a fund there is no draft state and no second copy.
   whyWeLikeIt String?
 
   /// When it was invested (owner: "investment date (date picker)").

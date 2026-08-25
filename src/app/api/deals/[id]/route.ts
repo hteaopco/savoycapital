@@ -93,7 +93,8 @@ export async function GET(_request: Request, { params }: Params) {
  *
  * Mutable: investment size, investment date, instrument, terms, fees and the
  * "why we like it" paragraph. The first five are what the Portfolio chart is
- * built from; the sixth is management-facing prose that no chart reads.
+ * built from; the sixth is prose, written here and read by investors on the
+ * Portfolio drill-down.
  * **Not the name, and not
  * `fundId`**: moving a deal between funds would strand every R2 key already
  * written under `.../funds/<fundId>/deals/<dealId>/`, and the key is what the
