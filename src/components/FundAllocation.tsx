@@ -303,7 +303,21 @@ function HoldingDetail({ holding }: { holding: Holding }) {
               borderBottom: `1px solid ${C.border}`,
             }}
           >
-            <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>
+            {/*
+              `min-w-0` + `overflowWrap` because this name comes from the
+              database, so its length is whatever someone typed. Without the
+              first, a flex item refuses to shrink below its longest WORD and the
+              row tears the panel sideways; without the second the word overflows
+              its own box instead. Measured at a 375px phone: a 273px panel tears
+              at a single ~26-character token, and every real holding name today
+              is well under that — this is the case that arrives with the data,
+              not one that is broken now. § 0.7 lets a NAME wrap or truncate; the
+              amount beside it keeps `nowrap` because a value must read in full.
+            */}
+            <span
+              className="min-w-0"
+              style={{ fontSize: 12, fontWeight: 800, color: C.text, overflowWrap: "anywhere" }}
+            >
               {holding.name}
             </span>
             <span

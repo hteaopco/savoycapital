@@ -374,7 +374,14 @@ export function DealRoom({
                 }}
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block" style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                  {/* User-entered, so `overflowWrap` — the wrapper's `min-w-0`
+                      keeps the ROW from tearing, but measured at 375px a long
+                      unbroken token still spills its own box and runs under the
+                      badge beside it. */}
+                  <span
+                    className="block"
+                    style={{ fontSize: 13, fontWeight: 700, color: C.text, overflowWrap: "anywhere" }}
+                  >
                     {deal.name}
                   </span>
                   <span
@@ -1483,7 +1490,10 @@ function DocumentRow({
       }}
     >
       <div className="min-w-0 flex-1">
-        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{doc.description}</div>
+        {/* Same shape, same reason as the deal name above: user-entered. */}
+        <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflowWrap: "anywhere" }}>
+          {doc.description}
+        </div>
         {editing ? (
           <div className="flex items-center" style={{ gap: 6, marginTop: 6 }}>
             <input
