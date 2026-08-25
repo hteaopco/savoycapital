@@ -46,24 +46,22 @@ import {
 export type DetailRow = {
   label: string;
   value: string;
-  /**
-   * Render this row as PROSE rather than as a data value.
-   *
-   * Every other row here is a figure, a date or a short clause, so the default
-   * carries `tabular-nums` — the fixed-width numerals that make a column line
-   * up. In running prose those same numerals are wrong: they are a table
-   * mechanism, and a sentence set in them reads spaced-out and mechanical.
-   * A prose row also gets real leading and a scroll ceiling.
-   *
-   * Added 2026-08-24 for "Why We Like It", which is the first row here that is
-   * a paragraph rather than a value.
-   */
-  prose?: boolean;
 };
 
 /** A single position inside a bucket. */
 export type Holding = {
   name: string;
+  /**
+   * The investment thesis, shown as its OWN panel further down the chain
+   * (owner, 2026-08-24: "i would like tfor the 'why we like it' to be off the
+   * card to the right ... the why we like it box after that").
+   *
+   * Deliberately NOT a `DetailRow`. It briefly was one, and the rows beside it
+   * are figures and short clauses — a paragraph sharing their column had to
+   * fight their `tabular-nums` and their tight leading. Its own panel is what
+   * was asked for and is also what the content wants.
+   */
+  whyWeLikeIt?: string | null;
   /** Committed capital in integer cents (FACTS.md: money is cents end to end). */
   amountCents: number;
   /**
@@ -172,23 +170,45 @@ const numCell: React.CSSProperties = {
 };
 
 /**
- * The terms panel for an opened position, plus the line that runs out to it.
+ * An opened position's panels, and the lines that run out to them.
  *
- * Two layouts, one DOM node: from `2xl` (1536px) up it floats to the right of
- * the card on the end of the connector. Narrower than that it drops inline under
- * the row and the connector is hidden, because a floating panel running off the
- * side of the screen is worse than one that stacks.
+ * A CHAIN of two, as of 2026-08-24 (owner: *"i would like tfor the 'why we like
+ * it' to be off the card to the right. have the line on the right side of card
+ * and the why we like it box after that"*):
  *
- * The breakpoint is a RESULT of the arithmetic, and it has moved every time one
- * of the five numbers did — lg, then xl, then 1440, now 2xl. The sum today:
- * 240 sidebar + 64 shell padding + 780 card + 98 clearance + 320 panel = 1502,
- * which fits 1536 with 34px to spare.
+ *   card ──── detail panel ──── Why We Like It
  *
- * Widening the card and the gap is what pushed it out this far, and that trade
- * is the owner's to revisit: a narrower card, a tighter gap or a narrower panel
- * each buy back the room to float on smaller screens. Change ANY of the five and
- * re-do the sum — the failure mode is a panel hanging off the right edge, and it
- * is invisible at every width except the one where it happens.
+ * ## Three layouts, and the middle one is the point
+ *
+ * | Width | What happens |
+ * |---|---|
+ * | `≥ 1860px` | The full chain. Both connectors show. |
+ * | `2xl` (1536) – 1860 | The tray floats right of the card, panels **stacked**. |
+ * | `< 1536` | The tray drops inline under the row, no connectors. |
+ *
+ * The middle state exists because the alternative was worse in both directions:
+ * pushing the whole tray out to 1860 would take the floating detail panel away
+ * from everyone between 1536 and 1860 who has it today, and letting the chain
+ * run at 1536 would hang the second panel off the right edge. A tray that is a
+ * flex COLUMN until it has room to be a flex ROW gets both.
+ *
+ * ## The breakpoints are RESULTS of arithmetic
+ *
+ * Same convention as before — measured from the row's right edge, which is 26px
+ * inside the card's, so both sums are conservative by that much:
+ *
+ *   float:  240 sidebar + 64 padding + 780 card + 98 clearance + 320 panel = 1502  → `2xl` (1536)
+ *   chain:  ... + 72 second gap + 280 thesis panel                        = 1854  → `min-[1860px]:`
+ *
+ * That leaves 34px and 6px of slack respectively. **Change ANY of those numbers
+ * and re-do both sums** — the failure mode is a panel hanging off the right
+ * edge, and it is invisible at every width except the one where it happens.
+ * The trade is the owner's to revisit: a narrower card, a tighter gap or a
+ * narrower panel each buy back room to chain on smaller screens.
+ *
+ * The thesis panel is 280 rather than 320 for exactly that reason — it is what
+ * the sum had left. If the chain should appear on narrower screens, that is the
+ * number to spend, and 1860 moves with it.
  *
  * Mounted only while open, so the sweep replays on every open rather than
  * firing once for the life of the page.
@@ -210,6 +230,38 @@ function HoldingDetail({ holding }: { holding: Holding }) {
     transform: revealed ? "scaleX(1)" : "scaleX(0)",
   };
 
+  /*
+    12 = card/panel on `DESIGN_SYSTEM.md` § 2's radius scale, which supersedes
+    AP § 3's "10 cards / 12 modals" (owner, 2026-08-24). Shared by both panels
+    in the chain so the second cannot drift into looking like a different kind
+    of object from the first.
+  */
+  const panelChrome: React.CSSProperties = {
+    borderRadius: 12,
+    border: `1px solid ${C.border}`,
+    background: C.bg,
+    boxShadow: C.shadowSm,
+    overflow: "hidden",
+    opacity: revealed ? 1 : 0,
+    transition: `opacity ${FADE_MS}ms ease-out ${FADE_DELAY_MS}ms`,
+  };
+
+  const why = holding.whyWeLikeIt?.trim();
+
+  /*
+    The chain's width, and therefore the whole design's constraint.
+
+    Written as two complete class strings rather than assembled, because
+    Tailwind scans source text: a class built from a ternary fragment looks
+    tidier and silently never reaches the stylesheet. Both strings below appear
+    verbatim in the file, which is the only reason they compile.
+
+      320 + 72 + 280 = 672   detail panel, connector, thesis panel
+  */
+  const trayWidth = why
+    ? "2xl:w-[320px] min-[1860px]:w-[672px]"
+    : "2xl:w-[320px]";
+
   return (
     <>
       <div
@@ -224,99 +276,154 @@ function HoldingDetail({ holding }: { holding: Holding }) {
         }}
       />
 
+      {/*
+        The tray that holds the chain. One absolutely-positioned box so the two
+        panels move together; inside it they are a flex COLUMN that becomes a
+        flex ROW once there is room for the full chain. That is what makes the
+        middle state coherent rather than broken — see the header.
+      */}
       <div
-        className="mt-2 2xl:mt-0 2xl:absolute 2xl:top-1/2 2xl:-translate-y-1/2 2xl:z-10 2xl:w-[320px] 2xl:left-[calc(100%+98px)]"
-        style={{
-          // 12 = card/panel on `DESIGN_SYSTEM.md` § 2's radius scale, which
-          // supersedes AP § 3's "10 cards / 12 modals" (owner, 2026-08-24).
-          borderRadius: 12,
-          border: `1px solid ${C.border}`,
-          background: C.bg,
-          boxShadow: C.shadowSm,
-          overflow: "hidden",
-          opacity: revealed ? 1 : 0,
-          transition: `opacity ${FADE_MS}ms ease-out ${FADE_DELAY_MS}ms`,
-        }}
+        className={`mt-2 flex flex-col gap-2 2xl:mt-0 2xl:absolute 2xl:top-1/2 2xl:-translate-y-1/2 2xl:z-10 2xl:left-[calc(100%+98px)] min-[1860px]:flex-row min-[1860px]:items-center min-[1860px]:gap-0 ${trayWidth}`}
       >
-        <div
-          aria-hidden
-          style={{
-            ...sweep,
-            height: EDGE_WEIGHT,
-            transition: `transform ${EDGE_MS}ms ease-out`,
-          }}
-        />
-
-        <div
-          className="flex items-baseline justify-between"
-          style={{
-            gap: 10,
-            padding: "10px 12px",
-            borderBottom: `1px solid ${C.border}`,
-          }}
-        >
-          <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>
-            {holding.name}
-          </span>
-          <span
-            style={{ fontSize: 12, fontWeight: 700, color: C.text, ...numCell }}
-          >
-            {money(holding.amountCents)}
-          </span>
-        </div>
-
-        {(holding.detail ?? []).map((row, i) => (
+        <div className="min-[1860px]:w-[320px] min-[1860px]:shrink-0" style={panelChrome}>
           <div
-            key={row.label}
+            aria-hidden
             style={{
-              padding: "8px 12px",
-              borderTop: i === 0 ? "none" : `1px solid ${C.border}`,
+              ...sweep,
+              height: EDGE_WEIGHT,
+              transition: `transform ${EDGE_MS}ms ease-out`,
+            }}
+          />
+
+          <div
+            className="flex items-baseline justify-between"
+            style={{
+              gap: 10,
+              padding: "10px 12px",
+              borderBottom: `1px solid ${C.border}`,
             }}
           >
+            <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>
+              {holding.name}
+            </span>
+            <span
+              style={{ fontSize: 12, fontWeight: 700, color: C.text, ...numCell }}
+            >
+              {money(holding.amountCents)}
+            </span>
+          </div>
+
+          {(holding.detail ?? []).map((row, i) => (
             <div
+              key={row.label}
               style={{
-                fontSize: 10,
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: ".06em",
-                color: C.textDim,
+                padding: "8px 12px",
+                borderTop: i === 0 ? "none" : `1px solid ${C.border}`,
               }}
             >
-              {row.label}
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: ".06em",
+                  color: C.textDim,
+                }}
+              >
+                {row.label}
+              </div>
+              {/* Terms wrap; § 0.7 truncates labels and names, never values that
+                  must be read in full, and a rate or an amort schedule is one. */}
+              <div
+                style={{
+                  fontSize: 12,
+                  color: C.text,
+                  marginTop: 1,
+                  ...numCell,
+                  whiteSpace: "normal",
+                }}
+              >
+                {row.value}
+              </div>
             </div>
-            {/* Terms wrap; § 0.7 truncates labels and names, never values that
-                must be read in full, and a rate or an amort schedule is one.
-                Neither is a thesis, which is why a prose row scrolls at a
-                ceiling rather than being cut off with an ellipsis. */}
+          ))}
+        </div>
+
+        {why ? (
+          <>
+            {/*
+              The second link in the chain. A flex ITEM here rather than an
+              absolutely-positioned sibling like the first: the first has to
+              reach across a gap between two independent boxes, while this one
+              only has to fill the space its own row already leaves. Hidden
+              below the chain breakpoint, where the panels stack and a
+              horizontal line between them would point at nothing.
+            */}
             <div
-              style={
-                row.prose
-                  ? {
-                      fontSize: 12,
-                      color: C.text,
-                      marginTop: 3,
-                      whiteSpace: "pre-wrap",
-                      lineHeight: 1.6,
-                      // A ceiling, not a truncation. A few sentences never
-                      // reach it and see no scrollbar at all; a pasted essay
-                      // scrolls inside the panel instead of stretching it past
-                      // the card it is pinned to the middle of.
-                      maxHeight: 220,
-                      overflowY: "auto",
-                    }
-                  : {
-                      fontSize: 12,
-                      color: C.text,
-                      marginTop: 1,
-                      ...numCell,
-                      whiteSpace: "normal",
-                    }
-              }
+              aria-hidden
+              className="hidden min-[1860px]:block min-[1860px]:w-[72px] min-[1860px]:shrink-0"
+              style={{
+                ...sweep,
+                height: CONNECTOR_WEIGHT,
+                transition: `transform ${CONNECTOR_MS}ms ease-out`,
+              }}
+            />
+
+            <div
+              className="min-[1860px]:w-[280px] min-[1860px]:shrink-0"
+              style={panelChrome}
             >
-              {row.value}
+              <div
+                aria-hidden
+                style={{
+                  ...sweep,
+                  height: EDGE_WEIGHT,
+                  transition: `transform ${EDGE_MS}ms ease-out`,
+                }}
+              />
+
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderBottom: `1px solid ${C.border}`,
+                  fontSize: 10,
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: ".06em",
+                  color: C.textDim,
+                }}
+              >
+                Why We Like It
+              </div>
+
+              {/*
+                Prose, so none of the detail panel's value styling applies: no
+                `tabular-nums` (a column mechanism that reads mechanical in a
+                sentence) and real leading instead of the 1px nudge a one-line
+                value wants.
+
+                `maxHeight` is a CEILING, not a truncation. A few sentences
+                never reach it and show no scrollbar at all; a long entry
+                scrolls inside the panel rather than stretching the tray past
+                the row it is centred on. An investor-facing thesis is the last
+                thing to cut off with an ellipsis.
+              */}
+              <div
+                style={{
+                  padding: "10px 12px",
+                  fontSize: 12,
+                  color: C.text,
+                  lineHeight: 1.6,
+                  whiteSpace: "pre-wrap",
+                  maxHeight: 260,
+                  overflowY: "auto",
+                }}
+              >
+                {why}
+              </div>
             </div>
-          </div>
-        ))}
+          </>
+        ) : null}
       </div>
     </>
   );
