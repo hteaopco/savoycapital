@@ -157,6 +157,13 @@ on a re-fetched main. Quality and small diffs beat one giant PR.
 
 Ordered by severity. The first two *break* the page; the rest are ergonomics/consistency.
 
+> **savoycapital: audit at 375 AND 390 AND 430, not 375 alone (2026-08-25).** This rubric
+> and § 5's toolkit both reason from "a 375px phone". A flex row whose fixed-width children
+> nearly fill it behaves differently a few pixels either side of that: the Fund & Users row
+> was clean at 320/360/375 and crushed a name to 2px at 390/393/414/430. 375 is the *tightest*
+> width, which makes it the right one for overflow — and the wrong one on its own for a row
+> that only breaks once there is *enough* room for every fixed child to sit on one line.
+
 ### A. Page-tearing horizontal overflow (highest priority)
 - A `<table>` with a fixed `minWidth` / many `whiteSpace:nowrap` columns and **no
   `overflow-x:auto` wrapper** → the whole page scrolls sideways. **This is the #1
@@ -168,6 +175,12 @@ Ordered by severity. The first two *break* the page; the rest are ergonomics/con
   the section wider than the viewport.
 - A fixed pixel width > ~360px on any container; a `minWidth` on a flex child that
   can't shrink (missing `minWidth: 0`).
+- **The inverse, which is easier to miss: a flex child that CAN shrink, to nothing.**
+  `flex-1` sets `flex-basis: 0`, so a `min-w-0 flex-1` block yields all its width to
+  fixed-width siblings. Two `minWidth: 150`-ish selects in the same row will take the whole
+  line and leave the flexible child a couple of pixels. It does not tear and no gate sees it
+  — the child just becomes unreadably narrow. Give it `w-full md:w-auto` so it takes its own
+  line on a phone.
 - CSS that *looks* responsive but isn't: `column-count: N` does **not** collapse on
   its own (a real trap); a comment claiming it does is a red flag.
 

@@ -360,7 +360,8 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
                 style={input}
               />
             </div>
-            <div className="flex flex-col md:w-[170px]" style={{ gap: 6 }}>
+            {/* Same intrinsic-width trap as the edit form's date field. */}
+            <div className="flex min-w-0 flex-col md:w-[170px]" style={{ gap: 6 }}>
               <label htmlFor={sizeId} style={label}>
                 Fund size
               </label>
@@ -403,7 +404,7 @@ function FundsTab({ funds, onChanged }: { funds: Fund[]; onChanged: () => void }
                 type="date"
                 value={inceptionDate}
                 onChange={(e) => setInceptionDate(e.target.value)}
-                style={input}
+                style={{ ...input, maxWidth: "100%" }}
               />
             </div>
             <button
@@ -574,7 +575,15 @@ function FundRow({ fund, onChanged }: { fund: Fund; onChanged: () => void }) {
                 style={{ ...input, ...numCell }}
               />
             </div>
-            <div className="flex flex-col md:w-[200px]" style={{ gap: 6 }}>
+            {/*
+              `min-w-0` + `maxWidth` because a `type="date"` input carries an
+              intrinsic min-content width from the date text the platform draws.
+              As a flex item with the default `min-width: auto` that intrinsic
+              width wins, and on iOS this field rendered WIDER than the fund-size
+              input above it and the Save button below — visibly out of the
+              column. Reported from a handset; no gate here can see it.
+            */}
+            <div className="flex min-w-0 flex-col md:w-[200px]" style={{ gap: 6 }}>
               <label htmlFor={dateId} style={label}>
                 Inception date
               </label>
@@ -583,7 +592,7 @@ function FundRow({ fund, onChanged }: { fund: Fund; onChanged: () => void }) {
                 type="date"
                 value={inception}
                 onChange={(e) => setInception(e.target.value)}
-                style={input}
+                style={{ ...input, maxWidth: "100%" }}
               />
             </div>
             <button
@@ -754,7 +763,30 @@ function PersonRow({
       className="flex flex-wrap items-center"
       style={{ gap: 12, padding: "12px 16px", borderTop: `1px solid ${C.border}` }}
     >
-      <div className="min-w-0 flex-1">
+      {/*
+        `w-full` on a phone, `flex-1` from md up — and the full width is what
+        keeps this row readable.
+
+        As `flex-1` alone, this block's flex-basis is 0, so it yields all of its
+        width to the two selects beside it. Those carry minWidth 150 and 140; at
+        a 390px viewport the row has ~316px inside its padding, the selects and
+        their gaps take 314, and the name was left with about TWO pixels — which
+        rendered "Rodney Savoy" as a column of single letters, one per line.
+        Reported from a real handset, and the screenshot is the only reason it
+        was caught: every gate here was green.
+
+        The per-character break came from `overflowWrap: "anywhere"` below, added
+        so a long unbroken name could not tear the row. That pairing is the
+        lesson: **`overflowWrap: anywhere` on a flex item that can be crushed
+        turns a silent overflow into an unreadable one.** It needs a guaranteed
+        width beside it, which is what `w-full` supplies. Keeping the wrap and
+        fixing the width is right — dropping the wrap would just restore a
+        different bug for a long name.
+
+        Desktop is unchanged: `md:w-auto md:flex-1` restores exactly the previous
+        declaration above 767px, where the row has room for all three.
+      */}
+      <div className="w-full min-w-0 md:w-auto md:flex-1">
         {/* Comes from Clerk, so its length is not ours to bound — same
             treatment as the deal and holding names. */}
         <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflowWrap: "anywhere" }}>
