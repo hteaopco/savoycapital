@@ -314,14 +314,34 @@ function HoldingDetail({
       */}
       <div
         style={{ "--sc-sheet-bg": C.bg } as React.CSSProperties}
-        className={`sc-sheet fixed inset-0 z-50 flex flex-col gap-2 overflow-y-auto overscroll-contain p-4 md:static md:inset-auto md:z-auto md:mt-2 md:overflow-visible md:p-0 2xl:mt-0 2xl:absolute 2xl:top-1/2 2xl:-translate-y-1/2 2xl:z-10 2xl:left-[calc(100%+98px)] min-[1860px]:flex-row min-[1860px]:items-center min-[1860px]:gap-0 ${trayWidth}`}
+        className={`sc-sheet fixed inset-0 z-50 flex flex-col gap-2 overflow-y-auto overscroll-contain px-4 pb-4 md:static md:inset-auto md:z-auto md:mt-2 md:overflow-visible md:px-0 md:pb-0 2xl:mt-0 2xl:absolute 2xl:top-1/2 2xl:-translate-y-1/2 2xl:z-10 2xl:left-[calc(100%+98px)] min-[1860px]:flex-row min-[1860px]:items-center min-[1860px]:gap-0 ${trayWidth}`}
       >
         {/*
           The way back. Phone only — on desktop the panel sits beside the row it
           belongs to and there is nothing to return from.
         */}
+        {/*
+          `mb-4` sits ON TOP of the tray's own `gap-2`, so the card clears the
+          bar by 24px (16 + 8) — both on `DESIGN_SYSTEM.md` § 2's spacing scale.
+          At 12px the panel read as fused to the header rather than as a card
+          sitting below it (owner, 2026-08-26: "move the card away from the top
+          header… so it looks more like a card").
+
+          NO negative top margin here, and the sheet carries no top padding —
+          the two go together. A `sticky top-0` element is pinned to its scroll
+          container's PADDING EDGE, so a `-mt-4` pulling it flush was cancelled
+          the instant it stuck: the bar rendered 16px below its flow position and
+          silently ate the same 16px out of the gap below it. Measured, not
+          reasoned — the margin was applying and the gap was still 8px. Flow and
+          pinned position have to agree, so the bar starts at the sheet's top
+          edge and the padding it used to fight is simply not there.
+
+          Mobile-only without a breakpoint prefix, because the bar is `md:hidden`
+          — a `display: none` element contributes no margin at all, so nothing
+          here can reach the desktop layout.
+        */}
         <div
-          className="sticky top-0 z-10 -mx-4 -mt-4 mb-1 flex items-center md:hidden"
+          className="sticky top-0 z-10 -mx-4 mb-4 flex items-center md:hidden"
           style={{
             gap: 4,
             padding: "6px 8px",
