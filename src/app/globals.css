@@ -62,4 +62,43 @@
   textarea {
     min-height: 44px;
   }
+
+  /*
+   * The detail sheet's entrance and its surface.
+   *
+   * Both live here rather than at the call site because an inline style cannot
+   * be gated to a breakpoint, and this must not reach the desktop layout where
+   * the same panel floats beside its row.
+   *
+   * The colour arrives as a CUSTOM PROPERTY set from the `C` palette in
+   * `FundAllocation.tsx`. Writing the value here instead would put a literal
+   * colour in CSS — which the palette rule exists to prevent, and which would
+   * then drift from `C` silently.
+   *
+   * 180ms: UI feedback, so `DESIGN_SYSTEM.md` § 0.8's hard 200ms ceiling
+   * applies. The 400ms carve-out is for a CONTENT CROSSFADE and does not
+   * stretch to cover a transition like this one.
+   */
+  @keyframes sc-sheet-in {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .sc-sheet {
+    background: var(--sc-sheet-bg);
+    animation: sc-sheet-in 180ms ease-out;
+  }
+}
+
+/* Motion is a preference, not a decoration. The sheet still opens; it just
+   arrives rather than travelling. Matches the carousel, which already reads
+   this. */
+@media (prefers-reduced-motion: reduce) {
+  .sc-sheet {
+    animation: none;
+  }
 }

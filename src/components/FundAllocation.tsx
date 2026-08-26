@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronLeft } from "lucide-react";
 import { C } from "./palette";
 import {
   CONNECTOR_MS,
@@ -213,7 +213,13 @@ const numCell: React.CSSProperties = {
  * Mounted only while open, so the sweep replays on every open rather than
  * firing once for the life of the page.
  */
-function HoldingDetail({ holding }: { holding: Holding }) {
+function HoldingDetail({
+  holding,
+  onClose,
+}: {
+  holding: Holding;
+  onClose: () => void;
+}) {
   const [revealed, setRevealed] = useState(false);
 
   // One frame of un-revealed paint is what gives the transition something to
@@ -282,9 +288,65 @@ function HoldingDetail({ holding }: { holding: Holding }) {
         flex ROW once there is room for the full chain. That is what makes the
         middle state coherent rather than broken — see the header.
       */}
+      {/*
+        On a phone this tray is a FULL-SCREEN SHEET, not an inline expansion
+        (owner, 2026-08-25: "the page slides to the right and just the details
+        are showing… then a back button"). That is also `MOBILE_REFERENCE.md`
+        § 4's prescribed shape — a detail that renders inline becomes a sheet so
+        tapping a row feels like opening a page. Inline, it pushed the bucket
+        list around and buried every row below it.
+
+        CSS-only, via `md:`. `useIsMobile()` does not exist in this repo and is
+        not needed: the panel is already mounted only while open, so the sheet is
+        a matter of POSITION, not of a different tree. That keeps the desktop DOM
+        byte-identical and cannot hydrate differently from the server.
+
+        `md:inset-auto` is load-bearing and easy to miss. `inset-0` sets all four
+        offsets; without releasing it, `right: 0` and `bottom: 0` would survive
+        into the 2xl floating layout and fight `2xl:left-[calc(100%+98px)]`. Each
+        mobile-only property is released at `md:` for the same reason.
+
+        The slide and the sheet background live in `globals.css` behind
+        `@media (max-width: 767px)`, because an inline style cannot be gated to a
+        breakpoint. The background is passed down as a CSS VARIABLE rather than
+        written into the stylesheet, so the `C` palette stays the only source of
+        colour and no hex appears in CSS.
+      */}
       <div
-        className={`mt-2 flex flex-col gap-2 2xl:mt-0 2xl:absolute 2xl:top-1/2 2xl:-translate-y-1/2 2xl:z-10 2xl:left-[calc(100%+98px)] min-[1860px]:flex-row min-[1860px]:items-center min-[1860px]:gap-0 ${trayWidth}`}
+        style={{ "--sc-sheet-bg": C.bg } as React.CSSProperties}
+        className={`sc-sheet fixed inset-0 z-50 flex flex-col gap-2 overflow-y-auto overscroll-contain p-4 md:static md:inset-auto md:z-auto md:mt-2 md:overflow-visible md:p-0 2xl:mt-0 2xl:absolute 2xl:top-1/2 2xl:-translate-y-1/2 2xl:z-10 2xl:left-[calc(100%+98px)] min-[1860px]:flex-row min-[1860px]:items-center min-[1860px]:gap-0 ${trayWidth}`}
       >
+        {/*
+          The way back. Phone only — on desktop the panel sits beside the row it
+          belongs to and there is nothing to return from.
+        */}
+        <div
+          className="sticky top-0 z-10 -mx-4 -mt-4 mb-1 flex items-center md:hidden"
+          style={{
+            gap: 4,
+            padding: "6px 8px",
+            background: C.bg,
+            borderBottom: `1px solid ${C.border}`,
+          }}
+        >
+          <button
+            onClick={onClose}
+            className="inline-flex items-center min-h-[44px]"
+            style={{
+              gap: 4,
+              padding: "0 8px",
+              border: "none",
+              background: "transparent",
+              color: C.accent,
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: "inherit",
+            }}
+          >
+            <ChevronLeft size={18} />
+            Portfolio
+          </button>
+        </div>
         <div className="min-[1860px]:w-[320px] min-[1860px]:shrink-0" style={panelChrome}>
           <div
             aria-hidden
@@ -982,7 +1044,12 @@ export function FundAllocation({
                             </span>
                           </div>
 
-                          {isDetailOpen ? <HoldingDetail holding={h} /> : null}
+                          {isDetailOpen ? (
+                            <HoldingDetail
+                              holding={h}
+                              onClose={() => openHoldingDetail(null, s.id)}
+                            />
+                          ) : null}
                         </div>
                       );
                     })}
