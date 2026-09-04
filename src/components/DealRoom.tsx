@@ -9,6 +9,7 @@ import {
   Folder,
   FolderOpen,
   Lock,
+  Pencil,
   Plus,
   Trash2,
   Upload,
@@ -524,12 +525,7 @@ function DealDetailView({
         All deals
       </button>
 
-      <div className="flex flex-col" style={{ gap: 2 }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>{deal.name}</div>
-        <div style={{ fontSize: 11, color: C.textMuted, fontVariantNumeric: "tabular-nums" }}>
-          Deal {deal.id} · Fund {deal.fundId} · created {formatDate(deal.createdAt)}
-        </div>
-      </div>
+      <DealName deal={deal} onSaved={onChanged} />
 
       <DealFigures deal={deal} onSaved={onChanged} />
 
@@ -545,6 +541,150 @@ function DealDetailView({
           exist — today every signed-in user sees everything, so a file uploaded here
           would be readable by nobody and appear to be readable by investors.
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The deal's name, with an inline rename (owner, 2026-09-04: "need a way to
+ * edit name of the deal").
+ *
+ * **Renaming is safe, and the route header says why at length**: the deal name
+ * is not part of an R2 object key, so a rename strands no object and breaks no
+ * download. It had been grouped with `fundId` under one "not editable"
+ * sentence whose argument only ever covered `fundId`.
+ *
+ * Reads as a heading until you ask to edit it. A permanently-open text input
+ * for a field changed once in a deal's life would make every visit look like an
+ * unsaved form, and the name sits at the top of the screen where that reads
+ * loudest.
+ *
+ * The name is the one field here with **no empty state** — a deal with no name
+ * cannot be told apart in the list — so Save is disabled on blank rather than
+ * clearing it, and the route rejects it too.
+ */
+function DealName({ deal, onSaved }: { deal: DealDetail; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(deal.name);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const nameId = useId();
+
+  const trimmed = name.trim();
+  const unchanged = trimmed === deal.name;
+
+  const cancel = () => {
+    // Back to what is stored, not to what was typed. Leaving a rejected or
+    // abandoned edit in the box means the next open of this screen shows a name
+    // the deal does not have.
+    setName(deal.name);
+    setError(null);
+    setEditing(false);
+  };
+
+  const save = async () => {
+    if (busy || !trimmed) return;
+    if (unchanged) {
+      setEditing(false);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/deals/${deal.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error ?? "Could not rename the deal.");
+      setEditing(false);
+      onSaved();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not rename the deal.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <div className="flex flex-col" style={{ gap: 2 }}>
+        <div className="flex flex-wrap items-center" style={{ gap: 8 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>{deal.name}</div>
+          <button
+            onClick={() => setEditing(true)}
+            aria-label={`Rename ${deal.name}`}
+            className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+            style={{
+              ...secondaryButton,
+              padding: "4px 8px",
+              fontSize: 11,
+              color: C.accent,
+              border: "none",
+              background: "transparent",
+            }}
+          >
+            <Pencil size={12} />
+            Rename
+          </button>
+        </div>
+        <div style={{ fontSize: 11, color: C.textMuted, fontVariantNumeric: "tabular-nums" }}>
+          Deal {deal.id} · Fund {deal.fundId} · created {formatDate(deal.createdAt)}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col" style={{ gap: 8 }}>
+      {error ? <Notice tone="error">{error}</Notice> : null}
+      <label htmlFor={nameId} style={label}>
+        Deal name
+      </label>
+      <div className="flex flex-col gap-2 md:flex-row md:items-center">
+        <input
+          id={nameId}
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={200}
+          autoFocus
+          // Enter saves, Escape abandons — the two things a rename box is
+          // expected to do. Without them the only way out is the mouse.
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void save();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              cancel();
+            }
+          }}
+          style={{ ...input, fontSize: 15, fontWeight: 700 }}
+        />
+        <div className="flex items-center" style={{ gap: 8 }}>
+          <button
+            onClick={() => void save()}
+            disabled={busy || !trimmed}
+            className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+            style={{ ...primaryButton, opacity: busy || !trimmed ? 0.5 : 1 }}
+          >
+            {busy ? "Saving…" : "Save"}
+          </button>
+          <button
+            onClick={cancel}
+            disabled={busy}
+            className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+            style={{ ...secondaryButton, opacity: busy ? 0.5 : 1 }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: C.textMuted }}>
+        Deal {deal.id} · Fund {deal.fundId} · created {formatDate(deal.createdAt)}
       </div>
     </div>
   );

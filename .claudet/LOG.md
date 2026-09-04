@@ -8,6 +8,37 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Mallard Bay Outdoors on the public carousel, and the deal name became editable**
+  (owner, 2026-09-04: *"i want to upload this investment on the main page"*, *"need a way to
+  edit name of the deal"*).
+  **The investments array moved to `src/content/investments.ts`.** `CLAUDE.md`'s NO HARDCODING
+  rule names this case exactly — "no position names ... written as a literal inside
+  `src/components/**`" — and three had been sitting in `RecentInvestments.tsx` since it was
+  built. Adding a fourth would have been a fourth violation rather than a first. The TYPE stays
+  in the component and the content imports it, matching `src/lib/portfolio.ts` ↔
+  `FundAllocation`.
+  **Appended, not prepended.** The carousel opens on entry one, so leading with the newest
+  investment would have changed which slide the public page opens on — a visible change nobody
+  asked for. Order is deal order and the file now says so.
+  **The logo was NOT owner-supplied.** The attachment did not survive upload (nothing reached
+  disk), so it was taken from mallardbay.com's own `mb-logo` asset and rasterised with the
+  `sharp` already in `node_modules` — SVG at 600dpi → 1200×131 transparent PNG. Provenance is
+  recorded in `uploads/README.md` because the other three came from the owner and this one did
+  not; that difference should be visible to whoever looks next.
+  Instrument and year are the owner's ("it is private equity, you can set it", "2026 current
+  investment"), and the owner set Deal 4's `instrument` in the Deal Room directly — this
+  session has no `DATABASE_URL` and cannot write to Postgres.
+  **Renaming a deal was never the same case as re-homing one.** The PATCH route's header
+  grouped `name` and `fundId` under one "not editable" sentence whose entire argument was about
+  stranded R2 keys — and the name is not in a key
+  (`<audience>/funds/<fundId>/deals/<dealId>/<uuid>/<filename>`). A rename strands nothing.
+  `fundId` stays immutable for the original reason; the comment now argues them separately.
+  The name is the one field on that route with **no empty state** — a nameless deal cannot be
+  told apart in a list — so blank is a 400 rather than a clear, and Save is disabled on it.
+  Enter saves, Escape abandons, Cancel restores the STORED name rather than the typed one.
+  **Verified against the emitted HTML**, which is available again because the public page is
+  static: all four slides present, in deal order, Mallard Bay last.
+
 - **The holding panel became a chain** (owner, 2026-08-24: *"i would like tfor the 'why we like
   it' to be off the card to the right. have the line on the right side of card and the why we
   like it box after that"*). `card ──── detail panel ──── Why We Like It`.

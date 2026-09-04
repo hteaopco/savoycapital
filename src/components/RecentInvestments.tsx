@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { C } from "./palette";
 import { bodyLead, display, displaySm, eyebrow } from "./type";
+import { INVESTMENTS } from "@/content/investments";
 
 const AUTOPLAY_MS = 6000;
 
@@ -16,7 +17,7 @@ const AUTOPLAY_MS = 6000;
  */
 const FADE_MS = 400;
 
-type Investment = {
+export type Investment = {
   name: string;
   /** Holding status. "Current" today; realized positions would read differently. */
   status: string;
@@ -49,57 +50,6 @@ type Investment = {
     treatment: "logo" | "photo";
   };
 };
-
-const INVESTMENTS: Investment[] = [
-  {
-    name: "HTeaO Franchisee",
-    status: "Current",
-    kind: "Private Credit",
-    year: "2026",
-    blurb:
-      "Credit investment in the largest franchisee of HTeaO, a fast growing QSR that specializes in providing premium water and refreshing iced tea. The capital was used to fund store expansion through acquisition of existing stores and allowed the Operator to continue expanding in core markets.",
-    website: { href: "https://www.hteao.com", label: "hteao.com" },
-    image: {
-      src: "/investments/hteao.png",
-      width: 520,
-      height: 360,
-      treatment: "logo",
-    },
-  },
-  {
-    name: "Westfield Fluid Controls",
-    status: "Current",
-    kind: "Private Equity",
-    year: "2026",
-    blurb:
-      "Equity investment in Westfield, an industry leader in the design, manufacture, assembly, and testing of powered and non-powered valves, solenoids, and fluid controls for aerospace and defense applications. Notable customers of Westfield include Boeing, Northrop Grumman, the Department of Defense, and more.",
-    website: {
-      href: "https://www.westfieldhydraulics.com",
-      label: "westfieldhydraulics.com",
-    },
-    image: {
-      src: "/investments/westfield.png",
-      width: 760,
-      height: 219,
-      treatment: "logo",
-    },
-  },
-  {
-    name: "Marucci Sports",
-    status: "Current",
-    kind: "Private Equity",
-    year: "2026",
-    blurb:
-      "Equity investment in the MBO of Marucci Sports from publicly traded FOXA. Marucci is the leading wood and composite bat maker in both college and professional baseball, with a recent push into softball and apparel. Marucci is the official bat of the MLB.",
-    website: { href: "https://maruccisports.com", label: "maruccisports.com" },
-    image: {
-      src: "/investments/marucci.jpg",
-      width: 900,
-      height: 412,
-      treatment: "photo",
-    },
-  },
-];
 
 /**
  * 36×36px at every width. design/DESIGN_SYSTEM.md § 9 permits a SPACED SECONDARY
