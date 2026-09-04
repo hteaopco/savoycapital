@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { ChevronDown, ChevronLeft } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { C } from "./palette";
 import {
   CONNECTOR_MS,
@@ -1008,11 +1008,26 @@ export function FundAllocation({
                               made this a column originally — the position
                               changed, the reason for the column did not.
 
-                              It only fits as a column from md up. At 390px the
-                              tray gives ~260px and the four cells want ~354, so
-                              below md the slot goes full-width and wraps to its
-                              own line — § 0.7 lets a name truncate but never a
-                              money value.
+                              It only fits as a TEXT column from md up. At 390px
+                              the tray gives ~260px and the four cells want ~354,
+                              so the words cannot ride the same line — § 0.7 lets
+                              a name truncate but never a money value.
+
+                              Below md the label becomes a CHEVRON, which fits.
+                              A full-width slot wrapping to its own line was the
+                              earlier answer and it cost a line per holding:
+                              measured at 390px with four holdings, 95px per row
+                              against 55px for the chevron — 378px of tray down
+                              to 218px, without truncating anything.
+
+                              The row stays INERT and the button stays the only
+                              control on it (owner, 2026-08-24). Making the whole
+                              row the tap target is shorter still (32px per row)
+                              and is NOT taken here, because it would spend the
+                              cue that decision bought — a bucket row is
+                              clickable and a drill-down row is not. That is the
+                              owner's call to make, not a layout saving to help
+                              myself to.
 
                               Only a position we actually hold terms for gets a
                               button, so the control cannot open an empty box.
@@ -1021,7 +1036,7 @@ export function FundAllocation({
                               from md up.
                             */}
                             <span
-                              className="w-full md:w-[104px] flex justify-end"
+                              className="md:w-[104px] flex justify-end"
                               style={{ flexShrink: 0 }}
                             >
                               {hasDetail ? (
@@ -1033,6 +1048,7 @@ export function FundAllocation({
                                     )
                                   }
                                   aria-expanded={isDetailOpen}
+                                  aria-label={`View details for ${h.name}`}
                                   className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
                                   style={{
                                     padding: "4px 10px",
@@ -1058,7 +1074,20 @@ export function FundAllocation({
                                     transition: `background ${TRANSITION}, color ${TRANSITION}, border-color ${TRANSITION}`,
                                   }}
                                 >
-                                  View Details
+                                  {/*
+                                    One control, two labels. The chevron is the
+                                    phone's idiom for "opens a page" and it is
+                                    what the tap now does — the detail arrives as
+                                    a full-screen sheet. The words stay from md
+                                    up, where the 104px column has room for them
+                                    and the panel opens beside the row instead.
+
+                                    `aria-label` carries the full sentence at
+                                    both widths, so the icon-only state is not
+                                    an unlabelled button.
+                                  */}
+                                  <ChevronRight size={16} className="md:hidden" />
+                                  <span className="hidden md:inline">View Details</span>
                                 </button>
                               ) : null}
                             </span>
