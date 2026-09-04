@@ -933,6 +933,21 @@ export function FundAllocation({
                       const key = `${s.id}:${h.name}`;
                       const hasDetail = (h.detail ?? []).length > 0;
                       const isDetailOpen = openHolding === key;
+                      /*
+                        "#001 - HTea Opco" -> ["#001", "HTea Opco"], so a phone
+                        can put the reference on its own line (owner, 2026-09-04:
+                        "make the #001 on 1 line, then the name on next line").
+
+                        The whole string is the DEAL NAME as somebody typed it
+                        into the Deal Room — no code composes that prefix — so
+                        this reads the shape rather than assuming it, and any
+                        name that does not carry one falls through and renders
+                        whole. An en or em dash counts too, because a person
+                        typing a name will use whichever their keyboard offers.
+                      */
+                      const label = /^\s*(#\S+)\s*[-\u2013\u2014]\s*(.+)$/.exec(
+                        h.name,
+                      );
 
                       return (
                         <div
@@ -960,18 +975,51 @@ export function FundAllocation({
                           */}
                           <div
                             className="flex flex-wrap items-center"
-                            style={{ gap: 9, padding: "5px 0" }}
+                            /*
+                              Column gap only. `gap: 9` also spaced the WRAPPED
+                              bands 9px apart, which on a phone is pure height
+                              between the reference, the name and the figures —
+                              three bands paying for two gaps they do not need.
+                              Desktop never wraps this row, so a zero row-gap
+                              cannot reach it.
+                            */
+                            style={{ columnGap: 9, rowGap: 0, padding: "5px 0" }}
                           >
+                            {/*
+                              FULL WIDTH on a phone, and that is the point rather
+                              than a side effect. Sharing the band with the
+                              amount, the share and the chevron leaves this cell
+                              ~73px of a 260px tray, and "Westfield Companies"
+                              wants ~130 — so splitting the reference off without
+                              also widening the cell would have produced `#002`
+                              followed by the name wrapped across two lines, the
+                              same three-line block as before. On its own band it
+                              gets the full 260 and the name lands on one line.
+
+                              `md:w-auto md:flex-1` restores the previous
+                              declaration above 767px, where the row has room for
+                              all four cells and the name has never wrapped.
+                            */}
                             <span
-                              className="min-w-0"
+                              className="min-w-0 w-full md:w-auto md:flex-1"
                               style={{
-                                flex: 1,
                                 fontSize: 12,
                                 fontWeight: 500,
                                 color: C.textMuted,
                               }}
                             >
-                              {h.name}
+                              {label ? (
+                                <>
+                                  <span className="block md:hidden">{label[1]}</span>
+                                  <span className="block md:hidden">{label[2]}</span>
+                                  {/* Desktop keeps the single original string,
+                                      so its spacing is the author's and not a
+                                      flex gap standing in for a separator. */}
+                                  <span className="hidden md:inline">{h.name}</span>
+                                </>
+                              ) : (
+                                h.name
+                              )}
                             </span>
 
                             <span
