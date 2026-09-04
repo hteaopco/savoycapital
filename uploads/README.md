@@ -18,6 +18,7 @@ these moved out.
 | File | What it is | Notes |
 |---|---|---|
 | `westfield.png` | Westfield Fluid Controls logo | 2764×797 PNG, transparent |
+| `mallardbay.svg` | Mallard Bay Outdoors logo | **NOT owner-supplied.** Downloaded from mallardbay.com (the site's own `mb-logo` asset) on 2026-09-04 — the owner's attachment did not survive the upload. Rasterised to `public/investments/mallardbay.png` at 1200×131. Replace with the supplied asset if one arrives. |
 | `hteao.jpg` | HTeaO logo | 1132×783 JPEG, white background — not transparent |
 | `marucci.png` | Marucci Sports | 1315×602 PNG. **A photograph, not a logo** — an MLB marketing shot with type burned in. Different in kind from the two above. |
 

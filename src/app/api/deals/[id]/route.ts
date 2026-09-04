@@ -91,14 +91,22 @@ export async function GET(_request: Request, { params }: Params) {
  * before these columns has neither, and the screen opens its editor for exactly
  * that reason.
  *
- * Mutable: investment size, investment date, instrument, terms, fees and the
- * "why we like it" paragraph. The first five are what the Portfolio chart is
- * built from; the sixth is prose, written here and read by investors on the
- * Portfolio drill-down.
- * **Not the name, and not
- * `fundId`**: moving a deal between funds would strand every R2 key already
- * written under `.../funds/<fundId>/deals/<dealId>/`, and the key is what the
- * read boundary guards on. A deal in the wrong fund is re-created, not moved.
+ * Mutable: **the name**, investment size, investment date, instrument, terms,
+ * fees and the "why we like it" paragraph. The figures are what the Portfolio
+ * chart is built from; the prose is read by investors on the drill-down.
+ *
+ * **`fundId` is NOT mutable**: moving a deal between funds would strand every
+ * R2 key already written under `.../funds/<fundId>/deals/<dealId>/`, and the
+ * key is what the read boundary guards on. A deal in the wrong fund is
+ * re-created, not moved.
+ *
+ * **The name used to be lumped in with `fundId` as immutable, and that was
+ * wrong** (fixed 2026-09-04, owner: "need a way to edit name of the deal"). The
+ * argument above is entirely about object keys, and the name is not in one —
+ * the key is `<audience>/funds/<fundId>/deals/<dealId>/<uuid>/<filename>`, in
+ * which nothing is derived from `Deal.name`. Renaming strands nothing, breaks
+ * no link, and moves no boundary; it only changes a label. The two were never
+ * the same case, and one shared sentence made them look like it.
  *
  * An explicit `null` clears a value; an absent key leaves it alone. That
  * distinction is why this reads keys off the body rather than spreading it.
@@ -134,6 +142,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const data: {
+    name?: string;
     amountCents?: bigint | null;
     investmentDate?: Date | null;
     instrument?: "PRIVATE_EQUITY" | "PRIVATE_CREDIT" | null;
@@ -141,6 +150,26 @@ export async function PATCH(request: Request, { params }: Params) {
     fees?: string | null;
     whyWeLikeIt?: string | null;
   } = {};
+
+  /*
+    The name. Unlike every other field here it is NOT nullable — a deal with no
+    name is a row nobody can identify in a list, so an empty string is a 400
+    rather than a clear. That asymmetry is the reason this is not folded into
+    the length-capped text loop below.
+  */
+  if ("name" in (body ?? {})) {
+    const raw = typeof body?.name === "string" ? body.name.trim() : "";
+    if (!raw) {
+      return NextResponse.json({ error: "A deal needs a name." }, { status: 400 });
+    }
+    if (raw.length > 200) {
+      return NextResponse.json(
+        { error: `That name is too long (200 characters max, and this is ${raw.length}).` },
+        { status: 400 },
+      );
+    }
+    data.name = raw;
+  }
 
   if ("amountCents" in (body ?? {})) {
     const raw = typeof body?.amountCents === "string" ? body.amountCents.trim() : "";
@@ -212,6 +241,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
   return NextResponse.json({
     id: saved.id,
+    name: saved.name,
     amountCents: saved.amountCents === null ? null : Number(saved.amountCents),
     investmentDate: saved.investmentDate
       ? saved.investmentDate.toISOString().slice(0, 10)
