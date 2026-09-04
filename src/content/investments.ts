@@ -86,7 +86,7 @@ export const INVESTMENTS: Investment[] = [
     kind: "Private Equity",
     year: "2026",
     blurb:
-      "Equity investment in Mallard Bay, an Outfitter Experience Management platform. Mallard Bay gives hunting and fishing outfitters the tools to manage bookings, accept payments, market their services, and build their brand — a mobile booking app, custom websites, marketplace listings, and marketing services including paid ads and social media management.",
+      "Equity investment in Mallard Bay, an Outfitter Experience Management platform. Mallard Bay gives hunting and fishing outfitters the tools to manage bookings, accept payments, market their services, and build their brand — a mobile booking app, custom websites, marketplace listings, and marketing services.",
     website: { href: "https://mallardbay.com", label: "mallardbay.com" },
     image: {
       src: "/investments/mallardbay.png",
