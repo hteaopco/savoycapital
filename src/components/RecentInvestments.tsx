@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { C } from "./palette";
-import { bodyLead, display, displaySm, eyebrow } from "./type";
+import { bodyLead, displaySm, eyebrow } from "./type";
 import { INVESTMENTS } from "@/content/investments";
 
 const AUTOPLAY_MS = 6000;
@@ -208,10 +208,34 @@ export function RecentInvestments() {
 
   return (
     <div style={{ background: C.bgAlt }}>
-      <div className="mx-auto max-w-[1120px] px-5 py-14 md:px-10 md:pb-24 md:pt-20">
-        <div className="mb-10 flex flex-col gap-3">
-          <div style={{ ...eyebrow, color: C.accent }}>Recent Investments</div>
-          <h1 style={{ ...display, color: C.text }}>Our Portfolio</h1>
+      <div className="mx-auto max-w-[1120px] px-5 py-16 md:px-10 md:pb-28 md:pt-24">
+        {/*
+          An <h2>, not an <h1>. `SiteHero` owns the page's one h1 as of
+          2026-09-06 — two h1s is the document outline saying the page has two
+          subjects, and a crawler reading "Our Portfolio" as the title of a
+          fund's site was part of why it read as a component rather than a page.
+
+          The position sits opposite the heading on a shared rule: it tells a
+          reader the carousel has more in it before they wait for it to advance,
+          which is the one thing the dots underneath do not say at a glance.
+        */}
+        <div
+          className="mb-10 flex flex-wrap items-end justify-between gap-4 pb-5 md:mb-12"
+          style={{ borderBottom: `1px solid ${C.border}` }}
+        >
+          <div className="flex flex-col gap-3">
+            <div style={{ ...eyebrow, color: C.accent }}>Recent Investments</div>
+            <h2 style={{ ...displaySm, color: C.text }}>Our Portfolio</h2>
+          </div>
+          <div
+            style={{
+              ...eyebrow,
+              color: C.textDim,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {count} {count === 1 ? "Investment" : "Investments"}
+          </div>
         </div>
 
         <div
@@ -223,11 +247,30 @@ export function RecentInvestments() {
             background: C.bg,
           }}
         >
-          {/* Image — fixed height so every slide is the same box. */}
+          {/*
+            Image — fixed height so every slide is the same box.
+
+            NO BORDER, and the frame stays WHITE. It used to be a white box with
+            a 1px border sitting on a white card: three concentric rectangles,
+            each separated by the same `C.border`, the innermost doing its
+            separating entirely with chrome because both sides of it were the
+            same colour. `DESIGN_SYSTEM.md` § 0.5 — "chrome supports content,
+            never decorates it." The logo or photo defines its own region; the
+            frame does not need to be drawn around it.
+
+            **It is not tinted, and that is measured rather than taste.**
+            `public/investments/hteao.png` is RGBA but its background is baked in
+            OPAQUE WHITE (top-left pixel 255,255,255,255 — checked, not assumed).
+            On a `C.bgAlt` frame that logo renders as a hard white slab inside a
+            grey box, which is worse than the border ever was. Any future asset
+            with real transparency does not change this until ALL of them do.
+
+            `overflow: hidden` and the radius stay: the "photo" treatment uses
+            `cover` and needs something to crop against.
+          */}
           <div
             className="grid h-[200px] md:h-[280px]"
             style={{
-              border: `1px solid ${C.border}`,
               borderRadius: 12,
               background: C.bg,
               overflow: "hidden",
