@@ -6,6 +6,32 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The public page carries photography, and the palette did not move to allow it (owner,
+  2026-09-06).** Two passes fixed the landing page's structure and it still read as generated.
+  The owner's diagnosis was simpler and correct: *"i think its a lack of graphics … maybe
+  something professional like a sky scraper backdrop?"* The page had no imagery at all beyond
+  four portfolio logos.
+  - **`design/README.md` § "The gap this folder does not cover" is the licence for this.** It
+    says outright that `design/` is an internal-application system — tables, modals, pills —
+    and that a marketing surface needs patterns no exemplar demonstrates. A photographic hero
+    is one of them. **Its other instruction was obeyed exactly: the palette did not loosen.**
+    The scrim is `linear-gradient(C.overlayStrong → C.overlay)`, the type is `C.onSolid`, the
+    fallback ground is `C.text`. No new token, no raw rgba, `design-lint` green on all 12 rules.
+  - **Measured, not eyeballed:** headline **17.6:1** and sub-line **12.0:1** against
+    `DESIGN_SYSTEM.md` § 7's 4.5:1 floor, sampled from the rendered page. A scrim over a
+    photograph is the one place this product has a contrast problem rather than a token
+    problem — **do not lighten it to show more of the picture without re-measuring.**
+  - **The image is a stand-in with a clean licence, not a brand decision.** A Historic
+    American Buildings Survey photograph: a work of the US federal government, public domain,
+    no attribution owed, verifiable at a Library of Congress URL rather than resting on a
+    stock site's blanket terms. That was the whole selection criterion — a fund's public page
+    is the wrong place to discover an image's terms were not what someone assumed. It is a
+    real building Savoy has no connection to; **its own photography would be strictly better**
+    and is one line in `src/content/site-imagery.ts` to swap.
+  - **Provenance lives in code, next to the only file that references it** — `site-imagery.ts`
+    records source, licence and whether attribution is owed, per image. A doc in `.claudet/`
+    would rot away from `public/`. **Do not add an image without that record.**
+
 - **Mobile is audited at 375, 390 and 430 — not 375 alone (2026-08-25).** The canonical
   "look at it at 375px" from `MOBILE_REFERENCE.md` § 10 is necessary and **not sufficient**,
   proven by shipping a defect through it.
