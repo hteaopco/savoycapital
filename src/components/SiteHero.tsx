@@ -1,66 +1,70 @@
 import Image from "next/image";
 import { C } from "./palette";
-import { display } from "./type";
+import { display, eyebrow, heroLead } from "./type";
+import { APPROACH, HEADQUARTERS } from "@/content/site";
 import { HERO_IMAGE } from "@/content/site-imagery";
 
 /**
- * The landing page's hero: a full-bleed photograph, a scrim, and one line.
+ * The landing page's opening: headline, positioning paragraph and the three
+ * facts, all composed over one photograph.
  *
- * ## One line, and nothing else
+ * ## This supersedes the spec's hero, on the owner's instruction
  *
- * No subhead, no button, no scroll indicator (owner's build spec, 2026-09-06).
- * Because the headline is the only copy on the screen it has to look
- * deliberate — hence the height, the lower-third placement, and the real air
- * below the line before the fold. A second element here would read as a hero
- * that could not carry itself on one.
+ * The 2026-09-06 build spec said "one line of copy only — no subhead, no
+ * button", with the approach paragraph and the facts row as separate bands
+ * below. The owner moved all three into the image on 2026-09-07: headline to
+ * the top half, then the paragraph, then the facts. **Do not "restore" the spec
+ * version** — the spec is the older instruction and this is the newer one.
  *
- * The `<h1>`. The page has exactly one, and it is this — section headings below
- * are `<h2>`.
+ * That is also why the headline sits at the top rather than the lower third:
+ * it is making room, not being decorative.
  *
- * ## The scrim is a contrast device, not a mood
+ * ## Everything over a photograph is a contrast problem
  *
- * A photograph is the one place on this product where the failure mode is
- * *contrast* rather than a wrong token. `DESIGN_SYSTEM.md` § 7 sets 4.5:1 for
- * body text, and the gradient below is sized to clear it against the actual
- * photograph — **not against a flat swatch**, which is the mistake that ships
- * type nobody can read.
+ * `DESIGN_SYSTEM.md` § 7 sets 4.5:1 for body text, and with three tiers of copy
+ * on the image instead of one, three things have to clear it — not just the
+ * headline. So:
  *
- * It runs dark-to-lighter left-to-right because the words are on the left, so
- * the picture keeps whatever it has on the right. **Do not lighten it to show
- * more of the image without re-measuring the headline against the real file.**
+ *  - **`C.onSolid` for all of it.** `C.textMuted` is a slate meant for a white
+ *    page and it fails against a picture; the palette's answer on a solid tone
+ *    is `onSolid`, held back with opacity where a line needs to sit quieter.
+ *  - **Two scrim layers.** A horizontal gradient carries the left column where
+ *    the words are, and a flat wash over it holds the whole picture back a stop
+ *    (owner, 2026-09-06: "put some transparency over it").
  *
- * The palette did not move to allow any of this: `design/README.md` § "The gap
- * this folder does not cover" licenses a marketing pattern the exemplars do not
- * demonstrate, and says in the same breath not to resolve it by loosening the
- * palette. So the scrim is `C.overlayStrong` → `C.overlay`, the type is
- * `C.onSolid`, and the ground behind a not-yet-loaded image is `C.text`.
+ * **Measure against the real file before lightening either layer.** A scrim
+ * tuned against a flat swatch is how unreadable type ships.
+ *
+ * The `<h1>`. The page has exactly one and it is here.
  */
-export function SiteHero() {
+export function SiteHero({
+  committedCapital,
+  investmentCount,
+}: {
+  committedCapital: string | null;
+  investmentCount: number;
+}) {
+  // Committed capital is absent whenever the database is unreachable — the
+  // block drops rather than showing a fallback. See `loadCommittedCapitalCents`.
+  const facts = [
+    ...(committedCapital
+      ? [{ value: committedCapital, label: "Committed capital" }]
+      : []),
+    { value: String(investmentCount), label: "Current investments" },
+    { value: HEADQUARTERS, label: "Headquarters" },
+  ];
+
   return (
     <div style={{ position: "relative", background: C.text, overflow: "hidden" }}>
       <Image
         src={HERO_IMAGE.src}
         alt={HERO_IMAGE.alt}
         fill
-        // Above the fold and the largest paint on the page: preload it rather
-        // than letting the headline land on bare slate first.
         priority
         sizes="100vw"
         style={{ objectFit: "cover", objectPosition: "center" }}
       />
 
-      {/*
-        Two layers, and both earn their place.
-
-        The horizontal gradient is the headline's contrast. The flat wash on top
-        of it is what the owner asked for on 2026-09-06 ("put some transparency
-        over it") — it holds the whole picture back a stop so the photograph
-        reads as a ground rather than as the subject, which is what lets one
-        line of type hold a 70vh frame.
-
-        It holds no content, so it needs no `aria-hidden`; it only has to sit
-        above the image and below the words, which is what the ordering does.
-      */}
       <div
         style={{
           position: "absolute",
@@ -68,27 +72,80 @@ export function SiteHero() {
           background: `linear-gradient(to right, ${C.overlayStrong}, ${C.overlay})`,
         }}
       />
-      <div
-        style={{ position: "absolute", inset: 0, background: C.overlay }}
-      />
+      <div style={{ position: "absolute", inset: 0, background: C.overlay }} />
 
       {/*
-        Roughly 70vh, floored so it cannot collapse on a short window and capped
-        so it cannot swallow a laptop screen. The content sits in the lower
-        third and the padding below is what keeps the line from looking dropped
-        at the bottom edge.
+        Content starts at the TOP and flows down, rather than being pinned to
+        the bottom. The min-height is a floor, not a fixed height: with three
+        tiers of copy the block sizes itself, and a fixed height would either
+        clip it on a phone or strand it on a tall desktop window.
       */}
-      <div className="relative mx-auto flex min-h-[440px] max-w-[1120px] flex-col justify-end px-5 pb-16 pt-24 md:min-h-[70vh] md:px-10 md:pb-24 md:pt-40">
-        {/*
-          ~600px measure per the spec: the line holds the frame on desktop
-          without wrapping, and wraps naturally on a phone.
-        */}
+      <div className="relative mx-auto flex min-h-[520px] max-w-[1120px] flex-col justify-start px-5 pb-16 pt-16 md:min-h-[640px] md:px-10 md:pb-20 md:pt-24">
         <h1
           className="max-w-[600px]"
           style={{ ...display, color: C.onSolid, textWrap: "pretty" }}
         >
           Operating experience, applied to capital.
         </h1>
+
+        <p
+          className="mt-10 max-w-[600px] md:mt-14"
+          style={{
+            ...heroLead,
+            color: C.onSolid,
+            // Held back so it reads under the headline rather than beside it,
+            // and still well clear of the 4.5:1 floor on this scrim.
+            opacity: 0.9,
+            textWrap: "pretty",
+          }}
+        >
+          {APPROACH}
+        </p>
+
+        {/*
+          The facts, on a rule. Three discrete blocks — not a middle-dot-joined
+          string, no icons, no cards (spec § 4, which survives the move). The
+          rule is the only chrome here and it earns it: it separates a claim
+          about the firm from figures about it.
+        */}
+        {/*
+          The rule is its own element rather than a `borderTop`, because a
+          border needs a COLOR and there is no palette token for "white at 20%".
+          Appending an alpha suffix to `C.onSolid` would have produced exactly
+          that — a fabricated color that passes `raw-hex` (no `#` in the source)
+          and is still a value the palette never defined. Opacity on a real
+          token is the honest version of the same effect, and it is what the
+          copy above already does.
+        */}
+        <div
+          aria-hidden
+          className="mt-10 md:mt-12"
+          style={{ height: 1, background: C.onSolid, opacity: 0.25 }}
+        />
+
+        <div className="mt-8 flex flex-col gap-8 md:flex-row md:gap-16">
+          {facts.map((fact) => (
+            <div key={fact.label} className="flex flex-col gap-1.5">
+              <div
+                style={{
+                  fontSize: 28,
+                  fontWeight: 800,
+                  letterSpacing: "-0.025em",
+                  lineHeight: 1.05,
+                  color: C.onSolid,
+                  // Every value here reads as a figure, the city included —
+                  // lining them up is what makes them read as one set.
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {fact.value}
+              </div>
+              <div style={{ ...eyebrow, color: C.onSolid, opacity: 0.72 }}>
+                {fact.label}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
