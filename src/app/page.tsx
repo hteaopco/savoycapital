@@ -1,5 +1,3 @@
-import { DEFAULT_FUND_ID } from "@/lib/db";
-import { loadCommittedCapitalCents } from "@/lib/portfolio";
 import { INVESTMENTS } from "@/content/investments";
 import { PortfolioGrid } from "@/components/PortfolioGrid";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -34,40 +32,30 @@ import { SiteContact, WhatWeLookFor } from "@/components/SiteSections";
  */
 
 /**
- * Statically rendered, revalidated hourly.
+ * Fully static, and it has nothing left to revalidate.
  *
- * The one figure that can change is committed capital, which is read from
- * Postgres so the public page and Fund & Users cannot disagree (DECISIONS
- * 2026-08-24, "there is one source for a fund figure"). Without `revalidate`
- * that read would be frozen at build time and the rule would be defeated by a
- * cache instead of by a literal.
+ * It carried `revalidate = 3600` until 2026-09-07, for one reason: committed
+ * capital was read from Postgres, and without a revalidate that read would have
+ * been frozen at build time. Removing the figure (owner: "also remove $10M
+ * committed") removed the page's only database-backed value, and with it the
+ * hourly regeneration — which would otherwise have kept re-rendering an
+ * identical page on a schedule for a reason that no longer exists.
  *
- * An hour is chosen because the alternative — rendering per request — puts the
- * marketing page's availability behind the database's for a number that changes
- * a few times a year.
+ * Everything here is now build-time content. **A future figure read from the
+ * database brings `revalidate` back with it**, and the argument above is why:
+ * a stale number quoted to a broker is the failure to avoid.
  */
-export const revalidate = 3600;
 
-export default async function Home() {
-  const committedCents = await loadCommittedCapitalCents(DEFAULT_FUND_ID);
-
+export default function Home() {
   return (
     <main>
       <SiteNav action={{ href: "/portal", label: "Investor Portal" }} />
 
       {/*
-        `committedCapital` is null whenever the database is unreachable or
-        unset — CI builds in exactly that state — and the facts block then omits
-        it rather than filling in a fallback. A gap is honest; a stale figure
-        quoted to a broker is not.
-
         The count is derived from the list the grid below renders, so the two
         can never disagree.
       */}
-      <SiteHero
-        committedCapital={formatCommitted(committedCents)}
-        investmentCount={INVESTMENTS.length}
-      />
+      <SiteHero investmentCount={INVESTMENTS.length} />
 
       <PortfolioGrid />
 
@@ -78,28 +66,4 @@ export default async function Home() {
       <SiteFooter />
     </main>
   );
-}
-
-/**
- * Whole millions, because the row is read at a glance and "$10,000,000" is
- * three tokens of precision nobody uses here. Not `formatCents` from
- * `src/lib/money.ts`: that renders the exact dollar figure the portal needs,
- * and this is the public headline version of the same number.
- *
- * Under a million it falls back to the exact figure rather than rounding to
- * "$0M", which is the failure this kind of shortening usually ships with.
- */
-function formatCommitted(cents: number | null): string | null {
-  if (cents === null) return null;
-
-  const dollars = Math.round(cents / 100);
-  if (dollars < 1_000_000) {
-    return `$${dollars.toLocaleString("en-US")}`;
-  }
-
-  const millions = dollars / 1_000_000;
-  const rendered = Number.isInteger(millions)
-    ? String(millions)
-    : millions.toFixed(1);
-  return `$${rendered}M`;
 }

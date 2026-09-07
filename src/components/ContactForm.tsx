@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { Paperclip, X } from "lucide-react";
 import { C } from "./palette";
-import { HEADQUARTERS } from "@/content/site";
 import { HONEYPOT_FIELD, MAX_FILES } from "@/lib/inquiry-fields";
 
 /**
@@ -288,7 +287,6 @@ export function ContactForm() {
         {state === "sending" ? "Sending…" : "Send"}
       </button>
 
-      <div style={{ marginTop: 20, fontSize: 13, color: C.textMuted }}>{HEADQUARTERS}</div>
     </form>
   );
 }

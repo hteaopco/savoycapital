@@ -37,19 +37,20 @@ import { HERO_IMAGE } from "@/content/site-imagery";
  *
  * The `<h1>`. The page has exactly one and it is here.
  */
-export function SiteHero({
-  committedCapital,
-  investmentCount,
-}: {
-  committedCapital: string | null;
-  investmentCount: number;
-}) {
-  // Committed capital is absent whenever the database is unreachable — the
-  // block drops rather than showing a fallback. See `loadCommittedCapitalCents`.
+export function SiteHero({ investmentCount }: { investmentCount: number }) {
+  /*
+    Committed capital was the third fact here and was REMOVED on 2026-09-07
+    (owner: "also remove $10M committed"). It was the page's only
+    database-backed figure, so its removal took the whole chain with it —
+    `loadCommittedCapitalCents`, the prop, and the hourly revalidate that
+    existed to keep it fresh. See `src/app/page.tsx`.
+
+    **Do not reinstate it as a literal.** The reason it was read from Postgres
+    in the first place is that a hard-coded fund size on a public page is a
+    figure quoted to brokers that nobody is positioned to notice going stale
+    (DECISIONS 2026-08-24). If it ever returns, it returns from the database.
+  */
   const facts = [
-    ...(committedCapital
-      ? [{ value: committedCapital, label: "Committed capital" }]
-      : []),
     { value: String(investmentCount), label: "Current investments" },
     { value: HEADQUARTERS, label: "Headquarters" },
   ];
