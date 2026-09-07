@@ -22,8 +22,8 @@ import { HONEYPOT_FIELD, MAX_FILES } from "@/lib/inquiry-fields";
  * **So the badge is not decoration; it is the thing that makes this form
  * honest.** If it is ever removed, this form should go back to being a mailto.
  * A ClickSend SMS now fires too (`src/lib/sms.ts`), but it is best-effort and
- * unconfigured without `SMS_ALERT_TO` — the badge is the signal that does not
- * depend on a secret being set. Resend email is still to come.
+ * silent without the ClickSend credentials — the badge is the signal that does
+ * not depend on a secret being set. Resend email is still to come.
  *
  * ## Client component, and why the whole page is not one
  *

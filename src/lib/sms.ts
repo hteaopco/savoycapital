@@ -1,4 +1,5 @@
 import "server-only";
+import { managementPhones } from "./clerk-users";
 
 /**
  * ClickSend SMS — outbound alerts only.
@@ -6,7 +7,11 @@ import "server-only";
  * Built from the owner's handoff notes (2026-09-07, carried from theAPlink),
  * with three deliberate departures recorded below. `CLICKSEND_USERNAME` and
  * `CLICKSEND_API_KEY` are provisioned in Railway; nothing here reads a
- * credential from anywhere else and nothing here is hardcoded.
+ * credential from anywhere else.
+ *
+ * **Recipients come from the Clerk roster, not from a literal** — this instance
+ * signs people in by phone, so the number is already there and verified. See
+ * `alertRecipients()`. There is no phone number written in this repository.
  *
  * ## Lazy and optional, like `getDb()` and `getR2()`
  *
@@ -111,12 +116,12 @@ function getConfig(): ClickSendConfig | null {
 }
 
 /**
- * Who gets alerted. `SMS_ALERT_TO`, comma-separated.
+ * The `SMS_ALERT_TO` **override**, comma-separated. Empty when unset, which is
+ * the normal case — see `alertRecipients()` for where numbers actually come
+ * from.
  *
- * **An environment variable rather than a constant**, because `CLAUDE.md`
- * forbids baking a fact about these two people into the source, and because a
- * phone number is the kind of thing that changes without a deploy. Unset means
- * nobody is texted and everything else still works.
+ * It exists for the one case the roster cannot express: alerting a number that
+ * is not somebody's sign-in identity. Nothing sets it today.
  */
 export function smsRecipients(): string[] {
   const raw = process.env.SMS_ALERT_TO;
@@ -223,6 +228,24 @@ export const NEW_INQUIRY_SMS = smsSafe(
 );
 
 /**
+ * Who gets alerted: **the Clerk roster, not a constant.**
+ *
+ * The owner offered to hardcode his number and then asked whether Clerk already
+ * had it (2026-09-07). It does — this instance signs people in BY phone
+ * (`PLAYBOOKS/auth-clerk.md` GOTCHA 9), so every account carries a verified one
+ * by construction. `managementPhones()` reads it live. **No phone number is
+ * written anywhere in this repository**, adding the second principal is a role
+ * assignment rather than a deploy, and a number that changes has to change in
+ * Clerk anyway or its owner cannot sign in.
+ *
+ * `SMS_ALERT_TO` wins when set, for a recipient who is not a sign-in identity.
+ */
+export async function alertRecipients(): Promise<string[]> {
+  const override = smsRecipients();
+  return override.length ? override : managementPhones();
+}
+
+/**
  * Tell the owners an enquiry arrived. Fire-and-forget by contract.
  *
  * One HTTP call per recipient, which the handoff notes is not the efficient
@@ -230,7 +253,7 @@ export const NEW_INQUIRY_SMS = smsSafe(
  * them in a single `messages[]` array instead.
  */
 export async function notifyNewInquiry(): Promise<void> {
-  const recipients = smsRecipients();
+  const recipients = await alertRecipients();
   if (!recipients.length) return;
   await Promise.all(recipients.map((to) => sendSms(to, NEW_INQUIRY_SMS)));
 }

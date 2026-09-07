@@ -3,9 +3,8 @@
 How the owners find out an enquiry arrived, how to turn it on, and the one thing about SMS
 that costs real money if you get it wrong.
 
-Subsystem status: **code complete, off until `SMS_ALERT_TO` is set.** The credentials are
-provisioned in Railway; the recipient list is not, so today every send is a no-op and the
-Cold Reach badge is doing the work alone.
+Subsystem status: **code complete, live as soon as the credentials are read.** There is
+nothing else to configure — recipients come from the Clerk roster, not from a variable.
 
 ---
 
@@ -16,9 +15,26 @@ Cold Reach badge is doing the work alone.
 | Client + guards | `src/lib/sms.ts` | Basic auth, E.164 normalisation, GSM-7 guard, send budget |
 | Trigger | `src/app/api/inquiries/route.ts` | `await notifyNewInquiry()` after the row lands |
 
+| Recipients | `src/lib/clerk-users.ts` | `managementPhones()` — the roster, cached 5 min |
+
 One HTTP `POST` to `https://rest.clicksend.com/v3/sms/send` per recipient. Two recipients, so
 `Promise.all` over two calls is fine; if that ever becomes dozens, put them in a single
 `messages[]` array instead — the API takes one.
+
+**There is no phone number written anywhere in this repository.** This instance is configured
+`identification_strategies: ["phone_number"]` with `email_address: off`
+(`auth-clerk.md` GOTCHA 9), so a phone is *how an account signs in* — every account has one
+and it is verified by construction. The owner offered to hardcode his on 2026-09-07 and then
+asked the better question, "or doesn't my clerk account have my number?" It does.
+
+That is strictly better than a literal three ways over: nothing personal is committed to git
+history, adding the second principal is a role assignment rather than a deploy, and a number
+that changes has to change in Clerk anyway or its owner cannot sign in.
+
+Who counts as management is **the same rule as `src/lib/authz.ts`, valve included**: the
+MANAGEMENT assignments, or every account while the assignment table is empty. A notification
+list that disagreed with the authorization list would text somebody about an inbox they
+cannot open.
 
 **The alert is a fixed string with no interpolation:**
 
@@ -36,11 +52,13 @@ this Departure 1 and gives the full argument.
 |---|---|---|
 | `CLICKSEND_USERNAME` | Basic-auth user | Railway, per owner 2026-09-07 |
 | `CLICKSEND_API_KEY` | Basic-auth pass | Railway, per owner 2026-09-07 |
-| `SMS_ALERT_TO` | Comma-separated recipients | **Not set — this is what turns it on** |
 | `CLICKSEND_SOURCE` | Optional reporting label, default `savoycapital` | Optional |
+| `SMS_ALERT_TO` | **Override.** Comma-separated, wins over the roster | Unset, and normally stays that way |
 
-`SMS_ALERT_TO` takes US numbers in any format — `(337) 555-0147, 3375550148` is fine.
-`toDialable()` normalises at the boundary and drops anything that is not ten digits.
+There is no recipient variable to set. `SMS_ALERT_TO` exists only for the one case the roster
+cannot express — alerting a number that is not somebody's sign-in identity. It takes US
+numbers in any format; `toDialable()` normalises at the boundary and drops anything that is
+not ten digits.
 
 **Nothing here is required to build or boot.** Absent credentials or an absent recipient list
 make `sendSms` return `false` and the enquiry still lands, exactly like `DATABASE_URL` and the
@@ -48,9 +66,14 @@ make `sendSms` return `false` and the enquiry still lands, exactly like `DATABAS
 
 ## 3. Bringing it up
 
-1. Set `SMS_ALERT_TO` on the **app** service in Railway.
-2. Submit the public contact form.
-3. A text arrives within a few seconds; the badge increments either way.
+1. Confirm `CLICKSEND_USERNAME` and `CLICKSEND_API_KEY` are on the **app** service in Railway.
+2. Confirm the people who should be texted hold a MANAGEMENT assignment under Fund & Users.
+3. Submit the public contact form.
+4. A text arrives within a few seconds; the badge increments either way.
+
+**A role change takes up to five minutes to affect who is texted** — `managementPhones()`
+caches, because the trigger is a public endpoint and the alternative is a Clerk API call per
+submission.
 
 If no text arrives, the app logs `[sms] …` on the failure path. There is no other signal —
 see § 5.

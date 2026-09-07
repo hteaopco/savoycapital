@@ -45,11 +45,12 @@ import { notifyNewInquiry } from "@/lib/sms";
  *
  * ## Notification, and what still is not here
  *
- * A ClickSend SMS goes to `SMS_ALERT_TO` after the row lands — **best-effort by
- * contract**: `notifyNewInquiry()` cannot throw and cannot fail this request,
- * so an SMS outage never costs an enquiry. It is also unconfigured by default,
- * which means **the red badge in the portal nav remains the signal that does
- * not depend on a secret being set.** That is the whole reason the badge
+ * A ClickSend SMS goes to management's Clerk phone numbers after the row lands
+ * — **best-effort by contract**: `notifyNewInquiry()` cannot throw and cannot
+ * fail this request, so an SMS outage never costs an enquiry. It also stays
+ * silent without `CLICKSEND_*` set, which means **the red badge in the portal
+ * nav remains the signal that does not depend on a secret being set.** That is
+ * the whole reason the badge
  * shipped in the same change as the form — the owner's own build spec argued
  * that an unwatched form is worse than no form, and the badge is what answers
  * it. Do not remove it because a text message exists.

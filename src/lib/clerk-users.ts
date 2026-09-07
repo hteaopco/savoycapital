@@ -1,5 +1,6 @@
 import "server-only";
 import { clerkClient } from "@clerk/nextjs/server";
+import { getDb } from "./db";
 
 /**
  * Reading the account list out of Clerk.
@@ -89,4 +90,75 @@ export async function listClerkAccounts(): Promise<
 export function accountLabel(a: ClerkAccount): string {
   const name = [a.firstName, a.lastName].filter(Boolean).join(" ").trim();
   return name || a.phone || a.email || a.id;
+}
+
+/**
+ * Phone numbers for everyone who should be told an enquiry arrived.
+ *
+ * ## There is no phone number written anywhere in this repository
+ *
+ * The owner offered to hardcode his (2026-09-07) and then asked the better
+ * question — *"or doesn't my clerk account have my number?"* It does, and it
+ * cannot not: this instance is configured `identification_strategies:
+ * ["phone_number"]` with `email_address: off` (`PLAYBOOKS/auth-clerk.md`
+ * GOTCHA 9), so **a phone is how an account signs in.** Every account on the
+ * instance has one and it is verified by construction.
+ *
+ * So the roster IS the recipient list, and that is strictly better than a
+ * literal in three ways: nothing personal is committed to git history, adding
+ * the second principal is a role assignment rather than a deploy, and a number
+ * that changes has to change in Clerk anyway or its owner cannot sign in.
+ *
+ * ## Who counts as management matches `authz.ts`, including the valve
+ *
+ * MANAGEMENT assignments, or — while the assignment table is empty and
+ * `authz.ts`'s bootstrap valve is treating everyone as management — every
+ * account on the instance. Deliberately the same rule in both places: a
+ * notification list that disagreed with the authorization list would text
+ * somebody about an inbox they cannot open.
+ *
+ * ## Failure shape
+ *
+ * `[]` on any problem — no secret key, no database, a Clerk outage. The caller
+ * is a best-effort notifier and an empty list simply means nobody is texted.
+ * Never throws.
+ */
+const PHONE_CACHE_MS = 5 * 60 * 1000;
+let phoneCache: { at: number; phones: string[] } | null = null;
+
+export async function managementPhones(): Promise<string[]> {
+  // Cached because the trigger is a public endpoint: without this, a spam run
+  // past the honeypot is also a Clerk API call per submission. Five minutes is
+  // short enough that a role change takes effect while someone is still
+  // wondering whether it did.
+  if (phoneCache && Date.now() - phoneCache.at < PHONE_CACHE_MS) return phoneCache.phones;
+
+  let phones: string[] = [];
+  try {
+    const roster = await listClerkAccounts();
+    if (roster) {
+      const db = getDb();
+      const assignments = db
+        ? await db.userRole.findMany({ select: { clerkUserId: true, role: true } })
+        : [];
+
+      const wanted = assignments.length
+        ? new Set(
+            assignments.filter((a) => a.role === "MANAGEMENT").map((a) => a.clerkUserId),
+          )
+        : // The valve is holding: no assignments exist, so everyone signed in
+          // is management and everyone gets told. Two accounts today.
+          null;
+
+      phones = roster.accounts
+        .filter((a) => wanted === null || wanted.has(a.id))
+        .map((a) => a.phone)
+        .filter((p): p is string => Boolean(p));
+    }
+  } catch {
+    phones = [];
+  }
+
+  phoneCache = { at: Date.now(), phones };
+  return phones;
 }
