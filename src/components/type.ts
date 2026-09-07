@@ -10,7 +10,7 @@ import type { CSSProperties } from "react";
  * authorship, in one place.
  *
  * It exists because the same `clamp(30px, 4.2vw, 40px)` was written out twice —
- * in `RecentInvestments.tsx` and `coming-soon/page.tsx` — which is a scale that
+ * in the landing page's carousel and `coming-soon/page.tsx` — which is a scale that
  * lives nowhere and drifts the first time someone edits one of them.
  *
  * These sizes are NOT on `DESIGN_SYSTEM.md` § 2's type scale, which stops at a
@@ -21,9 +21,9 @@ import type { CSSProperties } from "react";
  * Everything else still binds — color from `C`, weight and letter-spacing stated
  * here rather than in a Tailwind class, `tabular-nums` on any number.
  *
- * **Adding a size here is a design decision, not a convenience.** Three is the
- * whole scale. If a screen wants a fourth, that is a conversation with the owner
- * about the marketing surface, not a fourth constant.
+ * **Adding a size here is a design decision, not a convenience.** Five is the
+ * whole scale. If a screen wants a sixth, that is a conversation with the owner
+ * about the marketing surface, not a sixth constant.
  */
 
 /** Page headline — the one per screen. `<h1>`. */
@@ -55,6 +55,22 @@ export const eyebrow: CSSProperties = {
   fontWeight: 700,
   textTransform: "uppercase",
   letterSpacing: ".1em",
+};
+
+/**
+ * The sentence under a hero headline, and the landing page's thesis statement.
+ * One step above `bodyLead`, because it is read at the top of the page at a
+ * glance rather than inside a card.
+ *
+ * Written as a token rather than a `fontSize: 17` over `bodyLead` at the call
+ * site — an inline override is how a scale stops being a scale, and this
+ * module's whole point is that the public surface has one written down.
+ */
+export const heroLead: CSSProperties = {
+  margin: 0,
+  fontSize: 17,
+  fontWeight: 500,
+  lineHeight: 1.65,
 };
 
 /**

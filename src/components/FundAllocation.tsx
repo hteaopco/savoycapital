@@ -627,7 +627,7 @@ export function FundAllocation({
   return (
     <div
       style={{
-        // 12, matching `RecentInvestments`' card. `DESIGN_SYSTEM.md` § 2: 12 is
+        // 12, matching the landing page's portfolio cards. `DESIGN_SYSTEM.md` § 2: 12 is
         // cards and panels, 10 is larger buttons and dashed "empty" cards. The
         // two surfaces shipped at 12 and 10 for a while, which is the kind of
         // drift no lint sees and a person reading both screens does.
@@ -824,7 +824,7 @@ export function FundAllocation({
                   its 36px carve-out explicitly excludes list rows — these are
                   list rows, so the floor applies whole. A pointer is not a thumb,
                   which is why the desktop height is still a design choice; that
-                  reading is the one RecentInvestments already runs on. Sizing
+                  reading is the one the public portfolio cards run on. Sizing
                   lives in the className, theming in the style prop.
                 */}
                 <button

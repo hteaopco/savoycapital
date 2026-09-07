@@ -6,6 +6,47 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The landing page is built to a written spec, and its job is legitimacy rather than
+  fundraising (owner's build spec, 2026-09-06).** Audience: business owners, brokers and
+  intermediaries deciding whether Savoy is a real counterparty. Structure: nav → hero →
+  approach → at a glance → portfolio → what we look for → contact → footer. A revision, not a
+  redesign — palette, type and grid unchanged.
+  - **The carousel is gone.** `RecentInvestments.tsx` was deleted for a static 2×2 grid:
+    "four investments displayed reads as substance; four investments hidden behind arrows
+    reads as padding." Gone with it: the `1 OF 4` counter, the prev/next controls, the
+    `RECENT INVESTMENTS` eyebrow. The `Investment` type moved to `src/content/investments.ts`
+    — a content module importing its shape from a component was backwards, which is exactly
+    what the deletion proved.
+  - **No performance figures anywhere, and that is a legal constraint.** No target returns,
+    no IRR, no MOIC, no fund terms, no "invest with us". The criteria in `What we look for`
+    are *screening* ranges (EBITDA, project size, tenor), which describe what Savoy will look
+    at rather than what it has earned.
+  - **A footer legal line exists now, and it is not clearance.** It disclaims an offer.
+    `FACTS.md` § "securities marketing" is still open: counsel has not read the page, and the
+    spec names that as blocking go-live. Do not read the line as permission to add offering
+    language above it.
+  - **No contact form, deliberately** — a form implies a monitored inbox, and an unanswered
+    form is worse than none. A `mailto:` only.
+
+- **Committed capital on the PUBLIC page reads Postgres, and omits itself rather than
+  guessing (design seat, 2026-09-06).** The spec asks for `$10M / Committed capital` in the
+  "At a glance" row. Writing that as a literal in `src/content/` would have recreated the
+  exact bug DECISIONS 2026-08-24 was written about — Fund & Users editing a figure that
+  another surface renders from a hard-coded copy, and nobody finding out. So
+  `loadCommittedCapitalCents()` reads `Fund.sizeCents`, and:
+  - **`null` omits the whole block.** No fallback number. CI builds with no `DATABASE_URL`
+    and its output simply has two facts instead of three; Railway's build has the variable
+    and bakes in the real one. A gap on a marketing page is honest; a stale figure quoted to
+    a broker is not.
+  - **`export const revalidate = 3600`.** Without it the read would freeze at build time and
+    the one-source rule would be defeated by a cache instead of by a literal. Per-request
+    rendering was rejected: it puts the marketing page's availability behind the database's
+    for a number that changes a few times a year.
+  - **Worth knowing:** this is the first time a fund figure appears on an unauthenticated
+    surface. It is the owner's explicit call, with the label he specified ("committed
+    capital", not "AUM" or "fund size"), and it is the boundary `CLAUDE.md` names — "a real
+    figure moved into a public component". Recorded so the next change here is deliberate.
+
 - **Mobile is audited at 375, 390 and 430 — not 375 alone (2026-08-25).** The canonical
   "look at it at 375px" from `MOBILE_REFERENCE.md` § 10 is necessary and **not sufficient**,
   proven by shipping a defect through it.
