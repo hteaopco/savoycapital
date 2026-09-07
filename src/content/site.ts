@@ -40,7 +40,9 @@ export type Criterion = {
 };
 
 /**
- * What the firm looks for, by asset class.
+ * What the firm looks for, by asset class. Four of them as of 2026-09-07,
+ * ordered early-stage to hard-asset, which is how the columns read left to
+ * right.
  *
  * The highest-value block on the page for inbound deal flow — brokers screen on
  * criteria before anything else. **Keep each to a short paragraph.** The full
@@ -54,11 +56,15 @@ export type Criterion = {
 export const CRITERIA: Criterion[] = [
   {
     label: "Private Equity",
-    body: "Control, significant minority, and passive positions in founder-led businesses with $500K–$3M EBITDA. Demonstrated operating history and financial visibility. Founders seeking a growth partner rather than full liquidity.",
+    body: "Control, significant minority, and passive positions in founder-led businesses with $500K–$5M EBITDA. Demonstrated operating history and financial visibility.",
   },
   {
     label: "Private Credit",
     body: "Senior secured and structured lending to operating businesses. Asset-backed with a strong collateral profile, defined maturities, and terms from 12 to 48 months.",
+  },
+  {
+    label: "Venture Capital",
+    body: "Selective minority positions in companies between Series A and Series B. Founders with direct subject-matter expertise, demonstrated traction, and a disciplined capital structure. Capital deployed in stages, sized relative to risk.",
   },
   {
     label: "Real Estate",
