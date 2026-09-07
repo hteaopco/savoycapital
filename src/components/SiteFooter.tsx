@@ -1,17 +1,19 @@
-import Link from "next/link";
 import { C } from "./palette";
-import { eyebrow } from "./type";
-import { FOOTER_DESCRIPTOR, LEGAL_LINE } from "@/content/site";
+import { LEGAL_LINE } from "@/content/site";
 
 /**
- * The public site's footer.
+ * The public site's footer — the legal line and a copyright, and nothing else.
+ *
+ * ## What was removed, and why it is not coming back
+ *
+ * It carried the wordmark, the firm descriptor, an "Investors" label and a
+ * second Investor Portal link until 2026-09-07: "it is too redundant, the
+ * investor portal is at the top" (owner). He is right on both counts — the
+ * descriptor restated the hero, and a page with one primary action should not
+ * offer it twice (`DESIGN_SYSTEM.md` § 0.2). **Do not re-add a nav or a
+ * wordmark here** to make the footer look fuller; empty is the intent.
  *
  * ## The legal line is the point of this revision
- *
- * The descriptor was already going to change — "private equity and private
- * debt" became three strategies with the new positioning. The addition that
- * matters is the informational-purposes line, and it is worth being precise
- * about what it does and does not do.
  *
  * **It disclaims an offer. It is not clearance.** `FACTS.md` § "securities
  * marketing" is still open: counsel has not read this page, and the owner's
@@ -38,46 +40,10 @@ export function SiteFooter() {
     // near-whites; a hairline is.
     <footer style={{ background: C.bg, borderTop: `1px solid ${C.border}` }}>
       <div className="mx-auto max-w-[1120px] px-5 py-12 md:px-10 md:py-16">
-        <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-          <div className="flex max-w-[460px] flex-col gap-3">
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 800,
-                letterSpacing: ".14em",
-                color: C.text,
-              }}
-            >
-              SAVOY CAPITAL
-            </div>
-            <div style={{ fontSize: 13, lineHeight: 1.7, color: C.textMuted }}>
-              {FOOTER_DESCRIPTOR}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 md:items-end">
-            <div style={{ ...eyebrow, color: C.textDim }}>Investors</div>
-            {/* 44px on touch, the footer's own density from md up. A pointer is
-                not a thumb, so nothing moves on desktop. */}
-            <Link
-              href="/portal"
-              className="inline-flex items-center self-start min-h-[44px] md:min-h-0 md:self-auto"
-              style={{
-                color: C.accent,
-                fontSize: 13,
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              Investor Portal
-            </Link>
-          </div>
-        </div>
-
-        <div
-          className="mt-10 flex flex-col gap-3 pt-6 md:mt-12"
-          style={{ borderTop: `1px solid ${C.border}` }}
-        >
+        {/* No inner rule any more: with the identity block gone this is the
+            whole footer, and a hairline above the only thing in it would be
+            chrome separating nothing. § 0.5. */}
+        <div className="flex flex-col gap-3">
           <div
             style={{
               fontSize: 12,

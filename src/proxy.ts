@@ -16,12 +16,31 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
  *
  * `/sign-in(.*)` must stay public or the sign-in page redirects to itself.
  * `/api/health` must stay public or Railway's healthcheck fails the deploy.
+ *
+ * `/api/inquiries` is the contact form's endpoint and the ONLY unauthenticated
+ * WRITE in the product (owner, 2026-09-07). It is worth being exact about what
+ * that opens, because this list is the control behind "the fund's numbers are
+ * not on the internet":
+ *
+ *   - It is **POST only**. There is no GET, no listing, and no route parameter.
+ *   - It **returns nothing from the database** — not the new row's id, not a
+ *     count. A caller learns one bit: accepted, or not.
+ *   - Files it stores land under `management/`, and the only route that serves
+ *     that prefix requires a management viewer. An anonymous caller cannot read
+ *     back even their own upload.
+ *
+ * So it adds "strangers can append rows and objects", not "strangers can read".
+ * Its own header documents the honeypot, rate limit and caps that bound the
+ * first half. **Do not widen this entry to `/api/inquiries(.*)`** — that would
+ * make every future sub-path public by default, which is the failure mode this
+ * whole list is shaped to avoid.
  */
 const isPublicRoute = createRouteMatcher([
   "/",
   "/coming-soon",
   "/sign-in(.*)",
   "/api/health",
+  "/api/inquiries",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

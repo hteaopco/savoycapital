@@ -281,3 +281,73 @@ model DealDocument {
   @@index([dealId, audience])
   @@index([dealId, folder])
 }
+
+/// An inbound enquiry from the PUBLIC contact form.
+///
+/// ## This table is written by ANONYMOUS callers
+///
+/// Every other model here is written by a signed-in member of a two-person
+/// firm. This one is filled in by whoever finds the website, which makes it the
+/// first untrusted-input surface in the product and the reason the route that
+/// writes it carries rate limiting, length caps and a honeypot. Read anything
+/// in these columns as hostile text: it is displayed to management, never
+/// interpolated into anything that executes.
+///
+/// The owner's word for the screen is "Cold Reach", which is what these are —
+/// unsolicited approaches from owners, brokers and intermediaries.
+model Inquiry {
+  id Int @id @default(autoincrement())
+
+  firstName String
+  lastName  String
+  email     String
+  /// Both optional: the form asks, and a broker with a real opportunity should
+  /// not be stopped by a field they would rather leave blank.
+  phone     String?
+  company   String?
+
+  /// "Tell us about the opportunity". The reason the row exists.
+  message String
+
+  /// NULL means new, and it is what turns the nav badge red. A timestamp rather
+  /// than a boolean so "when did someone first look at this" is answerable
+  /// later without a second column.
+  readAt DateTime?
+
+  /// Kept for rate limiting and abuse triage only, and deliberately NOT shown
+  /// on the admin screen — it is the submitter's data, not the firm's, and
+  /// nothing about reading an enquiry needs it.
+  submittedIp String?
+
+  createdAt DateTime @default(now())
+
+  files InquiryFile[]
+
+  /// The admin list is "newest first, unread first", and the badge counts
+  /// `readAt IS NULL`.
+  @@index([readAt, createdAt])
+}
+
+/// A file attached to an inbound enquiry.
+///
+/// Mirrors `DealDocument`'s shape on purpose — same unique key, same reason
+/// (two rows pointing at one object make deleting either silently break the
+/// other). What differs is who wrote it: an anonymous caller, so the route caps
+/// count, per-file size and total size, and stores under a prefix only
+/// management can read back.
+model InquiryFile {
+  id        Int     @id @default(autoincrement())
+  inquiryId Int
+  inquiry   Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+
+  /// The R2 object key: management/inquiries/<inquiryId>/<uuid>/<filename>
+  key String @unique
+
+  filename    String
+  sizeBytes   Int
+  contentType String
+
+  uploadedAt DateTime @default(now())
+
+  @@index([inquiryId])
+}
