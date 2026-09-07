@@ -48,7 +48,21 @@ export function WhatWeLookFor() {
           What we look for
         </h2>
 
-        <div className="mt-10 grid grid-cols-1 gap-10 md:mt-12 md:grid-cols-3 md:gap-12">
+        {/*
+          Four columns, and the breakpoint is ARITHMETIC rather than taste.
+
+          A readable measure for this copy is ~30 characters, which at 15px is
+          about 220px. Four of those plus three 32px gutters needs 976px of
+          content box. The column is capped at 1120 with 80px of padding, so it
+          gives 1040 at `xl` and above — comfortable — and 944 at `lg`, which
+          lands each column at 212px. Tight but honest.
+
+          At `md` (768px) the same sum gives 136px a column, which is four
+          words a line. So `md:` carries TWO columns and the fourth arrives at
+          `lg:`. DECISIONS 2026-08-24 allows a second breakpoint above `md`
+          when it is derived and shown at the call site; this is that.
+        */}
+        <div className="mt-10 grid grid-cols-1 gap-10 md:mt-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {CRITERIA.map((criterion) => (
             <div key={criterion.label} className="flex flex-col gap-3">
               <div style={{ ...eyebrow, color: C.accent }}>
@@ -102,19 +116,24 @@ export function SiteContact() {
           Contact
         </h2>
 
-        <p
-          className="mt-4 max-w-[520px]"
-          style={{
-            margin: 0,
-            fontSize: 15,
-            fontWeight: 500,
-            lineHeight: 1.7,
-            color: C.textMuted,
-          }}
-        >
-          For owners, brokers, and intermediaries with an opportunity to
-          discuss.
-        </p>
+        {/* Margin on the wrapper: the inline `margin: 0` below would beat a
+            `mt-*` class on the <p> itself, and this gap silently sat at zero
+            until a sweep for that shape found it. Same trap as `SiteHero`. */}
+        <div className="mt-5">
+          <p
+            className="max-w-[520px]"
+            style={{
+              margin: 0,
+              fontSize: 15,
+              fontWeight: 500,
+              lineHeight: 1.7,
+              color: C.textMuted,
+            }}
+          >
+            For owners, brokers, and intermediaries with an opportunity to
+            discuss.
+          </p>
+        </div>
 
         <div className="mt-8 flex flex-col gap-2">
           {/* 44px on touch, the page's own density from md up — the pattern

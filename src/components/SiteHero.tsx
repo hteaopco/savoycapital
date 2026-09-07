@@ -88,19 +88,33 @@ export function SiteHero({
           Operating experience, applied to capital.
         </h1>
 
-        <p
-          className="mt-10 max-w-[600px] md:mt-14"
-          style={{
-            ...heroLead,
-            color: C.onSolid,
-            // Held back so it reads under the headline rather than beside it,
-            // and still well clear of the 4.5:1 floor on this scrim.
-            opacity: 0.9,
-            textWrap: "pretty",
-          }}
-        >
-          {APPROACH}
-        </p>
+        {/*
+          The margin lives on this WRAPPER, not on the <p>.
+
+          `heroLead` carries `margin: 0` — every token in `type.ts` does, so a
+          heading or paragraph does not inherit a browser default — and an inline
+          style beats a Tailwind class. A `md:mt-14` on the <p> itself therefore
+          did nothing at all, and the gap sat at zero while the class read
+          correct in the source. That is the second time this shape has bitten
+          this page (the carousel dots had `padding: 0` beating `px-[9px]`), so:
+          **when a `type.ts` token is spread onto an element, its spacing goes
+          on a wrapper.**
+        */}
+        <div className="mt-10 md:mt-16">
+          <p
+            className="max-w-[600px]"
+            style={{
+              ...heroLead,
+              color: C.onSolid,
+              // Held back so it reads under the headline rather than beside it,
+              // and still well clear of the 4.5:1 floor on this scrim.
+              opacity: 0.9,
+              textWrap: "pretty",
+            }}
+          >
+            {APPROACH}
+          </p>
+        </div>
 
         {/*
           The facts, on a rule. Three discrete blocks — not a middle-dot-joined
