@@ -1,0 +1,89 @@
+/**
+ * Firm facts and positioning copy for the PUBLIC landing page.
+ *
+ * Same rule as `investments.ts`: everything here is readable by anyone on the
+ * internet. **No performance figures — no target returns, no IRR, no MOIC, no
+ * fund terms, no "invest with us" language.** That is a legal constraint, not a
+ * style preference (owner's build spec, 2026-09-06; `FACTS.md` § "securities
+ * marketing" is the standing reason and is still open pending counsel).
+ *
+ * Copy lives here rather than in the components because it is the part that
+ * gets edited — by a person, repeatedly, and eventually by counsel. A component
+ * holding its own prose means a copy change is a code review.
+ */
+
+/** Where the firm is. Shown in "At a glance" and in the contact block. */
+export const HEADQUARTERS = "Lafayette, LA";
+
+/**
+ * The one address on the public site.
+ *
+ * A `mailto:` and nothing else — **no contact form** (owner's spec): a form
+ * implies an inbox someone is watching, and an unanswered form is worse than no
+ * form. No phone number until one is confirmed.
+ */
+export const CONTACT_EMAIL = "jett@evolamco.com";
+
+/**
+ * The thesis statement, shown once directly under the hero.
+ *
+ * This is the page's positioning and the sentence the whole revision was built
+ * around. It says what Savoy invests in and what it brings; it does not say how
+ * anything has performed or invite anyone to invest.
+ */
+export const APPROACH =
+  "Savoy Capital makes control, minority, and passive investments across private equity, private credit, and real estate. We underwrite the operator before the asset. Businesses are run by people, and we have run them ourselves — which means we understand the seat you're sitting in.";
+
+export type Criterion = {
+  label: string;
+  body: string;
+};
+
+/**
+ * What the firm looks for, by asset class.
+ *
+ * The highest-value block on the page for inbound deal flow — brokers screen on
+ * criteria before anything else. **Keep each to a short paragraph.** The full
+ * criteria from the internal deck do not belong on a public page, and the spec
+ * says so explicitly.
+ *
+ * Note what these are and are not: ranges that describe the kind of business
+ * Savoy will look at ($500K–$3M EBITDA, $5M+ project size, 12–48 month terms).
+ * Those are screening criteria, not returns or terms of an offering.
+ */
+export const CRITERIA: Criterion[] = [
+  {
+    label: "Private Equity",
+    body: "Control, significant minority, and passive positions in founder-led businesses with $500K–$3M EBITDA. Demonstrated operating history and financial visibility. Founders seeking a growth partner rather than full liquidity.",
+  },
+  {
+    label: "Private Credit",
+    body: "Senior secured and structured lending to operating businesses. Asset-backed with a strong collateral profile, defined maturities, and terms from 12 to 48 months.",
+  },
+  {
+    label: "Real Estate",
+    body: "Opportunistic equity in operator-led transactions, $5M+ total project size, with meaningful sponsor co-investment and conservative leverage.",
+  },
+];
+
+/** Set apart below the three columns. */
+export const CRITERIA_CLOSER = "We move on our own timeline, and we close.";
+
+/**
+ * The footer's descriptor. Revised from "private equity and private debt" to
+ * match the three-strategy positioning above.
+ */
+export const FOOTER_DESCRIPTOR =
+  "A private investment fund making private equity, private credit, and real estate investments.";
+
+/**
+ * The legal line, set small and quiet at the bottom of the footer.
+ *
+ * **This is the conservative posture the spec was written to, not a legal
+ * opinion.** `FACTS.md` § "securities marketing" is still open: counsel has not
+ * read this page. The line below disclaims an offer; it does not substitute for
+ * the review. Do not treat its presence as clearance, and do not extend it into
+ * anything resembling offering language.
+ */
+export const LEGAL_LINE =
+  "This website is for informational purposes only. It is not an offer to sell or a solicitation of an offer to buy any security.";

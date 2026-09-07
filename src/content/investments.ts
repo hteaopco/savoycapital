@@ -1,4 +1,38 @@
-import type { Investment } from "@/components/RecentInvestments";
+/**
+ * The type lives HERE now, not in a component.
+ *
+ * It used to be imported from `RecentInvestments.tsx`, which was deleted on
+ * 2026-09-06 when the carousel became a static grid. A content module importing
+ * its own shape from a component was backwards anyway — the data outlives any
+ * one way of rendering it, which is exactly what just happened.
+ */
+export type Investment = {
+  name: string;
+  /** Holding status. "Current" today; realized positions would read differently. */
+  status: string;
+  /** Instrument. Should agree with the deal's `instrument` in the database. */
+  kind: string;
+  /** Year of investment. */
+  year: string;
+  blurb: string;
+  website: { href: string; label: string };
+  image: {
+    src: string;
+    width: number;
+    height: number;
+    /**
+     * "logo" sits centered inside the card's padding; "photo" fills the frame
+     * edge to edge.
+     *
+     * **"photo" uses `cover` and therefore CROPS, and that is settled** (owner,
+     * 2026-08-24). It was changed to `contain` so nothing was cut off, shipped,
+     * looked at, and reverted: "that looks worse, lets just revert...it looked
+     * better before". Do not re-raise it. If a photo's crop ever needs to
+     * change, the fix is the source image's aspect ratio, not this property.
+     */
+    treatment: "logo" | "photo";
+  };
+};
 
 /**
  * The portfolio companies shown on the PUBLIC page's "Our Portfolio" carousel.
