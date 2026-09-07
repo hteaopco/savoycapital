@@ -76,6 +76,19 @@ export function documentKey(args: {
   return `${prefix}funds/${args.fundId}/deals/${args.dealId}/${crypto.randomUUID()}/${safeFilename(args.filename)}`;
 }
 
+/**
+ * Build the object key for a file attached to a PUBLIC contact-form enquiry.
+ *
+ * Under `management/` deliberately: that is the prefix `isServableKey()` allows,
+ * and the only route that reads it already requires a management viewer. So an
+ * anonymous caller can PUT a file here and **cannot read back anything at all**,
+ * including their own upload. That asymmetry is the point — the alternative is
+ * an open bucket path, which is a malware-hosting offer with extra steps.
+ */
+export function inquiryKey(args: { inquiryId: number; filename: string }): string {
+  return `${PREFIX.management}inquiries/${args.inquiryId}/${crypto.randomUUID()}/${safeFilename(args.filename)}`;
+}
+
 /** Hard ceiling on an upload. Bodies are buffered, so this bounds memory too. */
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 

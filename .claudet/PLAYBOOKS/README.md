@@ -19,3 +19,7 @@ What belongs in one:
 | File | Subsystem |
 |---|---|
 | `auth-clerk.md` | Authentication and the private-surface authorization boundary (Clerk). |
+| `deal-room.md` | The deal room and its Postgres backing (Prisma 7, Railway). |
+| `fund-users.md` | Fund and investor records, and how a person is scoped to a fund. |
+| `storage-r2.md` | Document storage (Cloudflare R2), keys, upload and download. |
+| `sms-clicksend.md` | Outbound SMS alerts for inbound enquiries (ClickSend). |

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { SignOutButton, useClerk, useUser } from "@clerk/nextjs";
 import {
   ExternalLink,
+  Inbox,
   Globe,
   Handshake,
   IdCard,
@@ -67,6 +68,13 @@ type NavItem = {
    * the click rather than after it.
    */
   external?: boolean;
+  /**
+   * Renders a count badge when the named counter is above zero.
+   *
+   * A key rather than a number: `NAV` is a module constant and cannot hold live
+   * data, so the shell fetches counts once and looks them up here.
+   */
+  badge?: "coldReach";
 };
 
 type NavSection = {
@@ -103,6 +111,7 @@ const NAV: NavSection[] = [
     managementOnly: true,
     items: [
       { href: "/deal-room", label: "Deal Room", Icon: Handshake },
+      { href: "/cold-reach", label: "Cold Reach", Icon: Inbox, badge: "coldReach" },
       { href: "/fund-users", label: "Fund & Users", Icon: IdCard },
     ],
   },
@@ -258,6 +267,73 @@ const sectionTitle: React.CSSProperties = {
   letterSpacing: "-0.01em",
 };
 
+/**
+ * Live counts for the nav badges.
+ *
+ * Fetched client-side rather than threaded down from each page. The shell is a
+ * client component rendered by four server pages; a prop would mean every one
+ * of them computes the count and every future page remembers to, with a silently
+ * missing badge as the cost of forgetting. One request from the shell is the
+ * version that cannot be forgotten.
+ *
+ * Failure is silent and the badge simply does not render — a count is not worth
+ * an error state in a sidebar.
+ */
+function useNavCounts(enabled: boolean) {
+  const [counts, setCounts] = useState<{ coldReach: number }>({ coldReach: 0 });
+
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    fetch("/api/inquiries/unread", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d && typeof d.unread === "number") {
+          setCounts({ coldReach: d.unread });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled]);
+
+  return counts;
+}
+
+/**
+ * The count badge. Red ground, white text, as the owner specified with a
+ * screenshot of theAPlink's own nav (2026-09-07).
+ *
+ * `C.red` + `C.onSolid` — the palette's answer for foreground on a solid tone.
+ * This is the ONE place red means "unread" rather than "error"; the label makes
+ * it unambiguous and there is no other red in the sidebar to confuse it with.
+ * `borderRadius: 999` is § 2's circular step, which is what a count pill is.
+ */
+function NavBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className="inline-flex items-center justify-center"
+      aria-label={`${count} new`}
+      style={{
+        minWidth: 20,
+        height: 20,
+        padding: "0 6px",
+        borderRadius: 999,
+        background: C.red,
+        color: C.onSolid,
+        fontSize: 11,
+        fontWeight: 800,
+        fontVariantNumeric: "tabular-nums",
+        flexShrink: 0,
+      }}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 function NavBody({
   pathname,
   isManagement,
@@ -271,6 +347,8 @@ function NavBody({
   // so dropping a section drops its rule with it and the remaining group does
   // not open with a stray hairline.
   const sections = NAV.filter((s) => isManagement || !s.managementOnly);
+  // Only management sees a badged item, so only management pays for the fetch.
+  const counts = useNavCounts(isManagement);
   return (
     <nav className="flex flex-col" style={{ padding: "8px 8px" }}>
       {sections.map((section, sectionIndex) => (
@@ -305,7 +383,7 @@ function NavBody({
               borderLeft: `1px solid ${C.border}`,
             }}
           >
-            {section.items.map(({ href, label, Icon, external }) => {
+            {section.items.map(({ href, label, Icon, external, badge }) => {
               const active = !external && pathname === href;
               // An external entry is a plain <a> in a new tab. `next/link`
               // would prefetch it into the router cache and swap it in
@@ -341,6 +419,7 @@ function NavBody({
                 >
                   <Icon size={16} />
                   <span style={{ flex: 1 }}>{label}</span>
+                  {badge ? <NavBadge count={counts[badge]} /> : null}
                   {external ? (
                     <ExternalLink size={12} color={C.textDim} aria-hidden />
                   ) : null}

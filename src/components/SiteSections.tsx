@@ -1,6 +1,7 @@
 import { C } from "./palette";
 import { eyebrow } from "./type";
-import { CONTACT_EMAIL, CRITERIA, HEADQUARTERS } from "@/content/site";
+import { CRITERIA } from "@/content/site";
+import { ContactForm } from "./ContactForm";
 
 /**
  * The landing page's copy sections: What we look for, and Contact.
@@ -91,13 +92,15 @@ export function WhatWeLookFor() {
 /**
  * Contact.
  *
- * A `mailto:` and a city line. **No form** (spec): a form implies an inbox
- * someone is watching, and an unanswered form is worse than none. No phone
- * number, because none is confirmed.
+ * A form as of 2026-09-07, replacing the `mailto:` the build spec asked for.
+ * The spec's objection to forms — "a form implies inbox monitoring that does
+ * not exist yet" — was answered rather than overruled: submissions land under
+ * Admin as **Cold Reach** with a red badge on the nav. See `ContactForm`'s
+ * header for why that badge is load-bearing rather than decorative.
  *
- * No language inviting investment inquiries — that is the securities line, and
- * "get in touch" is on the correct side of it while anything about investing
- * with the firm is not.
+ * Still no language inviting investment. "Tell us about the opportunity" is an
+ * approach from a counterparty, which is the correct side of the securities
+ * line; anything about investing WITH the firm is not.
  */
 export function SiteContact() {
   return (
@@ -116,9 +119,6 @@ export function SiteContact() {
           Contact
         </h2>
 
-        {/* Margin on the wrapper: the inline `margin: 0` below would beat a
-            `mt-*` class on the <p> itself, and this gap silently sat at zero
-            until a sweep for that shape found it. Same trap as `SiteHero`. */}
         <div className="mt-5">
           <p
             className="max-w-[520px]"
@@ -135,23 +135,7 @@ export function SiteContact() {
           </p>
         </div>
 
-        <div className="mt-8 flex flex-col gap-2">
-          {/* 44px on touch, the page's own density from md up — the pattern
-              `SiteNav` and `FundAllocation` already run on. */}
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="inline-flex items-center self-start min-h-[44px] md:min-h-0"
-            style={{
-              fontSize: 19,
-              fontWeight: 600,
-              color: C.accent,
-              textDecoration: "none",
-            }}
-          >
-            {CONTACT_EMAIL}
-          </a>
-          <div style={{ fontSize: 13, color: C.textMuted }}>{HEADQUARTERS}</div>
-        </div>
+        <ContactForm />
       </div>
     </div>
   );

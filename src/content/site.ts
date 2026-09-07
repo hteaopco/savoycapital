@@ -16,11 +16,16 @@
 export const HEADQUARTERS = "Lafayette, LA";
 
 /**
- * The one address on the public site.
+ * The firm's address.
  *
- * A `mailto:` and nothing else — **no contact form** (owner's spec): a form
- * implies an inbox someone is watching, and an unanswered form is worse than no
- * form. No phone number until one is confirmed.
+ * **Not rendered on the site any more.** The public page's `mailto:` became a
+ * form on 2026-09-07 and enquiries land in the portal under Cold Reach, so
+ * nothing displays this today.
+ *
+ * It is kept because it is the fact, and because it is the recipient the
+ * Resend notification will need when that lands (owner, 2026-09-07: "we can
+ * wire in resend email and also clicksend text coming up"). If that never
+ * happens, delete it rather than leaving a constant nothing reads.
  */
 export const CONTACT_EMAIL = "jett@evolamco.com";
 
@@ -71,13 +76,6 @@ export const CRITERIA: Criterion[] = [
     body: "Opportunistic equity in operator-led transactions, $5M+ total project size, with meaningful sponsor co-investment and conservative leverage.",
   },
 ];
-
-/**
- * The footer's descriptor. Revised from "private equity and private debt" to
- * match the three-strategy positioning above.
- */
-export const FOOTER_DESCRIPTOR =
-  "A private investment fund making private equity, private credit, and real estate investments.";
 
 /**
  * The legal line, set small and quiet at the bottom of the footer.
