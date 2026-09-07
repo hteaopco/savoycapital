@@ -5,12 +5,7 @@ import { PortfolioGrid } from "@/components/PortfolioGrid";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHero } from "@/components/SiteHero";
 import { SiteNav } from "@/components/SiteNav";
-import {
-  AtAGlance,
-  SiteApproach,
-  SiteContact,
-  WhatWeLookFor,
-} from "@/components/SiteSections";
+import { SiteContact, WhatWeLookFor } from "@/components/SiteSections";
 
 /**
  * The public landing page.
@@ -28,8 +23,12 @@ import {
  *
  * The order is the spec's:
  *
- *   nav → hero → approach → at a glance → portfolio → what we look for
- *       → contact → footer
+ *   nav → hero → portfolio → what we look for → contact → footer
+ *
+ * **The hero carries three things, not one** (owner, 2026-09-07): the headline
+ * moved to the top of the image and the approach paragraph and the facts row
+ * moved up into it from their own bands below. The spec's "one line of copy
+ * only" hero is the older instruction — see `SiteHero`'s header.
  *
  * Single page, anchor-free, no routing beyond the existing portal destination.
  */
@@ -56,20 +55,16 @@ export default async function Home() {
     <main>
       <SiteNav action={{ href: "/portal", label: "Investor Portal" }} />
 
-      <SiteHero />
-
-      <SiteApproach />
-
       {/*
         `committedCapital` is null whenever the database is unreachable or
-        unset — CI builds in exactly that state — and the block is then omitted
-        rather than filled with a fallback. A gap is honest; a stale figure
+        unset — CI builds in exactly that state — and the facts block then omits
+        it rather than filling in a fallback. A gap is honest; a stale figure
         quoted to a broker is not.
 
         The count is derived from the list the grid below renders, so the two
         can never disagree.
       */}
-      <AtAGlance
+      <SiteHero
         committedCapital={formatCommitted(committedCents)}
         investmentCount={INVESTMENTS.length}
       />

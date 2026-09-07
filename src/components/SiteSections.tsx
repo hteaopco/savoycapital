@@ -1,118 +1,25 @@
 import { C } from "./palette";
-import { heroLead, eyebrow } from "./type";
-import {
-  APPROACH,
-  CONTACT_EMAIL,
-  CRITERIA,
-  CRITERIA_CLOSER,
-  HEADQUARTERS,
-} from "@/content/site";
+import { eyebrow } from "./type";
+import { CONTACT_EMAIL, CRITERIA, HEADQUARTERS } from "@/content/site";
 
 /**
- * The landing page's copy sections: Approach, At a glance, What we look for,
- * and Contact.
+ * The landing page's copy sections: What we look for, and Contact.
  *
- * Four small server components in one file because they are one thing — the
- * body of a single page, sharing a measure, a rhythm and a left edge. Splitting
- * them into four files would spread that agreement across four places where it
- * can drift, and none of them is reused anywhere else. The hero, the portfolio
- * grid and the footer are separate files because each is genuinely its own
- * problem.
+ * It held two more — the approach paragraph and the "at a glance" facts — until
+ * the owner moved both INTO the hero image on 2026-09-07. They live in
+ * `SiteHero.tsx` now; this file is what is left below the fold.
  *
- * Everything here is `DESIGN_SYSTEM.md` § 0.5's rule applied literally: the
- * only chrome in the whole file is two hairlines, and both separate different
- * *kinds* of statement rather than decorating a block.
+ * Two small server components in one file because they are one thing — the body
+ * of a single page, sharing a measure, a rhythm and a left edge. Neither is
+ * reused anywhere else.
+ *
+ * Everything here is `DESIGN_SYSTEM.md` § 0.5's rule applied literally: there
+ * is now no chrome in this file at all — the two bands are separated by tone
+ * and by space, and nothing is drawn to divide them.
  */
 
 /** The shared column. Every section sits on the same left edge as the hero. */
 const COLUMN = "mx-auto max-w-[1120px] px-5 md:px-10";
-
-/**
- * The thesis statement.
- *
- * No heading and no eyebrow, deliberately: a label above it would make it a
- * section, and it is meant to read as the page speaking rather than as a block
- * of content. Set above body size for the same reason — this is the sentence
- * the revision was built around, and generous padding is what makes it a pause
- * rather than a caption.
- */
-export function SiteApproach() {
-  return (
-    <div style={{ background: C.bgAlt }}>
-      <div className={`${COLUMN} py-16 md:py-24`}>
-        <p
-          className="max-w-[600px]"
-          style={{ ...heroLead, color: C.text, textWrap: "pretty" }}
-        >
-          {APPROACH}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Three facts in a row.
- *
- * Not a middle-dot-joined string and not three cards: three discrete blocks
- * with one hairline above the row and nothing else (spec). No icons, no
- * borders — whitespace does the separating, which is § 0.5 again.
- *
- * **"Committed capital" is the label, and the wording is load-bearing.** Not
- * "assets under management", not "fund size", not "capital raised": those are
- * different claims about a fund, and two of them are the kind of claim
- * `FACTS.md` § "securities marketing" gates.
- *
- * `committedCapital` is already formatted by the caller and may be `null` — the
- * block is then omitted entirely rather than showing a placeholder or a stale
- * literal. See `loadCommittedCapitalCents` for why that is the right failure.
- */
-export function AtAGlance({
-  committedCapital,
-  investmentCount,
-}: {
-  committedCapital: string | null;
-  investmentCount: number;
-}) {
-  const facts = [
-    ...(committedCapital
-      ? [{ value: committedCapital, label: "Committed capital" }]
-      : []),
-    { value: String(investmentCount), label: "Current investments" },
-    { value: HEADQUARTERS, label: "Headquarters" },
-  ];
-
-  return (
-    <div style={{ background: C.bg }}>
-      <div className={`${COLUMN} py-16 md:py-20`}>
-        <div
-          className="flex flex-col gap-10 pt-10 md:flex-row md:gap-20"
-          style={{ borderTop: `1px solid ${C.border}` }}
-        >
-          {facts.map((fact) => (
-            <div key={fact.label} className="flex flex-col gap-2">
-              <div
-                style={{
-                  fontSize: 32,
-                  fontWeight: 800,
-                  letterSpacing: "-0.025em",
-                  lineHeight: 1.05,
-                  color: C.text,
-                  // Every value in this row is read as a figure, including the
-                  // city — lining them up is what makes them read as a set.
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {fact.value}
-              </div>
-              <div style={{ ...eyebrow, color: C.textDim }}>{fact.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /**
  * What we look for — three parallel descriptions, not a sequence.
@@ -161,26 +68,6 @@ export function WhatWeLookFor() {
               </p>
             </div>
           ))}
-        </div>
-
-        {/* Set apart on a rule: it closes the section rather than belonging to
-            the third column, and without the rule it reads as Real Estate's
-            last line. */}
-        <div
-          className="mt-12 pt-8"
-          style={{ borderTop: `1px solid ${C.border}` }}
-        >
-          <p
-            style={{
-              margin: 0,
-              fontSize: 19,
-              fontWeight: 700,
-              letterSpacing: "-0.01em",
-              color: C.text,
-            }}
-          >
-            {CRITERIA_CLOSER}
-          </p>
         </div>
       </div>
     </div>

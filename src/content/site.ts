@@ -66,9 +66,6 @@ export const CRITERIA: Criterion[] = [
   },
 ];
 
-/** Set apart below the three columns. */
-export const CRITERIA_CLOSER = "We move on our own timeline, and we close.";
-
 /**
  * The footer's descriptor. Revised from "private equity and private debt" to
  * match the three-strategy positioning above.
