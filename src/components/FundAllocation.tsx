@@ -560,16 +560,23 @@ export function FundAllocation({
 }: FundAllocationProps) {
   const hatchId = useId();
   /**
-   * Every bucket with holdings starts EXPANDED (owner, 2026-08-24: "when you land
-   * on portfolio...i want it to expand all private equity and private credit").
+   * Every bucket starts COLLAPSED (owner, 2026-10-10: "Auto collapse the sleeves
+   * on main portfolios page when you land").
    *
-   * A Set rather than the single `openId` this used to be: an accordion that
-   * closes one bucket to open another cannot show them all at once, which is the
-   * thing being asked for.
+   * **This reverses the instruction it shipped with** — 2026-08-24: "when you
+   * land on portfolio...i want it to expand all private equity and private
+   * credit". Both are recorded because the reason the first one stopped holding
+   * is visible in the diff between them: there were two sleeves then and there
+   * are four now, each with its own holdings, and expanding all of them on
+   * landing buries the chart and the totals under a list. Collapsed, the page
+   * opens on the allocation; a sleeve opens when somebody asks for it.
+   *
+   * **Still a Set, not a single `openId`.** It was an accordion once, and the
+   * accordion is what made "show them all at once" impossible. Collapsing by
+   * default is a different thing from only ever allowing one open — somebody
+   * comparing two sleeves still opens both.
    */
-  const [openIds, setOpenIds] = useState<Set<string>>(
-    () => new Set(buckets.filter((b) => b.holdings.length > 0).map((b) => b.id)),
-  );
+  const [openIds, setOpenIds] = useState<Set<string>>(() => new Set<string>());
   const [pickedId, setPickedId] = useState<string | null>(null);
   /** `bucketId:holdingName` — scoped by bucket so two buckets may share a name. */
   const [openHolding, setOpenHolding] = useState<string | null>(null);
