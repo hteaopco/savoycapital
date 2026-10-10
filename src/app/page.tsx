@@ -3,7 +3,7 @@ import { PortfolioGrid } from "@/components/PortfolioGrid";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHero } from "@/components/SiteHero";
 import { SiteNav } from "@/components/SiteNav";
-import { SiteContact, WhatWeLookFor } from "@/components/SiteSections";
+import { SiteContact } from "@/components/SiteSections";
 
 /**
  * The public landing page.
@@ -21,7 +21,10 @@ import { SiteContact, WhatWeLookFor } from "@/components/SiteSections";
  *
  * The order is the spec's:
  *
- *   nav → hero → portfolio → what we look for → contact → footer
+ *   nav → hero → portfolio → contact → footer
+ *
+ * **"What we look for" sat between portfolio and contact until 2026-10-10**,
+ * when the owner deleted it. The spec's order is otherwise unchanged.
  *
  * **The hero carries three things, not one** (owner, 2026-09-07): the headline
  * moved to the top of the image and the approach paragraph and the facts row
@@ -58,8 +61,6 @@ export default function Home() {
       <SiteHero investmentCount={INVESTMENTS.length} />
 
       <PortfolioGrid />
-
-      <WhatWeLookFor />
 
       <SiteContact />
 

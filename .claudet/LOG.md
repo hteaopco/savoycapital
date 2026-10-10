@@ -39,6 +39,25 @@ Reverse-chronological log of notable changes.
   **Verified against the emitted HTML**, which is available again because the public page is
   static: all four slides present, in deal order, Mallard Bay last.
 
+- **"What we look for" deleted from the public page** (owner, 2026-10-10: *"Delete this entire
+  section"*). The four-mandate block — Private Equity, Private Credit, Venture Capital, Real
+  Estate — is gone, and so is everything that existed only to serve it: the `WhatWeLookFor`
+  component, the `CRITERIA` constant, the `Criterion` type, and an `eyebrow` import that was
+  orphaned by the removal. Page order is now nav → hero → portfolio → contact → footer, and the
+  comment in `page.tsx` that spelled out the old order is corrected rather than left wrong.
+  **This closes the asset-class mismatch flagged on the previous change from the other side.**
+  That flag said the public page advertised Venture Capital while the chart could not bucket it;
+  the owner's answer was to drop the section, not to add the instrument. The public page now
+  makes no asset-class claims at all beyond `APPROACH`'s one sentence — which still reads
+  "private equity, private credit, and real estate" and still does not mention oil and gas. That
+  half remains open.
+  **Deleted rather than hidden.** Nothing is commented out and no constant is left behind for a
+  future revival: dead content in `src/content/**` is content somebody will eventually render
+  again by accident, and git has the removal if it is ever wanted back.
+  Verified against the emitted HTML, since the page is static: the heading, all four mandate
+  labels and every body phrase return zero; the hero, the contact form, the portfolio grid and
+  the legal line are all still present.
+
 - **Two more asset classes: Oil & Gas and Real Estate** (owner, 2026-10-10: *"lets add another
   asset class — 1) Oil & Gas 2) Real Estate. We have 2 investments coming up in both"*).
   `Instrument` goes from two values to four, with migration
