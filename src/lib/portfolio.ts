@@ -76,8 +76,8 @@ const BUCKETS: Record<
 > = {
   PRIVATE_EQUITY: { id: "equity", label: "Private Equity", tone: "accent" },
   PRIVATE_CREDIT: { id: "credit", label: "Private Credit", tone: "green" },
-  OIL_AND_GAS: { id: "oil-gas", label: "Oil & Gas", tone: "amber" },
-  REAL_ESTATE: { id: "real-estate", label: "Real Estate", tone: "slate" },
+  OIL_AND_GAS: { id: "oil-gas", label: "Oil & Gas", tone: "salmon" },
+  REAL_ESTATE: { id: "real-estate", label: "Real Estate", tone: "purple" },
 };
 
 export async function loadPortfolio(fundId: number): Promise<PortfolioResult> {

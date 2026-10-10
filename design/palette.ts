@@ -22,6 +22,28 @@ export const C = {
   red: "#dc2626",
   redBg: "#fef2f2",
   redBorder: "#fecaca",
+  // CHART-ONLY tones (owner, 2026-10-10: "Salmon and purple"). The first
+  // amendment to this palette since it was carried over, and an owner call
+  // because this file is the design source of truth.
+  //
+  // **These are ARC IDENTITY and nothing else.** Unlike every token above them
+  // they carry no state and no meaning — `ui-governance.md` § 3 carves the
+  // donut out of the badge rule precisely because a chart needs a vocabulary of
+  // distinct series the design system has no words for. Do not reach for either
+  // one for a badge, a button, a border or a notice: they would be a colour
+  // asserting a meaning the system has not defined.
+  //
+  // They exist because the fund grew from two asset classes to four and the
+  // four semantic tones could not supply two more arcs honestly. `red` was the
+  // only one left and it means danger here, so an asset class drawn in it reads
+  // as a problem.
+  //
+  // `chartSalmon` is the CSS named colour, which is the one value in this file
+  // not from the Tailwind family the rest of it uses; it sits a shade off
+  // Tailwind's red-400 (#f87171). `chartPurple` is Tailwind purple-600,
+  // matching the 600-weight of `accent`, `green` and `red`.
+  chartSalmon: "#fa8072",
+  chartPurple: "#9333ea",
   overlay: "rgba(15, 23, 42, 0.45)",
   // Foreground on a SOLID tone surface (accent / green / amber / red button, solid pill).
   // The one white the design allows — it was living in components as `#ffffff` and `#fff`,

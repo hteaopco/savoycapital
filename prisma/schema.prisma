@@ -154,11 +154,13 @@ model UserRole {
 /// about what colour it takes on the chart" — that was right, and the
 /// conversation is recorded at `BucketTone` in `FundAllocation.tsx`.
 ///
-/// **A fifth value needs the same conversation and has less room for it.** The
-/// palette carries four semantic colours; two are these arcs, one is now Oil &
-/// Gas, and `red` means danger and must not become a category. The next
-/// instrument needs a purpose-made chart token, which is an owner call because
-/// `design/palette.ts` is owner-amended and mirror-gated against the app's copy.
+/// **A fifth value needs the same conversation.** The palette's four semantic
+/// colours could not supply two more arcs — `red` was all that was left and it
+/// means danger, so it must not become a category. The owner amended the
+/// palette instead, adding `chartSalmon` and `chartPurple` as chart-only
+/// tokens. A fifth instrument means another amendment, which is an owner call:
+/// `design/palette.ts` is the design source of truth and is mirror-gated
+/// against the app's copy.
 ///
 /// **Not the same list as the public page's.** `src/content/site.ts` advertises
 /// Private Equity, Private Credit, Venture Capital and Real Estate; this enum

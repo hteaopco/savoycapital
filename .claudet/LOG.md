@@ -47,15 +47,20 @@ Reverse-chronological log of notable changes.
   the first draft of the comment described the constraint as a transaction-block limit, which is
   not what it is. On PostgreSQL ≤ 11 this must be split in two; Railway runs 12+.
   **The colour was the hard part, and the enum's own comment had predicted it** — "a third is a
-  migration and a conversation about what colour it takes on the chart". The palette carries four
-  semantic colours; two were already arcs. **Oil & Gas takes `amber`** (reads as the commodity,
-  not a caution, once § 3's donut carve-out applies) and **Real Estate takes `text`**, the darkest
-  neutral. **`red` was deliberately refused**: in this palette it means danger — error notices and
-  the delete affordance — and an asset class drawn in it reads as a problem. That is exactly the
-  "token used for the wrong role" `ui-governance.md` § 3 says no regex will catch.
-  **A fifth asset class needs a purpose-made chart token**, which is an owner call:
-  `design/palette.ts` is owner-amended and mirror-gated. Recorded at `BucketTone` so the next
-  person does not reach for `red`.
+  migration and a conversation about what colour it takes on the chart". The palette's four
+  semantic colours could not supply two more arcs: two were already arcs, and **`red` was all that
+  remained — it means danger here**, so an asset class drawn in it reads as a problem. That is
+  exactly the "token used for the wrong role" `ui-governance.md` § 3 says no regex will catch.
+  It shipped first as `amber` and `text`, the two least-wrong existing tokens, with the real
+  answer flagged as the owner's to give. **The owner gave it the same day — "Salmon and purple" —
+  so `design/palette.ts` gained `chartSalmon` (#fa8072) and `chartPurple` (#9333ea).**
+  **This is the first amendment to that file since it was carried over from theAPlink**, and it
+  was an owner call, not a recorded divergence. Both copies edited together; the mirror gate is
+  hard — no baseline, no waiver — and was confirmed byte-identical before and after.
+  **The tokens are named for the chart, not for a meaning.** There is no "salmon state" to misuse
+  them into, which is the point: every other token in that file carries a role, and a fifth arc
+  colour borrowed from one of them would assert a meaning the system has not defined. A fifth
+  asset class is another amendment and still an owner call.
   **The instrument list was living in four hand-synced places; this cut it to three and
   mechanised one.** `BUCKETS` is now `Record<$Enums.Instrument, …>`, so forgetting a bucket is a
   **build error** instead of a real holding quietly landing in "not shown on the chart". Verified

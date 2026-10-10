@@ -79,32 +79,27 @@ export type Holding = {
  * `ui-governance.md` § 3 carves the donut out of the badge rule for exactly
  * this: a badge's tone encodes state (green means a positive one), while a
  * chart needs a vocabulary of distinct series the design system has no words
- * for. `amber` here says "oil and gas", not "warning".
+ * for. Here `salmon` says "oil and gas" and means nothing else anywhere.
  *
- * ## Why these four, and why there is no obvious fifth
+ * ## Why two of these are chart-only tokens
  *
- * The palette carries four semantic colours. Two were already arcs. Of the
- * remaining two:
+ * The fund went from two asset classes to four on 2026-10-10, and the palette's
+ * four semantic colours could not supply two more arcs honestly. Two were
+ * already arcs; `red` was the only one left and **red means danger here** — the
+ * error notice, the delete affordance — so an asset class drawn in it reads as
+ * a problem. That is the "token used for the wrong role" § 3 says no regex will
+ * ever catch.
  *
- *  - **`amber`** goes to Oil & Gas. A dark amber reads as the commodity rather
- *    than as a caution once it is an arc, and § 3's carve-out is what makes
- *    that legitimate.
- *  - **`red` is deliberately NOT used.** In this palette red means danger — it
- *    is the error notice and the delete affordance — and an asset class drawn
- *    in it reads as a problem. That is precisely the "token used for the wrong
- *    role" § 3 says no regex will ever catch.
+ * This first shipped as `amber` and `text`, the two least-wrong existing
+ * tokens. The owner amended the palette instead ("Salmon and purple"), which is
+ * the better answer and was always theirs to make: `design/palette.ts` is the
+ * design source of truth and is mirror-gated against the app's copy.
  *
- * So Real Estate takes **`text`**, the darkest neutral. On a white donut a
- * near-black arc reads as a full-weight fourth series, it cannot be confused
- * with Unallocated's light hatching, and it borrows no meaning it should not.
- *
- * **This is the weakest link in the set and the owner should know it.** Four
- * arcs is what this palette supports without an amendment; a fifth asset class
- * needs a purpose-made chart token, and `design/palette.ts` is owner-amended
- * and mirror-gated against `src/components/palette.ts`. Do not solve a fifth by
- * reaching for `red`.
+ * `chartSalmon` and `chartPurple` are therefore **named for the chart, not for
+ * a meaning** — there is no "salmon state" to misuse them into. A fifth asset
+ * class is another palette amendment, and still an owner call.
  */
-export type BucketTone = "accent" | "green" | "amber" | "slate";
+export type BucketTone = "accent" | "green" | "salmon" | "purple";
 
 export type AllocationBucket = {
   id: string;
@@ -125,11 +120,8 @@ export type FundAllocationProps = {
 const TONE: Record<BucketTone, string> = {
   accent: C.accent,
   green: C.green,
-  amber: C.amber,
-  // Named `slate` rather than `text` because what it means HERE is a fourth
-  // series, not "this is type". The token it resolves to is an implementation
-  // detail of that choice — see `BucketTone`.
-  slate: C.text,
+  salmon: C.chartSalmon,
+  purple: C.chartPurple,
 };
 
 /**
