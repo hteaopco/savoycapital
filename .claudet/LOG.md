@@ -39,6 +39,46 @@ Reverse-chronological log of notable changes.
   **Verified against the emitted HTML**, which is available again because the public page is
   static: all four slides present, in deal order, Mallard Bay last.
 
+- **Two more asset classes: Oil & Gas and Real Estate** (owner, 2026-10-10: *"lets add another
+  asset class — 1) Oil & Gas 2) Real Estate. We have 2 investments coming up in both"*).
+  `Instrument` goes from two values to four, with migration
+  `20261010213000_instrument_oil_gas_real_estate` — purely additive, no existing row touched.
+  Prisma's own multi-value warning is carried **verbatim** in that file rather than paraphrased:
+  the first draft of the comment described the constraint as a transaction-block limit, which is
+  not what it is. On PostgreSQL ≤ 11 this must be split in two; Railway runs 12+.
+  **The colour was the hard part, and the enum's own comment had predicted it** — "a third is a
+  migration and a conversation about what colour it takes on the chart". The palette's four
+  semantic colours could not supply two more arcs: two were already arcs, and **`red` was all that
+  remained — it means danger here**, so an asset class drawn in it reads as a problem. That is
+  exactly the "token used for the wrong role" `ui-governance.md` § 3 says no regex will catch.
+  It shipped first as `amber` and `text`, the two least-wrong existing tokens, with the real
+  answer flagged as the owner's to give. **The owner gave it the same day — "Salmon and purple" —
+  so `design/palette.ts` gained `chartSalmon` (#fa8072) and `chartPurple` (#9333ea).**
+  **This is the first amendment to that file since it was carried over from theAPlink**, and it
+  was an owner call, not a recorded divergence. Both copies edited together; the mirror gate is
+  hard — no baseline, no waiver — and was confirmed byte-identical before and after.
+  **The tokens are named for the chart, not for a meaning.** There is no "salmon state" to misuse
+  them into, which is the point: every other token in that file carries a role, and a fifth arc
+  colour borrowed from one of them would assert a meaning the system has not defined. A fifth
+  asset class is another amendment and still an owner call.
+  **The instrument list was living in four hand-synced places; this cut it to three and
+  mechanised one.** `BUCKETS` is now `Record<$Enums.Instrument, …>`, so forgetting a bucket is a
+  **build error** instead of a real holding quietly landing in "not shown on the chart". Verified
+  by mutation — removed `REAL_ESTATE` and confirmed TS2741 before trusting it. The separate
+  hand-written arc-order array is **gone**: order now comes from `BUCKETS`' declaration order, so
+  the duplicate that could go stale no longer exists.
+  Still hand-held and worth knowing: `DealRoom`'s `Instrument` union (a client component, so it
+  cannot import Prisma) and the PATCH route's allowlist.
+  **Two asset-class lists on two surfaces still disagree, by design and worth watching.** The
+  public page advertises Venture Capital, which is not an `Instrument`; the chart now buckets Oil
+  & Gas, which the public page does not mention — and `APPROACH` still reads "private equity,
+  private credit, and real estate". Flagged, not silently fixed.
+  **Nothing renders yet**: buckets appear only when deals carry the instrument, and the two
+  investments are still "coming up". The Deal Room picker offers all four today.
+  **Not verified: nothing has been written to Postgres from here** — no `DATABASE_URL` in this
+  session, and the Deal Room is dynamic so there is no emitted HTML to check. The four labels were
+  confirmed present in the built client chunk instead.
+
 - **The holding panel became a chain** (owner, 2026-08-24: *"i would like tfor the 'why we like
   it' to be off the card to the right. have the line on the right side of card and the why we
   like it box after that"*). `card ──── detail panel ──── Why We Like It`.

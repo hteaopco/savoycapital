@@ -1,6 +1,7 @@
 import "server-only";
 import type { AllocationBucket, DetailRow } from "@/components/FundAllocation";
 import { getDb } from "./db";
+import type { $Enums } from "@prisma/client";
 
 /**
  * The Portfolio chart, built from the database (owner, 2026-08-24: "lets tie the
@@ -53,14 +54,30 @@ export type PortfolioResult =
 /**
  * Bucket identity per instrument.
  *
- * The tones match what the chart has always shown — equity accent, credit green
- * — and they are ARC IDENTITY, not state. `ui-governance.md` § 3 carves the
+ * The tones are ARC IDENTITY, not state. `ui-governance.md` § 3 carves the
  * donut out of the badge rule for exactly this reason: a chart is a vocabulary
- * the design system has no words for.
+ * the design system has no words for. The full argument for which colour went
+ * where — and why `red` is not among them — is at `BucketTone`.
+ *
+ * **Typed against Prisma's own enum, so a missing bucket fails the BUILD.**
+ * Added 2026-10-10 with Oil & Gas and Real Estate: before this the map was an
+ * untyped literal, a new instrument was not a type error, and the only thing
+ * catching it was the runtime guard below — which puts a real holding in the
+ * "not shown on the chart" line until somebody notices. `Record<Instrument, …>`
+ * moves that to `tsc`, where the next asset class cannot be half-added.
+ *
+ * **Declaration order IS arc order** (see `loadPortfolio`), so reordering these
+ * lines reorders the chart. The original two stay first on purpose: adding an
+ * asset class must not reshuffle arcs somebody already knows.
  */
-const BUCKETS = {
-  PRIVATE_EQUITY: { id: "equity", label: "Private Equity", tone: "accent" as const },
-  PRIVATE_CREDIT: { id: "credit", label: "Private Credit", tone: "green" as const },
+const BUCKETS: Record<
+  $Enums.Instrument,
+  { id: string; label: string; tone: AllocationBucket["tone"] }
+> = {
+  PRIVATE_EQUITY: { id: "equity", label: "Private Equity", tone: "accent" },
+  PRIVATE_CREDIT: { id: "credit", label: "Private Credit", tone: "green" },
+  OIL_AND_GAS: { id: "oil-gas", label: "Oil & Gas", tone: "salmon" },
+  REAL_ESTATE: { id: "real-estate", label: "Real Estate", tone: "purple" },
 };
 
 export async function loadPortfolio(fundId: number): Promise<PortfolioResult> {
@@ -88,9 +105,12 @@ export async function loadPortfolio(fundId: number): Promise<PortfolioResult> {
     const key = deal.instrument as keyof typeof BUCKETS;
     const meta = BUCKETS[key];
     if (!meta) {
-      // An instrument the chart has no bucket for. Reachable only by adding an
-      // enum value without adding a bucket, and named rather than dropped so
-      // that omission is visible on the screen instead of in a diff.
+      // An instrument the chart has no bucket for. **No longer reachable by
+      // forgetting a bucket** — `BUCKETS` is exhaustive against Prisma's enum
+      // and that is a build error now. What is left is the deploy-order case: a
+      // migration applied against a client generated before it, where the
+      // database returns a value this build has never heard of. Named rather
+      // than dropped, so it is visible on the screen instead of in a diff.
       excluded.push({ name: deal.name, missing: `an unmapped instrument (${deal.instrument})` });
       continue;
     }
@@ -139,9 +159,16 @@ export async function loadPortfolio(fundId: number): Promise<PortfolioResult> {
     data: {
       fundName: fund.name,
       fundSizeCents: fund.sizeCents === null ? null : Number(fund.sizeCents),
-      // Equity before credit, so the chart's arc order does not depend on which
-      // deal happened to be created first.
-      buckets: (["PRIVATE_EQUITY", "PRIVATE_CREDIT"] as const)
+      /*
+        A FIXED order, so the chart's arcs never depend on which deal happened
+        to be created first — and taken from `BUCKETS`' declaration order rather
+        than a second hand-written list. That list existed until 2026-10-10 and
+        was the kind of duplicate that goes stale silently: adding an instrument
+        to one and not the other drops a real holding off the chart with every
+        gate green. Object key order is insertion order for string keys, so the
+        order you read in `BUCKETS` is the order drawn.
+      */
+      buckets: (Object.keys(BUCKETS) as $Enums.Instrument[])
         .map((k) => byInstrument.get(k))
         .filter((b): b is AllocationBucket => b !== undefined),
       excluded,

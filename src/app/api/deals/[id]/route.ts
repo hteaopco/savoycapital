@@ -145,7 +145,7 @@ export async function PATCH(request: Request, { params }: Params) {
     name?: string;
     amountCents?: bigint | null;
     investmentDate?: Date | null;
-    instrument?: "PRIVATE_EQUITY" | "PRIVATE_CREDIT" | null;
+    instrument?: "PRIVATE_EQUITY" | "PRIVATE_CREDIT" | "OIL_AND_GAS" | "REAL_ESTATE" | null;
     terms?: string | null;
     fees?: string | null;
     whyWeLikeIt?: string | null;
@@ -198,7 +198,17 @@ export async function PATCH(request: Request, { params }: Params) {
     const raw = typeof body?.instrument === "string" ? body.instrument : "";
     if (!raw) {
       data.instrument = null;
-    } else if (raw === "PRIVATE_EQUITY" || raw === "PRIVATE_CREDIT") {
+      /*
+        An explicit allowlist, not a cast. The enum grew on 2026-10-10 and will
+        grow again; a cast would let any string through to Prisma and turn a
+        typo into a database error instead of a 400 with a message.
+      */
+    } else if (
+      raw === "PRIVATE_EQUITY" ||
+      raw === "PRIVATE_CREDIT" ||
+      raw === "OIL_AND_GAS" ||
+      raw === "REAL_ESTATE"
+    ) {
       data.instrument = raw;
     } else {
       return NextResponse.json({ error: "Unknown instrument." }, { status: 400 });

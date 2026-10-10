@@ -73,7 +73,33 @@ export type Holding = {
 };
 
 /** Which `C` tone paints a bucket. Keeps raw hex out of the content module. */
-export type BucketTone = "accent" | "green";
+/**
+ * A bucket's arc colour on the donut — **identity, never state.**
+ *
+ * `ui-governance.md` § 3 carves the donut out of the badge rule for exactly
+ * this: a badge's tone encodes state (green means a positive one), while a
+ * chart needs a vocabulary of distinct series the design system has no words
+ * for. Here `salmon` says "oil and gas" and means nothing else anywhere.
+ *
+ * ## Why two of these are chart-only tokens
+ *
+ * The fund went from two asset classes to four on 2026-10-10, and the palette's
+ * four semantic colours could not supply two more arcs honestly. Two were
+ * already arcs; `red` was the only one left and **red means danger here** — the
+ * error notice, the delete affordance — so an asset class drawn in it reads as
+ * a problem. That is the "token used for the wrong role" § 3 says no regex will
+ * ever catch.
+ *
+ * This first shipped as `amber` and `text`, the two least-wrong existing
+ * tokens. The owner amended the palette instead ("Salmon and purple"), which is
+ * the better answer and was always theirs to make: `design/palette.ts` is the
+ * design source of truth and is mirror-gated against the app's copy.
+ *
+ * `chartSalmon` and `chartPurple` are therefore **named for the chart, not for
+ * a meaning** — there is no "salmon state" to misuse them into. A fifth asset
+ * class is another palette amendment, and still an owner call.
+ */
+export type BucketTone = "accent" | "green" | "salmon" | "purple";
 
 export type AllocationBucket = {
   id: string;
@@ -94,6 +120,8 @@ export type FundAllocationProps = {
 const TONE: Record<BucketTone, string> = {
   accent: C.accent,
   green: C.green,
+  salmon: C.chartSalmon,
+  purple: C.chartPurple,
 };
 
 /**
