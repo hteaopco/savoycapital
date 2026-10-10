@@ -51,44 +51,6 @@ export const CONTACT_EMAIL = "jett@evolamco.com";
 export const APPROACH =
   "Savoy Capital makes control, minority, and passive investments across private equity, private credit, and real estate. We underwrite the operator before the asset: great people first, great businesses second.";
 
-export type Criterion = {
-  label: string;
-  body: string;
-};
-
-/**
- * What the firm looks for, by asset class. Four of them as of 2026-09-07,
- * ordered early-stage to hard-asset, which is how the columns read left to
- * right.
- *
- * The highest-value block on the page for inbound deal flow — brokers screen on
- * criteria before anything else. **Keep each to a short paragraph.** The full
- * criteria from the internal deck do not belong on a public page, and the spec
- * says so explicitly.
- *
- * Note what these are and are not: ranges that describe the kind of business
- * Savoy will look at ($500K–$3M EBITDA, $5M+ project size, 12–48 month terms).
- * Those are screening criteria, not returns or terms of an offering.
- */
-export const CRITERIA: Criterion[] = [
-  {
-    label: "Private Equity",
-    body: "Control, significant minority, and passive positions in founder-led businesses with $500K–$5M EBITDA. Demonstrated operating history and financial visibility.",
-  },
-  {
-    label: "Private Credit",
-    body: "Senior secured and structured lending to operating businesses. Asset-backed with a strong collateral profile, defined maturities, and terms from 12 to 48 months.",
-  },
-  {
-    label: "Venture Capital",
-    body: "Selective minority positions in companies between Series A and Series B. Founders with direct subject-matter expertise, demonstrated traction, and a disciplined capital structure. Capital deployed in stages, sized relative to risk.",
-  },
-  {
-    label: "Real Estate",
-    body: "Opportunistic equity in operator-led transactions, $5M+ total project size, with meaningful sponsor co-investment and conservative leverage.",
-  },
-];
-
 /**
  * The legal line, set small and quiet at the bottom of the footer.
  *
