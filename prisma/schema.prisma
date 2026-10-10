@@ -144,16 +144,34 @@ model UserRole {
   @@index([fundId, role])
 }
 
-/// What kind of investment a deal is. **This is what makes the Portfolio's two
+/// What kind of investment a deal is. **This is what makes the Portfolio's
 /// buckets** — the chart groups deals by it, so a deal without one cannot be
 /// plotted and the screen says so rather than dropping it silently.
 ///
-/// Two values because the fund makes two kinds of investment (`FACTS.md`:
-/// private equity and private debt). A third is a migration and a conversation
-/// about what colour it takes on the chart, since `BucketTone` has two.
+/// Four values as of 2026-10-10 (owner: "lets add another asset class — Oil &
+/// Gas, Real Estate. We have 2 investments coming up in both"). The earlier
+/// comment here said a third value would be "a migration and a conversation
+/// about what colour it takes on the chart" — that was right, and the
+/// conversation is recorded at `BucketTone` in `FundAllocation.tsx`.
+///
+/// **A fifth value needs the same conversation and has less room for it.** The
+/// palette carries four semantic colours; two are these arcs, one is now Oil &
+/// Gas, and `red` means danger and must not become a category. The next
+/// instrument needs a purpose-made chart token, which is an owner call because
+/// `design/palette.ts` is owner-amended and mirror-gated against the app's copy.
+///
+/// **Not the same list as the public page's.** `src/content/site.ts` advertises
+/// Private Equity, Private Credit, Venture Capital and Real Estate; this enum
+/// has no `VENTURE_CAPITAL` and the public page says nothing about oil and gas.
+/// Neither gap is a bug — one is a screening criterion, the other is how a
+/// holding is bucketed — but they are two lists of asset classes on two
+/// surfaces, which `ui-governance.md` § 3 names as permanently the reviewer's
+/// job. Change one, look at the other.
 enum Instrument {
   PRIVATE_EQUITY
   PRIVATE_CREDIT
+  OIL_AND_GAS
+  REAL_ESTATE
 }
 
 /// One deal, inside a fund. The unit the owner creates and uploads into.

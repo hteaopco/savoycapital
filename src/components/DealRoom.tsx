@@ -64,12 +64,18 @@ export type Deal = {
 };
 
 /** Matches the schema's enum, and the two buckets the Portfolio chart draws. */
-export type Instrument = "PRIVATE_EQUITY" | "PRIVATE_CREDIT";
+export type Instrument =
+  | "PRIVATE_EQUITY"
+  | "PRIVATE_CREDIT"
+  | "OIL_AND_GAS"
+  | "REAL_ESTATE";
 
 /** Display names, in one place so the two screens cannot disagree. */
 export const INSTRUMENT_LABEL: Record<Instrument, string> = {
   PRIVATE_EQUITY: "Private Equity",
   PRIVATE_CREDIT: "Private Credit",
+  OIL_AND_GAS: "Oil & Gas",
+  REAL_ESTATE: "Real Estate",
 };
 
 /** Just enough of a fund to populate the picker. */

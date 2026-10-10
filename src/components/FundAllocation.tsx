@@ -73,7 +73,38 @@ export type Holding = {
 };
 
 /** Which `C` tone paints a bucket. Keeps raw hex out of the content module. */
-export type BucketTone = "accent" | "green";
+/**
+ * A bucket's arc colour on the donut — **identity, never state.**
+ *
+ * `ui-governance.md` § 3 carves the donut out of the badge rule for exactly
+ * this: a badge's tone encodes state (green means a positive one), while a
+ * chart needs a vocabulary of distinct series the design system has no words
+ * for. `amber` here says "oil and gas", not "warning".
+ *
+ * ## Why these four, and why there is no obvious fifth
+ *
+ * The palette carries four semantic colours. Two were already arcs. Of the
+ * remaining two:
+ *
+ *  - **`amber`** goes to Oil & Gas. A dark amber reads as the commodity rather
+ *    than as a caution once it is an arc, and § 3's carve-out is what makes
+ *    that legitimate.
+ *  - **`red` is deliberately NOT used.** In this palette red means danger — it
+ *    is the error notice and the delete affordance — and an asset class drawn
+ *    in it reads as a problem. That is precisely the "token used for the wrong
+ *    role" § 3 says no regex will ever catch.
+ *
+ * So Real Estate takes **`text`**, the darkest neutral. On a white donut a
+ * near-black arc reads as a full-weight fourth series, it cannot be confused
+ * with Unallocated's light hatching, and it borrows no meaning it should not.
+ *
+ * **This is the weakest link in the set and the owner should know it.** Four
+ * arcs is what this palette supports without an amendment; a fifth asset class
+ * needs a purpose-made chart token, and `design/palette.ts` is owner-amended
+ * and mirror-gated against `src/components/palette.ts`. Do not solve a fifth by
+ * reaching for `red`.
+ */
+export type BucketTone = "accent" | "green" | "amber" | "slate";
 
 export type AllocationBucket = {
   id: string;
@@ -94,6 +125,11 @@ export type FundAllocationProps = {
 const TONE: Record<BucketTone, string> = {
   accent: C.accent,
   green: C.green,
+  amber: C.amber,
+  // Named `slate` rather than `text` because what it means HERE is a fourth
+  // series, not "this is type". The token it resolves to is an implementation
+  // detail of that choice — see `BucketTone`.
+  slate: C.text,
 };
 
 /**
