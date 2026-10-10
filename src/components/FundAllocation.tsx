@@ -151,6 +151,27 @@ const fmtDate = (iso: string): string => {
 
 const RADIUS = 70;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+/**
+ * How solid an arc is when nothing is open or picked (owner, 2026-10-10: "The
+ * pie colors needs to be not as dark until the sleeve is clicked on or
+ * expanded").
+ *
+ * The donut sits on white, so opacity here tints toward the background — one
+ * value that lightens all four tones AND the Unallocated hatch consistently.
+ * The alternative, a second lighter hex per tone, would mean four more palette
+ * entries and an owner call for each, to express the same thing.
+ *
+ * **Three states, not two.** `ARC_REST` is every arc at rest; a bucket whose
+ * sleeve is expanded (or whose arc is picked) goes to full; everything else
+ * drops to `ARC_MUTED` so the emphasised one reads against it. At rest the
+ * whole chart is quiet, which is the point — the arcs stop competing with the
+ * figures beside them until somebody asks for one.
+ */
+const ARC_REST = 0.55;
+
+/** An arc while a DIFFERENT one is emphasised. Pre-dates the resting state. */
+const ARC_MUTED = 0.35;
+
 /** Surface gap between arcs, in path units. Reads as a seam, not a border. */
 const ARC_GAP = 3;
 const ARC_WIDTH = 26;
@@ -610,6 +631,15 @@ export function FundAllocation({
 
   const picked = segments.find((s) => s.id === pickedId) ?? null;
 
+  /*
+    Which arcs are drawn at full strength. A Set rather than two checks at the
+    call site so the three-way opacity rule below reads as one decision, and so
+    "is anything emphasised at all" is `.size` rather than a second expression
+    that can drift out of step with the first.
+  */
+  const emphasisedIds = new Set<string>(openIds);
+  if (pickedId) emphasisedIds.add(pickedId);
+
   /**
    * Expand or collapse a bucket. **Expansion and the donut are separate now**
    * (owner, 2026-08-24) — this used to set `pickedId` too, so collapsing a bucket
@@ -709,7 +739,15 @@ export function FundAllocation({
         className="flex items-start flex-wrap"
         style={{ gap: 26, marginTop: 18 }}
       >
+        {/*
+          `mx-auto` centres the donut on the line it wraps onto below `md`
+          (owner, 2026-10-10: "Center the pie on mobile"); `md:mx-0` puts it
+          back against the left edge beside the legend. The reset is explicit
+          rather than relied upon: the legend does not grow, so there IS free
+          space on a wide card and `auto` margins would absorb it.
+        */}
         <div
+          className="mx-auto md:mx-0"
           style={{
             position: "relative",
             width: 208,
@@ -764,7 +802,24 @@ export function FundAllocation({
                     }
                     strokeDasharray={arc.dash}
                     strokeDashoffset={arc.offset}
-                    opacity={!pickedId || pickedId === arc.id ? 1 : 0.35}
+                    /*
+                      Emphasis follows the LEGEND, not just the chart: an arc
+                      goes solid when its sleeve is expanded as well as when the
+                      arc itself is picked. That is what ties the open row to
+                      its wedge — expanding Private Equity lights the Private
+                      Equity arc, with no second click on the chart.
+
+                      Unallocated has no sleeve to expand, so it is only ever
+                      emphasised by being picked. It still drops to muted while
+                      another arc is, which is the behaviour it already had.
+                    */
+                    opacity={
+                      emphasisedIds.has(arc.id)
+                        ? 1
+                        : emphasisedIds.size > 0
+                          ? ARC_MUTED
+                          : ARC_REST
+                    }
                     // Picks, never expands. An arc is the chart selecting
                     // itself; expansion belongs to the legend rows.
                     onClick={() =>
