@@ -35,9 +35,21 @@ export const CONTACT_EMAIL = "jett@evolamco.com";
  * This is the page's positioning and the sentence the whole revision was built
  * around. It says what Savoy invests in and what it brings; it does not say how
  * anything has performed or invite anyone to invest.
+ *
+ * Shortened 2026-10-10 (owner's wording). It was three sentences; the last two
+ * — "We underwrite the operator before the asset" and a longer line about
+ * having run businesses — collapsed into one, with the colon carrying what
+ * "because our core belief is to invest in" was doing.
+ *
+ * **Lowercase "operator", deliberately.** `investments.ts` capitalises "the
+ * Operator" once, and that is correct there: it names a specific counterparty
+ * in a specific deal, the way a credit agreement would. Here it is the role in
+ * general prose, matching the other lowercase use in this file eight lines
+ * down ("operator-led transactions"). Capitalising it would make this file
+ * disagree with itself on one page.
  */
 export const APPROACH =
-  "Savoy Capital makes control, minority, and passive investments across private equity, private credit, and real estate. We underwrite the operator before the asset. Businesses are run by people, and we have run them ourselves — which means we understand the seat you're sitting in.";
+  "Savoy Capital makes control, minority, and passive investments across private equity, private credit, and real estate. We underwrite the operator before the asset: great people first, great businesses second.";
 
 export type Criterion = {
   label: string;
