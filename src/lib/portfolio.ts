@@ -36,12 +36,62 @@ import type { $Enums } from "@prisma/client";
  * "the database is not configured" on a database that is working fine.
  */
 
+/**
+ * One line of the investments table (owner, 2026-10-11).
+ *
+ * `estValueCents` null means UNMARKED. Not zero, and deliberately not carried
+ * at cost — see `Deal.estValueCents`. `gainLossCents` is therefore null too
+ * whenever either side of the subtraction is missing, rather than quietly
+ * reading a missing value as no change.
+ */
+export type InvestmentRow = {
+  name: string;
+  /** `YYYY-MM-DD`, or null for a deal nobody has dated. */
+  fundedOn: string | null;
+  sizeCents: number | null;
+  estValueCents: number | null;
+  gainLossCents: number | null;
+};
+
+/**
+ * The table's footer. Sums, and an honest account of what they cover.
+ *
+ * **The invariant: each cell is the sum of the numbers VISIBLE in its own
+ * column, and nothing else.** A reader checks a total by adding the column, so
+ * a footer figure that includes or excludes a row they can see is a figure that
+ * fails that check. `sizeCents` sums every stated size; `estValueCents` every
+ * stated value; `gainLossCents` every row where both sides were known.
+ *
+ * Each is therefore covered by a DIFFERENT subset, and the three can disagree
+ * about how many rows they counted. That is not a defect to normalise away:
+ * `null` means unmarked, a value nobody entered, and the alternatives are to
+ * treat an unmarked position as worth nothing (a wrong number stated
+ * confidently) or to carry it at cost (asserting a mark nobody made). So the
+ * sums cover what they cover and `markedCount` / `rowCount` ride along for the
+ * screen to print the ratio.
+ *
+ * `markedCount` is specifically **how many have an Est Value**. Gain / Loss can
+ * cover fewer — a valued deal with no size has no gain to compute — and that
+ * deal is already named by `excluded`, which the page prints above this table.
+ */
+export type InvestmentTotals = {
+  sizeCents: number;
+  estValueCents: number | null;
+  gainLossCents: number | null;
+  rowCount: number;
+  /** Rows with an Est Value. Gain / Loss may cover fewer; see above. */
+  markedCount: number;
+};
+
 export type PortfolioData = {
   fundName: string;
   fundSizeCents: number | null;
   buckets: AllocationBucket[];
   /** Deals that could not be plotted, and why. */
   excluded: { name: string; missing: string }[];
+  /** Oldest funded first. Every deal in the fund, plotted or not. */
+  investments: InvestmentRow[];
+  investmentTotals: InvestmentTotals;
 };
 
 export type PortfolioResult =
@@ -154,10 +204,79 @@ export async function loadPortfolio(fundId: number): Promise<PortfolioResult> {
     });
   }
 
+  /*
+    The investments table (owner, 2026-10-11: "sorted by oldest at top to
+    newest at bottom").
+
+    **Every deal in the fund, not just the plotted ones.** The chart drops a
+    deal with no instrument because there is no arc for it to join; a table has
+    no such constraint, and a position missing from BOTH views is a position
+    nobody can see. So this list is built from `fund.deals` directly rather
+    than from the buckets above.
+
+    Undated deals sort LAST, not first. "Oldest at top" has no answer for a row
+    with no date, and defaulting a missing date to the epoch would file it above
+    every real investment — the one place it is certainly wrong.
+  */
+  const investments: InvestmentRow[] = [...fund.deals]
+    .sort((a, b) => {
+      const at = a.investmentDate?.getTime();
+      const bt = b.investmentDate?.getTime();
+      if (at === undefined && bt === undefined) return a.id - b.id;
+      if (at === undefined) return 1;
+      if (bt === undefined) return -1;
+      // Same day, two deals: fall back to id so the order is stable rather
+      // than whatever the sort happens to do with a tie.
+      return at - bt || a.id - b.id;
+    })
+    .map((deal) => {
+      const sizeCents = deal.amountCents === null ? null : Number(deal.amountCents);
+      const estValueCents =
+        deal.estValueCents === null ? null : Number(deal.estValueCents);
+      return {
+        name: deal.name,
+        fundedOn: deal.investmentDate
+          ? deal.investmentDate.toISOString().slice(0, 10)
+          : null,
+        sizeCents,
+        estValueCents,
+        // Null unless BOTH sides are known. A missing mark is not "no change".
+        gainLossCents:
+          sizeCents === null || estValueCents === null
+            ? null
+            : estValueCents - sizeCents,
+      };
+    });
+
+  /*
+    Summed per COLUMN, each over the rows that actually show a number in it —
+    see `InvestmentTotals`. Keying all three off one subset was the first
+    version of this and it was wrong: a deal with a value but no size would
+    print an Est Value the footer did not include, so the column would not add
+    up to its own total.
+  */
+  const valued = investments.filter((r) => r.estValueCents !== null);
+  const withGain = investments.filter((r) => r.gainLossCents !== null);
+  const investmentTotals: InvestmentTotals = {
+    sizeCents: investments.reduce((sum, r) => sum + (r.sizeCents ?? 0), 0),
+    // Null rather than 0 when nothing is marked: a zero total value would read
+    // as "the book is worthless" instead of "nobody has valued it".
+    estValueCents: valued.length
+      ? valued.reduce((sum, r) => sum + (r.estValueCents ?? 0), 0)
+      : null,
+    gainLossCents: withGain.length
+      ? withGain.reduce((sum, r) => sum + (r.gainLossCents ?? 0), 0)
+      : null,
+    rowCount: investments.length,
+    markedCount: valued.length,
+  };
+
   return {
     kind: "ok",
     data: {
       fundName: fund.name,
+      investments,
+      investmentTotals,
       fundSizeCents: fund.sizeCents === null ? null : Number(fund.sizeCents),
       /*
         A FIXED order, so the chart's arcs never depend on which deal happened

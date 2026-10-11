@@ -6,6 +6,63 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The Portfolio page carries an investments table, and a deal now carries ONE mark
+  (owner, 2026-10-11).** *"lets add to this by including the investments here in a table
+  sorted by oldest at top to newest at bottom / Investment, fund Date, Size, Est Value,
+  Gain / Loss / consolidatated row under all investments."*
+  - **`Deal.estValueCents` is the first mark in this schema, and it is deliberately the
+    smallest one.** `STATE.md` had valuations blocked on a person; asking for an "Est Value"
+    column is that person deciding, so this is one nullable scalar per deal — not the
+    positions model (rate, term, amortisation, basis, ownership %), which is still open.
+    **It carries no as-of date and no history**, which `FACTS.md` says the real model needs.
+  - **Nullable means UNMARKED — not zero, and not cost.** An unmarked position renders `—`
+    and stays out of the value and gain totals. Treating it as worthless is a wrong number
+    stated confidently; carrying it at cost asserts a mark nobody made. The table prints
+    "Est Value covers N of M investments" instead of implying the gap away.
+  - **Gain / loss is DERIVED and never stored.** A stored copy is a third figure to keep in
+    step with two that disagree the moment either moves — the same argument that keeps
+    "Unallocated" derived in `FundAllocation`.
+  - **Each footer cell sums the numbers VISIBLE in its own column, and nothing else.** A
+    reader checks a total by adding the column up. The first version keyed all three sums
+    off one subset (rows with both a size and a value), so a valued deal with no size
+    printed an Est Value the footer excluded — a column that did not add up to its own
+    total. Caught by rendering the component with that row in it.
+  - **It lists MORE rows than the donut.** The chart drops a deal with no instrument
+    because there is no arc to join; the table has no such constraint and renders every deal
+    in the fund. A position absent from both views is a position nobody can see.
+  - **Undated deals sort LAST.** "Oldest at top" has no answer for a row with no date, and
+    defaulting a missing date to the epoch files it above every real investment — the one
+    place it is certainly wrong. Same-day deals break the tie by id, so the order is stable.
+  - **Side by side on basis widths, not on a breakpoint.** The card keeps its 780 and the
+    table asks for 520, so they pair up once the content column clears ~1320 and the table
+    wraps beneath otherwise. A `md:` branch would have put them side by side at 768px, where
+    the table gets roughly nothing.
+  - **Still open, and worth the owner knowing: a mark with no date.** `FUND_AS_OF` is a
+    literal labelling the allocation chart because "there are no marks in the schema" — that
+    premise is now half false. There is a mark VALUE and still no mark DATE, so the table
+    shows an Est Value with no as-of beside it. The entry below stands on its unchanged
+    half; moving `FUND_AS_OF` still needs a dated mark, which this is not.
+
+- **mobile-lint's waivers are per-LINE, not per-RULE, and prose must not spell the token
+  (found 2026-10-11).** Not a decision so much as a property of the gate that cost an hour
+  and will cost the next seat the same. Recorded because nothing in the repo catches it.
+  - `isWaived(original, line)` takes a line and **no rule id**, and looks back twelve lines.
+    So one `mobile-ok` above a `<table>` waives `table-overflow` and `table-label` at the
+    tag's own line too. A table waived for its `minWidth` silently stopped being checked for
+    its scroll wrapper and its pinned first column. **Put a waiver on the line it waives.**
+  - `table-overflow` looks 900 chars BEHIND the tag and `table-label` 900 either side, so
+    the space around a `<table>` is a byte budget. A long comment between the wrapper, the
+    tag and the header row pushes the thing being looked for out of the window and fails the
+    build. Explanations belong in the module docblock.
+  - `isWaived` reads the **original** text, not the masked text — it has to, since a waiver
+    lives in a comment. So typing the token while *describing* it is indistinguishable from
+    claiming it: a comment warning about stray waivers was itself a stray waiver, silencing
+    both table rules two lines from the warning.
+  - All three were established by mutating the thing and watching the gate, per CLAUDE.md.
+    **Fixing any of them is `mobile-lint`'s owner's call** (the mobile seat), not the build
+    seat's — an agent editing its own gate is the change no gate can catch. Flagged, not
+    touched.
+
 - **The landing page is built to a written spec, and its job is legitimacy rather than
   fundraising (owner's build spec, 2026-09-06).** Audience: business owners, brokers and
   intermediaries deciding whether Savoy is a real counterparty. Structure: nav → hero →

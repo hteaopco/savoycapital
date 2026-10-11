@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { C } from "@/components/palette";
 import { FundAllocation } from "@/components/FundAllocation";
+import { InvestmentsTable } from "@/components/InvestmentsTable";
 import { PortalShell } from "@/components/PortalShell";
 import { FUND_AS_OF } from "@/content/fund-allocation";
 import { loadPortfolio } from "@/lib/portfolio";
@@ -170,12 +171,36 @@ export default async function Portfolio() {
               size and an instrument yet. Set them in the Deal Room and they appear here.
             </EmptyState>
           ) : (
-            <div style={{ maxWidth: 780 }}>
-              <FundAllocation
-                fundSizeCents={result.data.fundSizeCents}
-                buckets={result.data.buckets}
-                asOf={FUND_AS_OF}
-              />
+            /*
+              The allocation card and the investments table, side by side where
+              there is room and stacked where there is not (owner, 2026-10-11,
+              pointing at the empty space right of the card).
+
+              The basis numbers are what decide that, not a breakpoint: the card
+              keeps its 780 and the table asks for 520, so they sit together
+              once the content column clears ~1320 and the table wraps under
+              the card below it. A `md:` branch would have put them side by side
+              at 768px, where the table would have ~0px.
+
+              `items-start` so a short table does not stretch to the card's
+              height. The card keeps an inline `maxWidth: 780` — the figure it
+              has always had — so that flex cannot widen it once the table wraps
+              away and the row has a single child.
+            */
+            <div className="flex flex-wrap items-start" style={{ gap: 20 }}>
+              <div style={{ flex: "1 1 780px", maxWidth: 780 }}>
+                <FundAllocation
+                  fundSizeCents={result.data.fundSizeCents}
+                  buckets={result.data.buckets}
+                  asOf={FUND_AS_OF}
+                />
+              </div>
+              <div className="min-w-0" style={{ flex: "1 1 520px" }}>
+                <InvestmentsTable
+                  rows={result.data.investments}
+                  totals={result.data.investmentTotals}
+                />
+              </div>
             </div>
           )}
 

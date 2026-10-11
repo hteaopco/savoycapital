@@ -63,6 +63,8 @@ export async function GET(_request: Request, { params }: Params) {
     // BigInt does not survive JSON; cents stay exact as a Number to about $90
     // trillion, so the width lives in the column and not on the wire.
     amountCents: deal.amountCents === null ? null : Number(deal.amountCents),
+    estValueCents:
+      deal.estValueCents === null ? null : Number(deal.estValueCents),
     investmentDate: deal.investmentDate
       ? deal.investmentDate.toISOString().slice(0, 10)
       : null,
@@ -91,9 +93,10 @@ export async function GET(_request: Request, { params }: Params) {
  * before these columns has neither, and the screen opens its editor for exactly
  * that reason.
  *
- * Mutable: **the name**, investment size, investment date, instrument, terms,
- * fees and the "why we like it" paragraph. The figures are what the Portfolio
- * chart is built from; the prose is read by investors on the drill-down.
+ * Mutable: **the name**, investment size, **estimated value**, investment date,
+ * instrument, terms, fees and the "why we like it" paragraph. The figures are
+ * what the Portfolio chart and its investments table are built from; the prose
+ * is read by investors on the drill-down.
  *
  * **`fundId` is NOT mutable**: moving a deal between funds would strand every
  * R2 key already written under `.../funds/<fundId>/deals/<dealId>/`, and the
@@ -144,6 +147,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const data: {
     name?: string;
     amountCents?: bigint | null;
+    estValueCents?: bigint | null;
     investmentDate?: Date | null;
     instrument?: "PRIVATE_EQUITY" | "PRIVATE_CREDIT" | "OIL_AND_GAS" | "REAL_ESTATE" | null;
     terms?: string | null;
@@ -181,6 +185,29 @@ export async function PATCH(request: Request, { params }: Params) {
         return NextResponse.json({ error: "That investment size is not a number." }, { status: 400 });
       }
       data.amountCents = BigInt(cents);
+    }
+  }
+
+  /*
+    The estimated value. Same parse as the investment size — one converter,
+    `parseDollarsToCents`, on both sides of the wire — and the same empty-string
+    clears it. **Clearing means UNMARKED, not zero**: the table renders "—" and
+    drops the position out of the gain/loss total rather than reading a blank
+    as no change.
+  */
+  if ("estValueCents" in (body ?? {})) {
+    const raw = typeof body?.estValueCents === "string" ? body.estValueCents.trim() : "";
+    if (!raw) {
+      data.estValueCents = null;
+    } else {
+      const cents = parseDollarsToCents(raw);
+      if (cents === null) {
+        return NextResponse.json(
+          { error: "That estimated value is not a number." },
+          { status: 400 },
+        );
+      }
+      data.estValueCents = BigInt(cents);
     }
   }
 
@@ -253,6 +280,8 @@ export async function PATCH(request: Request, { params }: Params) {
     id: saved.id,
     name: saved.name,
     amountCents: saved.amountCents === null ? null : Number(saved.amountCents),
+    estValueCents:
+      saved.estValueCents === null ? null : Number(saved.estValueCents),
     investmentDate: saved.investmentDate
       ? saved.investmentDate.toISOString().slice(0, 10)
       : null,

@@ -185,11 +185,20 @@ a test runner. **`prisma/` is no longer empty** — schema and the first migrati
 `scripts/` are not** — CI landed in #15, and `scripts/` now holds `design-lint.mjs`.
 
 **Blocked on a person:** what an equity vs. debt position holds — the decision the portfolio
-monitor's schema is built on. **Still open after 2026-08-24, and the shape of the stand-in
-matters:** the Portfolio chart now reads Postgres, and each deal carries `instrument` (a
-two-value enum) plus `terms` and `fees` as **free text**. That is deliberately not a schema
-for a position. When the real answer arrives it replaces those two columns; do not read them
-as the model.
+monitor's schema is built on. **Still open, and the shape of the stand-in matters:** the
+Portfolio chart now reads Postgres, and each deal carries `instrument` (a **four**-value
+enum — `PRIVATE_EQUITY`, `PRIVATE_CREDIT`, `OIL_AND_GAS`, `REAL_ESTATE`, the last two added
+on the owner's call 2026-10-11) plus `terms` and `fees` as **free text**. That is
+deliberately not a schema for a position. When the real answer arrives it replaces those
+columns; do not read them as the model.
+
+**One piece of it is no longer blocked: a deal carries a MARK (2026-10-11).**
+`Deal.estValueCents` — one nullable scalar, no date, no history — because the owner asked
+for a table with "Est Value" and "Gain / Loss" in it, and asking for the column is the
+person deciding. It is the smallest thing that answers that and nothing more: `FACTS.md`
+still calls for a *time series* of marks, and this is a current value with no as-of. Gain /
+loss is derived and never stored. **Do not read it as the valuation model either**, and do
+not grow it into one without being asked.
 And the securities-marketing question in `FACTS.md`, which gates what the *public* page may
 say, not whether it may exist.
 
