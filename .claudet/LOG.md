@@ -8,6 +8,29 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **The Portfolio grew an investments table, then a date for its marks** (owner,
+  2026-10-11: *"lets add to this by including the investments here in a table sorted by oldest
+  at top to newest at bottom ... consolidatated row under all investments"*, then *"you can add
+  an as of date...the entire table will be updated all at once, never one at a time"*).
+  **Two new columns, both the smallest thing that answered the ask.** `Deal.estValueCents` is
+  the first MARK this schema has carried — one nullable scalar, no history — and
+  `Fund.marksAsOf` dates all of them at once, because the owner's own description of the
+  process is that the table is revalued in a batch. Gain / loss is derived from the pair and
+  never stored.
+  **`FUND_AS_OF` and `src/content/fund-allocation.ts` are deleted.** That literal
+  `"2026-08-23"` rendered as "As of August 23, 2026" under a chart whose every figure has read
+  live from Postgres since 2026-08-24 — so it had been wrong since the first deal edited after
+  it, with every gate green. The allocation card now carries no as-of line at all: its figures
+  are live, so the only honest date would be "now". `src/content/` holds no fund figure
+  any more.
+  **Each footer total sums only what is visible in its own column**, after a first version
+  keyed all three off one subset and printed an Est Value the footer excluded.
+  **Three properties of `mobile-lint` were found and recorded, not fixed:** its waivers are
+  per-line rather than per-rule (so a waiver above a `<table>` had silently stopped this file
+  being checked for its scroll wrapper and pinned column), the 900-char windows around a
+  `<table>` are a byte budget, and prose spelling the waiver token claims it. The gate belongs
+  to the mobile seat.
+
 - **Mallard Bay Outdoors on the public carousel, and the deal name became editable**
   (owner, 2026-09-04: *"i want to upload this investment on the main page"*, *"need a way to
   edit name of the deal"*).

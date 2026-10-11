@@ -192,13 +192,19 @@ on the owner's call 2026-10-11) plus `terms` and `fees` as **free text**. That i
 deliberately not a schema for a position. When the real answer arrives it replaces those
 columns; do not read them as the model.
 
-**One piece of it is no longer blocked: a deal carries a MARK (2026-10-11).**
-`Deal.estValueCents` — one nullable scalar, no date, no history — because the owner asked
-for a table with "Est Value" and "Gain / Loss" in it, and asking for the column is the
-person deciding. It is the smallest thing that answers that and nothing more: `FACTS.md`
-still calls for a *time series* of marks, and this is a current value with no as-of. Gain /
-loss is derived and never stored. **Do not read it as the valuation model either**, and do
-not grow it into one without being asked.
+**One piece of it is no longer blocked: the fund carries MARKS, and one date for them
+(2026-10-11).** `Deal.estValueCents` — one nullable scalar per deal, no history — plus
+`Fund.marksAsOf`, a single date for all of them, because the owner's description of the
+process is that the whole table is revalued at once and never one position at a time. The
+owner asked for a table with "Est Value" and "Gain / Loss" in it, and asking for the column
+is the person deciding. Gain / loss is derived and never stored.
+
+It is still the smallest thing that answers that and nothing more: `FACTS.md` calls for a
+*time series* of marks, and this is **one current value per deal with one date** — no
+history, no per-position revaluation, no valuation events. **Do not read it as the valuation
+model**, and do not grow it into one without being asked. The same change deleted
+`FUND_AS_OF` and `src/content/fund-allocation.ts`, so `src/content/` now holds no fund
+figure at all.
 And the securities-marketing question in `FACTS.md`, which gates what the *public* page may
 say, not whether it may exist.
 

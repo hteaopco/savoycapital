@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { parseDollarsToCents, parseDateInput } from "@/lib/money";
+import { parseDollarsToCents, parseDateInput, toDateInput } from "@/lib/money";
 import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
@@ -10,7 +10,8 @@ import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
  * columns, so both are null on the fund every deal belongs to, and the screen
  * opens its editor for exactly that reason.
  *
- * **Only those two fields are mutable.** Not the name — renaming is a separate
+ * **Mutable: the fund size, the inception date, and the marks as-of date.**
+ * Not the name — renaming is a separate
  * decision with its own blast radius, since the fund name is what an investor
  * would see beside their own documents.
  *
@@ -57,7 +58,11 @@ export async function PATCH(request: Request, { params }: Params) {
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const data: { sizeCents?: bigint | null; inceptionDate?: Date | null } = {};
+  const data: {
+    sizeCents?: bigint | null;
+    inceptionDate?: Date | null;
+    marksAsOf?: Date | null;
+  } = {};
 
   if ("sizeCents" in (body ?? {})) {
     const raw = typeof body?.sizeCents === "string" ? body.sizeCents.trim() : "";
@@ -82,6 +87,27 @@ export async function PATCH(request: Request, { params }: Params) {
     data.inceptionDate = parsed ?? null;
   }
 
+  /*
+    The date every Est Value in this fund is marked as of (owner, 2026-10-11:
+    "the entire table will be updated all at once, never one at a time").
+
+    Same parse and the same clear-on-empty as the inception date above. One
+    date per fund and not per deal, because a batch revaluation is one fact —
+    see `Fund.marksAsOf`.
+  */
+  if ("marksAsOf" in (body ?? {})) {
+    const parsed = parseDateInput(
+      typeof body?.marksAsOf === "string" ? body.marksAsOf : "",
+    );
+    if (parsed === null) {
+      return NextResponse.json(
+        { error: "Marks as-of date must be YYYY-MM-DD." },
+        { status: 400 },
+      );
+    }
+    data.marksAsOf = parsed ?? null;
+  }
+
   const saved = await db.fund.update({ where: { id: fundId }, data });
 
   return NextResponse.json({
@@ -89,6 +115,9 @@ export async function PATCH(request: Request, { params }: Params) {
     // BigInt is not JSON-serialisable; cents stay exact as a Number to about
     // $90 trillion, so the width lives in the column and not on the wire.
     sizeCents: saved.sizeCents === null ? null : Number(saved.sizeCents),
-    inceptionDate: saved.inceptionDate ? saved.inceptionDate.toISOString().slice(0, 10) : null,
+    // Null, not "": on the wire "not set" is null. `toDateInput` returns ""
+    // because it feeds an `<input type="date">`, which is a different job.
+    inceptionDate: saved.inceptionDate ? toDateInput(saved.inceptionDate) : null,
+    marksAsOf: saved.marksAsOf ? toDateInput(saved.marksAsOf) : null,
   });
 }

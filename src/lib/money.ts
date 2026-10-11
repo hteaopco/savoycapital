@@ -103,3 +103,24 @@ export function parseDateInput(raw: string): Date | null | undefined {
   const parsed = new Date(`${trimmed}T00:00:00.000Z`);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
+
+/**
+ * `YYYY-MM-DD` to `MM/DD/YYYY`, for display.
+ *
+ * Lifted out of `FundAllocation` on 2026-10-11, when the investments table
+ * beside it needed to print the same kind of date. Two local copies of a date
+ * format on one screen is `ui-governance.md` § 3's named trap — "a heading
+ * scale that exists as a literal in two files ... consistency is cross-file
+ * and the lint is per-file" — and this one would have been visible: the card
+ * and the table sit side by side.
+ *
+ * **String surgery, not `Date`, deliberately.** `new Date("2026-08-23")`
+ * parses as UTC midnight and formats in local time, so anywhere west of UTC it
+ * renders as the 22nd. That is the same bug `toDateInput` above exists to
+ * avoid, and the reason a date never round-trips through `Date` here just to
+ * be printed.
+ */
+export function formatIsoDate(iso: string): string {
+  const [y, m, d] = iso.slice(0, 10).split("-");
+  return `${m}/${d}/${y}`;
+}

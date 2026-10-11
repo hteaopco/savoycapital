@@ -45,6 +45,12 @@ export type Fund = {
   /** Integer cents, or `null` until somebody sets it. */
   sizeCents: number | null;
   inceptionDate: string | null;
+  /**
+   * The date every Est Value in this fund is marked as of, or null while
+   * nobody has set one. One date per fund because the marks are refreshed in
+   * a batch (owner, 2026-10-11) — see `Fund.marksAsOf`.
+   */
+  marksAsOf: string | null;
   assignedCount: number;
   dealCount: number;
 };
@@ -461,11 +467,13 @@ function FundRow({ fund, onChanged }: { fund: Fund; onChanged: () => void }) {
   const [open, setOpen] = useState(needsBackfill);
   const [size, setSize] = useState(centsToDollarInput(fund.sizeCents));
   const [inception, setInception] = useState(fund.inceptionDate ?? "");
+  const [marksAsOf, setMarksAsOf] = useState(fund.marksAsOf ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const sizeId = useId();
   const dateId = useId();
+  const marksId = useId();
 
   const save = async () => {
     if (busy) return;
@@ -479,7 +487,11 @@ function FundRow({ fund, onChanged }: { fund: Fund; onChanged: () => void }) {
         // Both keys always sent: the route treats an absent key as "leave
         // alone" and an empty string as "clear", so sending both means the form
         // says exactly what it shows.
-        body: JSON.stringify({ sizeCents: size, inceptionDate: inception }),
+        body: JSON.stringify({
+          sizeCents: size,
+          inceptionDate: inception,
+          marksAsOf,
+        }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body?.error ?? "Could not save.");
@@ -522,6 +534,7 @@ function FundRow({ fund, onChanged }: { fund: Fund; onChanged: () => void }) {
           <div style={{ fontSize: 11, color: C.textMuted, ...numCell }}>
             Fund {fund.id} · {formatCents(fund.sizeCents)}
             {fund.inceptionDate ? ` · inception ${fund.inceptionDate}` : ""}
+            {fund.marksAsOf ? ` · marks ${fund.marksAsOf}` : ""}
           </div>
         </div>
         {/*
@@ -559,7 +572,15 @@ function FundRow({ fund, onChanged }: { fund: Fund; onChanged: () => void }) {
           style={{ gap: 12, padding: "0 16px 16px 42px", background: C.bgAlt }}
         >
           {error ? <Notice tone="error">{error}</Notice> : null}
-          <div className="flex flex-col gap-3 md:flex-row md:items-end">
+          {/*
+            `md:flex-wrap` added 2026-10-11 with the marks date below: this row
+            now holds three 200px inputs and a button. Without wrapping,
+            `md:flex-row` keeps them on one line and shrinks them — and the
+            date inputs carry an intrinsic min-content width from the text the
+            platform draws in them, so what actually gives is the fund-size
+            input. Wrapping keeps every control at its stated width.
+          */}
+          <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end">
             <div className="flex flex-col md:w-[200px]" style={{ gap: 6 }}>
               <label htmlFor={sizeId} style={label}>
                 Fund size
@@ -592,6 +613,34 @@ function FundRow({ fund, onChanged }: { fund: Fund; onChanged: () => void }) {
                 type="date"
                 value={inception}
                 onChange={(e) => setInception(e.target.value)}
+                style={{ ...input, maxWidth: "100%" }}
+              />
+            </div>
+            {/*
+              The date every Est Value in this fund is marked as of (owner,
+              2026-10-11: "the entire table will be updated all at once, never
+              one at a time"). It sits with the fund's other fund-level figures
+              because the whole table is revalued in one go — a per-deal date
+              would be the same fact copied once per deal.
+
+              **Deliberately NOT part of `needsBackfill` above.** A fund with
+              no marks yet has nothing to date, so demanding this would badge
+              every fund "Needs values" forever. The investments table raises
+              it only when a date is genuinely missing — something marked and
+              undated.
+
+              Same `min-w-0` + `maxWidth` as the inception date, for the same
+              iOS reason recorded there.
+            */}
+            <div className="flex min-w-0 flex-col md:w-[200px]" style={{ gap: 6 }}>
+              <label htmlFor={marksId} style={label}>
+                Est. values as of
+              </label>
+              <input
+                id={marksId}
+                type="date"
+                value={marksAsOf}
+                onChange={(e) => setMarksAsOf(e.target.value)}
                 style={{ ...input, maxWidth: "100%" }}
               />
             </div>

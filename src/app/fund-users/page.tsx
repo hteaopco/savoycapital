@@ -5,6 +5,7 @@ import { FundUsers as FundUsersScreen, type Person } from "@/components/FundUser
 import { CLERK_LIST_LIMIT, listClerkAccounts } from "@/lib/clerk-users";
 import { PortalShell } from "@/components/PortalShell";
 import { getDb } from "@/lib/db";
+import { toDateInput } from "@/lib/money";
 import { getViewer, isManagement } from "@/lib/authz";
 
 /**
@@ -71,9 +72,13 @@ export default async function FundUsersPage() {
               // boundary; cents stay exact as a Number to about $90 trillion,
               // so the width lives in the column and not on the wire.
               sizeCents: f.sizeCents === null ? null : Number(f.sizeCents),
-              inceptionDate: f.inceptionDate
-                ? f.inceptionDate.toISOString().slice(0, 10)
-                : null,
+              // Null PRESERVED, not collapsed to "": `needsBackfill` in
+              // `FundRow` tests `inceptionDate === null` to decide whether to
+              // badge the fund and open its editor. `toDateInput` alone
+              // returns "" for an unset date — it exists to populate an
+              // `<input>` — and would have turned that test permanently false.
+              inceptionDate: f.inceptionDate ? toDateInput(f.inceptionDate) : null,
+              marksAsOf: f.marksAsOf ? toDateInput(f.marksAsOf) : null,
               assignedCount: f._count.roles,
               dealCount: f._count.deals,
             })),

@@ -86,6 +86,33 @@ model Fund {
   /// with a time invites a timezone to shift it across midnight.
   inceptionDate DateTime? @db.Date
 
+  /// The date every `Deal.estValueCents` in this fund is marked as of (owner,
+  /// 2026-10-11: "the entire table will be updated all at once, never one at a
+  /// time...so it can be an as of date sitting above the table or below it").
+  ///
+  /// **One date per FUND, not per deal, and that is the owner's own
+  /// description of the process** — the marks are refreshed in a batch, so a
+  /// per-deal date would be five copies of one fact and five chances for them
+  /// to disagree. Revaluing a single position out of band is not how this
+  /// fund works; if it ever becomes how it works, this moves to `Deal` and
+  /// the table grows a column.
+  ///
+  /// **It dates the MARKS and nothing else.** `Deal.amountCents` and
+  /// `inceptionDate` are live — editing a deal changes the chart immediately —
+  /// so this is not an as-of for the whole portfolio and must not be labelled
+  /// as one.
+  ///
+  /// NULLABLE, like `inceptionDate` and for the same reason: this repo does
+  /// not invent a fund figure, and the date a valuation was struck is one.
+  /// It reads as "undated" until a person sets it. **This replaced
+  /// `FUND_AS_OF`, a hardcoded "2026-08-23"** that sat under a chart reading
+  /// live figures from Postgres — a date stated confidently that had been
+  /// wrong since the first deal edit after it.
+  ///
+  /// A date, not a timestamp: a mark is struck on a calendar day, and storing
+  /// a time invites a timezone to shift it across midnight.
+  marksAsOf DateTime? @db.Date
+
   createdAt DateTime @default(now())
 
   deals Deal[]

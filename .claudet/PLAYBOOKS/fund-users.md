@@ -64,7 +64,7 @@ audience — and no route reads it. There is nothing there to show yet.
 
 | Model | Holds |
 |---|---|
-| `Fund` | `name`, optional `sizeCents` (`BigInt`) and `inceptionDate` (a `DATE`), its deals and role assignments |
+| `Fund` | `name`, optional `sizeCents` (`BigInt`), `inceptionDate` and `marksAsOf` (both `DATE`), its deals and role assignments |
 | `UserRole` | unique `clerkUserId`, `fundId`, `role`, `assignedBy` |
 
 **Keyed by `clerkUserId`, not phone.** Phone matching would need normalisation — `+1 555 000
@@ -82,6 +82,16 @@ figure nobody supplied onto the fund every deal belongs to. The row's editor ope
 while either is missing, which is the backfill path.
 `inceptionDate` is a `DATE`, not a timestamp: an inception is a calendar day, and a time
 component invites a timezone to move it across midnight.
+
+**`marksAsOf` is the third editable field, added 2026-10-11** (owner: *"the entire table will
+be updated all at once, never one at a time"*). It is the date every `Deal.estValueCents` in
+the fund is marked as of, and it is on the FUND rather than on each deal because the marks are
+refreshed in a batch — one fact, not one per deal. A `DATE` for the same midnight reason.
+**It is deliberately NOT part of `needsBackfill`:** a fund with no marks has nothing to date,
+so requiring it would badge every fund "Needs values" forever. The Portfolio investments table
+raises it instead, in amber, only when something is marked and the date is missing. Saving it
+writes through the same `PATCH /api/funds/[id]`, where an absent key leaves the value alone
+and an empty string clears it.
 
 **`sizeCents` is `BigInt`, not `Int`, and that is not premature.** A Postgres `INTEGER` caps
 at 2,147,483,647 — **$21,474,836** in cents. This fund is already at $10M. Cents stay exact

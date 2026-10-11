@@ -63,7 +63,7 @@ red before you trust it. A gate with a broken regex reads green forever.
 Never bake a fund figure into a component. **No amounts, no position names, no dates of
 marks, no percentages, no fund size** written as a literal inside `src/components/**` or
 `src/app/**`. They belong in `src/content/**`, which exists for exactly this
-(`src/content/fund-allocation.ts` is the pattern to follow).
+(`src/content/investments.ts` is the pattern to follow).
 - **Money is integer cents end-to-end**; format only at render, always with
   `fontVariantNumeric: "tabular-nums"`.
 - **A derived figure is never supplied.** `FundAllocation` computes "Unallocated" as fund size

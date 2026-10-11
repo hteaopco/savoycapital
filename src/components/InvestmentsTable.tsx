@@ -1,4 +1,5 @@
 import { C } from "./palette";
+import { formatIsoDate } from "@/lib/money";
 import type { InvestmentRow, InvestmentTotals } from "@/lib/portfolio";
 
 /**
@@ -126,9 +127,18 @@ function gainColor(cents: number): string {
 export function InvestmentsTable({
   rows,
   totals,
+  marksAsOf,
 }: {
   rows: InvestmentRow[];
   totals: InvestmentTotals;
+  /**
+   * The date every Est Value is marked as of, or null while nobody has set
+   * one. **One date for the whole table, because that is how the fund works**
+   * — owner, 2026-10-11: "the entire table will be updated all at once, never
+   * one at a time...so it can be an as of date sitting above the table or
+   * below it."
+   */
+  marksAsOf: string | null;
 }) {
   if (rows.length === 0) {
     return (
@@ -160,6 +170,48 @@ export function InvestmentsTable({
           overflow: "hidden",
         }}
       >
+        {/*
+          The header, built to match `FundAllocation`'s beside it: same 14/800
+          title over a 12px muted subline. The two cards sit side by side, so a
+          table titled differently from its neighbour is the cross-file
+          inconsistency `ui-governance.md` § 3 keeps naming.
+
+          **The subline says "Est. values", not "As of".** Only the Est Value
+          column is struck on a date; Size and Fund Date come from the deals
+          and move the moment one is edited. A bare "As of" over this table
+          would date all five columns, which is the mistake the allocation card
+          was making with its hardcoded literal.
+        */}
+        <div
+          style={{
+            padding: "14px 16px 12px",
+            borderBottom: `1px solid ${C.border}`,
+          }}
+        >
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>
+            Investments
+          </div>
+          {marksAsOf !== null ? (
+            <div
+              style={{
+                fontSize: 12,
+                color: C.textMuted,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              Est. values as of {formatIsoDate(marksAsOf)}
+            </div>
+          ) : totals.markedCount > 0 ? (
+            /*
+              Marks with no date. Said out loud rather than left blank: a
+              valuation whose date nobody knows is worth less than one that is
+              dated, and the reader cannot tell the difference from silence.
+            */
+            <div style={{ fontSize: 12, color: C.amber }}>
+              Est. values are undated — set a date under Fund &amp; Users.
+            </div>
+          ) : null}
+        </div>
         {/*
           The scroller. The table carries an explicit width below it and the
           PAGE never scrolls sideways — a page doing that because a table broke
