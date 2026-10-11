@@ -116,6 +116,13 @@ type DealDetail = Omit<Deal, "documentCount"> & {
   terms: string | null;
   fees: string | null;
   /**
+   * What the position is reckoned to be worth now, in integer cents, or `null`
+   * while nobody has marked it. Feeds the Portfolio investments table's Est
+   * Value and Gain / Loss columns, where null means UNMARKED — never zero and
+   * never carried at cost.
+   */
+  estValueCents: number | null;
+  /**
    * The investment thesis, as a paragraph. **Read by investors** — it is shown
    * on the Portfolio drill-down as of 2026-08-24, so this box is not a
    * scratchpad and has no draft state.
@@ -886,6 +893,7 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
     deal.amountCents === null || deal.investmentDate === null || deal.instrument === null;
   const [open, setOpen] = useState(needsBackfill);
   const [amount, setAmount] = useState(centsToDollarInput(deal.amountCents));
+  const [estValue, setEstValue] = useState(centsToDollarInput(deal.estValueCents));
   const [date, setDate] = useState(deal.investmentDate ?? "");
   const [instrument, setInstrument] = useState<Instrument | "">(deal.instrument ?? "");
   const [terms, setTerms] = useState(deal.terms ?? "");
@@ -895,6 +903,7 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const amountId = useId();
+  const estValueId = useId();
   const dateId = useId();
   const instrumentId = useId();
   const termsId = useId();
@@ -917,6 +926,7 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
         // Two Save buttons on one card is how half a deal gets saved.
         body: JSON.stringify({
           amountCents: amount,
+          estValueCents: estValue,
           investmentDate: date,
           instrument,
           terms,
@@ -975,6 +985,7 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
             }}
           >
             {formatCents(deal.amountCents)}
+            {deal.estValueCents !== null ? ` → ${formatCents(deal.estValueCents)}` : ""}
             {deal.instrument ? ` · ${INSTRUMENT_LABEL[deal.instrument]}` : ""}
             {deal.investmentDate ? ` · ${deal.investmentDate}` : ""}
           </span>
@@ -1006,6 +1017,33 @@ function DealFigures({ deal, onSaved }: { deal: DealDetail; onSaved: () => void 
                 // parse exactly as entered.
                 onBlur={(e) => setAmount(groupDollarInput(e.target.value))}
                 placeholder="1,500,000"
+                style={{ ...input, fontVariantNumeric: "tabular-nums" }}
+              />
+            </div>
+            <div className="flex flex-col md:w-[200px]" style={{ gap: 6 }}>
+              <label htmlFor={estValueId} style={label}>
+                Est. value
+              </label>
+              {/*
+                What it is worth NOW — the Portfolio table's Est Value, and the
+                left-hand side of its Gain / Loss (owner, 2026-10-11).
+
+                **Leaving it empty is a real answer**, not a missing one: the
+                table renders "—" and keeps the position out of the gain/loss
+                total, rather than reading a blank as "no change" or carrying it
+                at cost. Both of those would assert a mark nobody made.
+
+                Same text/inputMode pair the design gate requires for money, and
+                the same blur grouping as the size beside it.
+              */}
+              <input
+                id={estValueId}
+                type="text"
+                inputMode="numeric"
+                value={estValue}
+                onChange={(e) => setEstValue(e.target.value)}
+                onBlur={(e) => setEstValue(groupDollarInput(e.target.value))}
+                placeholder="Unmarked"
                 style={{ ...input, fontVariantNumeric: "tabular-nums" }}
               />
             </div>

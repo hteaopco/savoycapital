@@ -239,6 +239,27 @@ model Deal {
   /// others — but within a fund there is no draft state and no second copy.
   whyWeLikeIt String?
 
+  /// What the position is reckoned to be worth NOW, in integer cents (owner,
+  /// 2026-10-11: a table of "Investment, fund Date, Size, Est Value, Gain /
+  /// Loss").
+  ///
+  /// **This is a MARK, and it is the first one this schema has carried.**
+  /// `STATE.md` records valuations as blocked on a person; asking for the
+  /// column is that person deciding, so this is deliberately the SMALLEST
+  /// thing that answers it — one nullable scalar per deal — and not the
+  /// positions model (rate, term, amortisation, basis, ownership) that is
+  /// still open. Do not grow it into one without being asked.
+  ///
+  /// **Nullable means UNMARKED, and unmarked is not zero and not cost.** A
+  /// position nobody has valued shows "—" and is left out of the gain/loss
+  /// total rather than being carried at cost, which would assert a valuation
+  /// nobody entered. The table says how many are unmarked instead.
+  ///
+  /// Gain/loss is DERIVED (`estValueCents - amountCents`) and never stored:
+  /// a stored copy is a third figure to keep in step with two that already
+  /// disagree the moment either moves.
+  estValueCents BigInt?
+
   /// When it was invested (owner: "investment date (date picker)").
   ///
   /// A `DATE`, not a timestamp, for the same reason as `Fund.inceptionDate`: an
