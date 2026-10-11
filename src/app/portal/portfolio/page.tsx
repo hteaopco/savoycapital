@@ -3,7 +3,6 @@ import { C } from "@/components/palette";
 import { FundAllocation } from "@/components/FundAllocation";
 import { InvestmentsTable } from "@/components/InvestmentsTable";
 import { PortalShell } from "@/components/PortalShell";
-import { FUND_AS_OF } from "@/content/fund-allocation";
 import { loadPortfolio } from "@/lib/portfolio";
 import { canSeeFund, getViewer } from "@/lib/authz";
 import { DEFAULT_FUND_ID } from "@/lib/db";
@@ -192,13 +191,13 @@ export default async function Portfolio() {
                 <FundAllocation
                   fundSizeCents={result.data.fundSizeCents}
                   buckets={result.data.buckets}
-                  asOf={FUND_AS_OF}
                 />
               </div>
               <div className="min-w-0" style={{ flex: "1 1 520px" }}>
                 <InvestmentsTable
                   rows={result.data.investments}
                   totals={result.data.investmentTotals}
+                  marksAsOf={result.data.marksAsOf}
                 />
               </div>
             </div>

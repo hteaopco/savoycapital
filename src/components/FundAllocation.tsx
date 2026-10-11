@@ -113,9 +113,26 @@ export type FundAllocationProps = {
   fundSizeCents: number;
   /** Deployed buckets. Unallocated is derived from these — do not pass it in. */
   buckets: AllocationBucket[];
-  /** Date of the marks shown, ISO `YYYY-MM-DD`. */
-  asOf: string;
 };
+
+/*
+  **There is no `asOf` here any more (2026-10-11), and that is deliberate.**
+
+  This card used to render `As of {FUND_AS_OF}` — a hardcoded "2026-08-23" in
+  `src/content/fund-allocation.ts`. Every figure on the card has read live from
+  Postgres since 2026-08-24, so that date had been wrong since the first deal
+  edited after it: the chart moved and the date under it did not.
+
+  A date is not the fix either. Fund size and each deal's amount change the
+  moment someone edits them, so the only true as-of for this card is "now",
+  and a label saying so is noise. The real date now lives on the investments
+  table beside this one, against `Fund.marksAsOf`, where it dates the Est Value
+  column — the one set of figures on the screen that IS struck on a date
+  (owner, 2026-10-11: "the entire table will be updated all at once").
+
+  If a page-level reporting date is ever wanted, it belongs above both cards as
+  one line, not re-added here where it would date live figures.
+*/
 
 const TONE: Record<BucketTone, string> = {
   accent: C.accent,
@@ -143,11 +160,6 @@ const abbrev = (cents: number): string => {
 
 const pct = (part: number, whole: number): string =>
   `${whole === 0 ? "0.0" : ((part / whole) * 100).toFixed(1)}%`;
-
-const fmtDate = (iso: string): string => {
-  const [y, m, d] = iso.slice(0, 10).split("-");
-  return `${m}/${d}/${y}`;
-};
 
 const RADIUS = 70;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -577,7 +589,6 @@ function HoldingDetail({
 export function FundAllocation({
   fundSizeCents,
   buckets,
-  asOf,
 }: FundAllocationProps) {
   const hatchId = useId();
   /**
@@ -709,9 +720,6 @@ export function FundAllocation({
         <div>
           <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>
             Fund Allocation
-          </div>
-          <div style={{ fontSize: 12, color: C.textMuted, ...numCell }}>
-            As of {fmtDate(asOf)}
           </div>
         </div>
         <span

@@ -1,6 +1,7 @@
 import "server-only";
 import type { AllocationBucket, DetailRow } from "@/components/FundAllocation";
 import { getDb } from "./db";
+import { toDateInput } from "./money";
 import type { $Enums } from "@prisma/client";
 
 /**
@@ -86,6 +87,16 @@ export type InvestmentTotals = {
 export type PortfolioData = {
   fundName: string;
   fundSizeCents: number | null;
+  /**
+   * The date every Est Value in this fund is marked as of, ISO `YYYY-MM-DD`,
+   * or null while nobody has set one.
+   *
+   * **It dates the MARKS only.** `fundSizeCents` and every `sizeCents` below
+   * are live — editing a deal moves them immediately — so this must not be
+   * rendered as an as-of for the page. It replaced `FUND_AS_OF`, a literal
+   * `"2026-08-23"` that sat under the allocation chart's live figures.
+   */
+  marksAsOf: string | null;
   buckets: AllocationBucket[];
   /** Deals that could not be plotted, and why. */
   excluded: { name: string; missing: string }[];
@@ -176,7 +187,7 @@ export async function loadPortfolio(fundId: number): Promise<PortfolioResult> {
     */
     const detail = [
       deal.investmentDate
-        ? { label: "Date funded", value: deal.investmentDate.toISOString().slice(0, 10) }
+        ? { label: "Date funded", value: toDateInput(deal.investmentDate) }
         : null,
       { label: "Instrument", value: meta.label },
       deal.terms ? { label: "Terms", value: deal.terms } : null,
@@ -235,9 +246,10 @@ export async function loadPortfolio(fundId: number): Promise<PortfolioResult> {
         deal.estValueCents === null ? null : Number(deal.estValueCents);
       return {
         name: deal.name,
-        fundedOn: deal.investmentDate
-          ? deal.investmentDate.toISOString().slice(0, 10)
-          : null,
+        // `toDateInput`, not an inline `toISOString().slice(0, 10)`: money.ts's
+        // docblock says every date on this product goes through it, and a
+        // second copy here is what makes that claim false.
+        fundedOn: deal.investmentDate ? toDateInput(deal.investmentDate) : null,
         sizeCents,
         estValueCents,
         // Null unless BOTH sides are known. A missing mark is not "no change".
@@ -275,6 +287,7 @@ export async function loadPortfolio(fundId: number): Promise<PortfolioResult> {
     kind: "ok",
     data: {
       fundName: fund.name,
+      marksAsOf: fund.marksAsOf ? toDateInput(fund.marksAsOf) : null,
       investments,
       investmentTotals,
       fundSizeCents: fund.sizeCents === null ? null : Number(fund.sizeCents),

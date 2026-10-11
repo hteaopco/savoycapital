@@ -6,6 +6,45 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The marks carry ONE date, on the fund, and the allocation card lost its as-of line
+  (owner, 2026-10-11).** *"you can add an as of date...the entire table will be updated all at
+  once, never one at a time...so it can be an as of date sitting above the table or below it."*
+  - **`Fund.marksAsOf`, not `Deal.marksAsOf`, and the owner's sentence is the whole argument.**
+    The table is revalued in a batch, so the date is one fact; a per-deal column would be that
+    fact copied once per deal and N chances for the copies to disagree. If single positions
+    ever get revalued out of band, this moves to `Deal` and the table grows a column — not
+    before.
+  - **It dates the Est Value column and is labelled that way**, "Est. values as of 10/31/2026",
+    not a bare "As of". Size and Fund Date come from the deals and move the instant one is
+    edited, so a bare as-of over the table would date five columns when it dates one.
+  - **`FUND_AS_OF` is deleted, and `src/content/fund-allocation.ts` with it.** It was a
+    hardcoded `"2026-08-23"` rendering as "As of August 23, 2026" under a chart whose every
+    figure has read live from Postgres since 2026-08-24 — so it had been wrong since the first
+    deal edited after that date, statically, with every gate green. `src/content/` now holds no
+    fund figure at all.
+  - **The allocation card has no as-of line at all now, and a date was not the fix.** Fund size
+    and each deal's amount change when someone edits them, so the only true as-of for that card
+    is "now" and a label saying so is noise. A page-level reporting date, if ever wanted,
+    belongs above both cards as one line — not back on the card, where it would date live
+    figures.
+  - **Undated marks are stated, not left blank.** When something is marked and no date is set,
+    the table says so in amber and points at Fund & Users. A valuation whose date nobody knows
+    is worth less than a dated one, and silence does not tell the reader which they have.
+  - **Not part of `needsBackfill`.** A fund with no marks has nothing to date, so requiring the
+    date would badge every fund "Needs values" permanently. The table raises it only when
+    something is actually marked and undated.
+  - **`fmtDate` moved to `src/lib/money.ts` as `formatIsoDate`.** The card and the table sit
+    side by side, so two local copies of one date format was `ui-governance.md` § 3's named
+    cross-file trap waiting to happen. Three inline `toISOString().slice(0, 10)` calls in
+    `portfolio.ts` went through `toDateInput` at the same time. They were not wrong — ISO
+    slicing is the safe technique, which is the point `money.ts` is making — just three
+    copies of it. **`toDateInput` returns `""` and not `null` for an unset date**, because it
+    exists to populate an `<input type="date">`; swapping it in where `null` was the contract
+    is a real bug, and nearly shipped one here: `FundRow`'s `needsBackfill` tests
+    `inceptionDate === null` to decide whether to badge a fund and open its editor, and `""`
+    would have made that permanently false with every gate green. Call sites that mean "not
+    set" keep the `x ? toDateInput(x) : null` guard.
+
 - **The Portfolio page carries an investments table, and a deal now carries ONE mark
   (owner, 2026-10-11).** *"lets add to this by including the investments here in a table
   sorted by oldest at top to newest at bottom / Investment, fund Date, Size, Est Value,
@@ -37,11 +76,9 @@ Newest first.
     table asks for 520, so they pair up once the content column clears ~1320 and the table
     wraps beneath otherwise. A `md:` branch would have put them side by side at 768px, where
     the table gets roughly nothing.
-  - **Still open, and worth the owner knowing: a mark with no date.** `FUND_AS_OF` is a
-    literal labelling the allocation chart because "there are no marks in the schema" — that
-    premise is now half false. There is a mark VALUE and still no mark DATE, so the table
-    shows an Est Value with no as-of beside it. The entry below stands on its unchanged
-    half; moving `FUND_AS_OF` still needs a dated mark, which this is not.
+  - ~~**Still open: a mark with no date.**~~ **CLOSED the same day — see the entry above.**
+    The owner's answer was that the whole table is revalued at once, which made the date a
+    fund-level column rather than a per-deal one.
 
 - **mobile-lint's waivers are per-LINE, not per-RULE, and prose must not spell the token
   (found 2026-10-11).** Not a decision so much as a property of the gate that cost an hour
@@ -195,7 +232,9 @@ Newest first.
 
 - **The Portfolio chart reads Postgres. There is one source for a fund figure (2026-08-24).**
   `src/lib/portfolio.ts` builds it from `Fund.sizeCents` and each `Deal.amountCents`, grouped
-  by `Deal.instrument`. `src/content/fund-allocation.ts` keeps only the as-of date.
+  by `Deal.instrument`. ~~`src/content/fund-allocation.ts` keeps only the as-of date.~~
+  **That file is gone (2026-10-11)** — the as-of date became `Fund.marksAsOf`, so `src/content/`
+  no longer holds any fund figure at all.
   - **The reason is a reported bug, not tidiness.** Fund & Users could edit a fund size that
     Portfolio did not render, because Portfolio rendered a hard-coded copy. The owner saved a
     change and reported that nothing happened. Two sources for one figure always resolves
@@ -209,10 +248,14 @@ Newest first.
     be drawn. `loadPortfolio` therefore returns buckets and a fund size and **never a total**.
     The figures this chart was first built from arrived $10,000 over; accepting a total as an
     input is how that ships.
-  - **`FUND_AS_OF` stays a literal, deliberately.** It is the date of the marks, and there are
-    no marks in the schema. `Fund.inceptionDate` and the latest investment date each answer a
-    different question, so either would put a number under a label it does not answer. When
-    positions and valuations land, this moves with them and not before.
+  - ~~**`FUND_AS_OF` stays a literal, deliberately.** It is the date of the marks, and there
+    are no marks in the schema.~~ **SUPERSEDED 2026-10-11 — see the marks as-of entry at the
+    top.** The premise ("there are no marks in the schema") stopped being true the moment
+    `Deal.estValueCents` landed, and the reasoning was right about the wrong thing: the
+    literal's real defect was not that it lacked a column to come from, but that it sat under
+    a chart whose every figure reads live from Postgres. It had been wrong since the first
+    deal edited after 2026-08-23 and nothing could have detected that. The card has no
+    as-of line now; `Fund.marksAsOf` dates the Est Value column, where a date is struck.
   - **`terms` and `fees` are free text.** What an equity vs. debt position actually holds is
     still blocked on a person (`STATE.md`). A typed schema written now to look thorough is
     one the real schema would start by undoing; a text column feeding a text panel is not.
