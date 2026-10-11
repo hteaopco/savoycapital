@@ -1063,17 +1063,40 @@ export function FundAllocation({
                             money value, and truncating the name to nothing to
                             keep one line would be the worse trade.
                           */}
+                          {/*
+                            THREE COLUMNS ON A PHONE, and nothing wraps between
+                            them (owner, 2026-10-11: "This looks sloppy …
+                            Everything needs to be even and uniformed").
+
+                            What was sloppy: the row was `flex-wrap`, so the
+                            figures and the control spilled onto a third band
+                            whose contents started wherever the previous cell
+                            happened to end. `$2,500,000` and `$200,000` are
+                            different widths, so the chevron after them landed at
+                            a different x on every row — the ragged edge in the
+                            screenshot. Nothing was misaligned by a rule; there
+                            was simply no column for anything to align to.
+
+                            Now: a fixed expander column, a flexible name column,
+                            and a right-aligned figures column. Every row's
+                            chevron shares an x and every row's money shares a
+                            right edge, because the columns are fixed rather than
+                            inherited from the content before them.
+
+                            At 390px the tray gives ~260px: 24 expander + 10 gap
+                            + 10 gap + ~68 figures leaves ~148 for the name, and
+                            "Westfield Companies" at 12px wants ~118. So the
+                            block is two lines — reference, then name — and the
+                            row is uniform at two lines rather than ragged at
+                            three.
+
+                            `md:flex-wrap` restores the desktop declaration; that
+                            row has never wrapped, so the class is a no-op there
+                            and exists so the two widths read as one decision.
+                          */}
                           <div
-                            className="flex flex-wrap items-center"
-                            /*
-                              Column gap only. `gap: 9` also spaced the WRAPPED
-                              bands 9px apart, which on a phone is pure height
-                              between the reference, the name and the figures —
-                              three bands paying for two gaps they do not need.
-                              Desktop never wraps this row, so a zero row-gap
-                              cannot reach it.
-                            */
-                            style={{ columnGap: 9, rowGap: 0, padding: "5px 0" }}
+                            className="flex items-center md:flex-wrap"
+                            style={{ columnGap: 10, rowGap: 0, padding: "5px 0" }}
                           >
                             {/*
                               FULL WIDTH on a phone, and that is the point rather
@@ -1091,7 +1114,7 @@ export function FundAllocation({
                               all four cells and the name has never wrapped.
                             */}
                             <span
-                              className="min-w-0 w-full md:w-auto md:flex-1"
+                              className="min-w-0 flex-1"
                               style={{
                                 fontSize: 12,
                                 fontWeight: 500,
@@ -1112,26 +1135,46 @@ export function FundAllocation({
                               )}
                             </span>
 
+                            {/*
+                              `md:contents` is doing the lane boundary here: on a
+                              phone this is a right-aligned COLUMN, so the money
+                              and the share stack and every row shares one right
+                              edge. From md up the wrapper vanishes from the box
+                              tree entirely and both spans become direct flex
+                              children of the row again — which is what they have
+                              always been, so the desktop layout is not just
+                              visually unchanged but structurally identical.
+
+                              A wrapper that stayed a box at md would have made
+                              the money and the share one flex item, and the
+                              104px column below would no longer line up with the
+                              bucket rows' empty twin.
+                            */}
                             <span
-                              style={{
-                                fontSize: 11,
-                                fontWeight: 400,
-                                color: C.textMuted,
-                                ...numCell,
-                              }}
+                              className="flex flex-col items-end md:contents"
+                              style={{ flexShrink: 0 }}
                             >
-                              {money(h.amountCents)}
-                            </span>
-                            <span
-                              style={{
-                                width: 54,
-                                textAlign: "right",
-                                fontSize: 11,
-                                color: C.textDim,
-                                ...numCell,
-                              }}
-                            >
-                              {pct(h.amountCents, fundSizeCents)}
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 400,
+                                  color: C.textMuted,
+                                  ...numCell,
+                                }}
+                              >
+                                {money(h.amountCents)}
+                              </span>
+                              <span
+                                className="md:w-[54px]"
+                                style={{
+                                  textAlign: "right",
+                                  fontSize: 11,
+                                  color: C.textDim,
+                                  ...numCell,
+                                }}
+                              >
+                                {pct(h.amountCents, fundSizeCents)}
+                              </span>
                             </span>
                             {/*
                               A fixed column, and since 2026-08-24 it sits AFTER
@@ -1173,8 +1216,41 @@ export function FundAllocation({
                               a thumb hits: 44px on touch, the tray's density
                               from md up.
                             */}
+                            {/*
+                              ON THE LEFT on a phone, on the right from md up
+                              (owner, 2026-10-11: "Another expand on the left of
+                              Westfield that would expand and show the info of
+                              clicked").
+
+                              `order-first` moves this cell ahead of its siblings
+                              below md; `md:order-none` returns every child to 0
+                              so DOM order decides again and it is last, after
+                              the percentage, where the owner put it on
+                              2026-08-24. **One button, two positions** — not a
+                              second control hidden at the other breakpoint,
+                              which would be two things to keep in step and two
+                              places for the next change to miss.
+
+                              **44px wide, not 24.** `DESIGN_SYSTEM.md` § 9's
+                              sub-floor carve-out covers a spaced secondary
+                              control and explicitly does NOT cover one
+                              "repeated in a dense list", which is exactly what a
+                              per-holding expander is. The row is already 44 tall;
+                              making the cell 44 wide costs the name column 20px
+                              and buys a thumb-sized target. Measured at 390px:
+                              44 + 10 + 10 + ~68 figures leaves ~128, and the
+                              longest name here ("Westfield Companies", 12px)
+                              wants ~118. A longer one wraps to a second line,
+                              which the block already is.
+
+                              The column is present even when a holding has no
+                              terms to show, so a holding without a button does
+                              not shunt its name 54px left of every neighbour —
+                              the empty-twin trick the bucket rows already use
+                              for the 104px column, applied at the other end.
+                            */}
                             <span
-                              className="md:w-[104px] flex justify-end"
+                              className="w-11 md:w-[104px] flex justify-end order-first md:order-none"
                               style={{ flexShrink: 0 }}
                             >
                               {hasDetail ? (
@@ -1187,9 +1263,17 @@ export function FundAllocation({
                                   }
                                   aria-expanded={isDetailOpen}
                                   aria-label={`View details for ${h.name}`}
-                                  className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+                                  /*
+                                    Padding moves to classes because it has to
+                                    differ by width and an inline value cannot.
+                                    Below md the cell IS 24px and the glyph is
+                                    16, so horizontal padding would overflow the
+                                    column; `md:px-2.5` is the 10px this carried
+                                    inline before, unchanged above 767px.
+                                    `py-1` is the 4px, at both widths.
+                                  */
+                                  className="inline-flex items-center justify-center min-h-[44px] md:min-h-0 w-full md:w-auto px-0 md:px-2.5 py-1"
                                   style={{
-                                    padding: "4px 10px",
                                     borderRadius: 6,
                                     // OPEN is a tint, not a solid fill (owner,
                                     // 2026-08-24: "make the link less heavy").
