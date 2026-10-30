@@ -140,6 +140,17 @@ That route is reached by an object key — the one identifier that cannot find i
 a scan. Deletion belongs to `DELETE /api/deals/<dealId>/documents/<docId>`, which owns both
 halves.
 
+**GOTCHA 8e — a deal delete must read its document keys BEFORE deleting the deal.**
+`DealDocument.deal` is `onDelete: Cascade`, and those rows are the only record of which
+objects belong to the deal. Delete the deal first and every object under it is orphaned with
+nothing left naming it — and GOTCHA 8's recovery for a single orphan ("findable by diffing
+keys against rows") stops working too, because the rows you would diff against went with it.
+`DELETE /api/deals/<id>` therefore reads the keys, deletes the deal, then deletes the objects,
+and **a refactor that moves that read after the delete silently leaks the whole deal's
+storage** with every gate green. It also reads keys for EVERY audience, not just
+`MANAGEMENT` as the GET does: an object no route can serve is precisely the one nobody would
+notice again.
+
 **GOTCHA 8a — folders are matched by exact string, so "UCC" and "UCC " are two folders.**
 There is no normalisation beyond a `trim()`, and no rename. The mitigation is a `<datalist>`
 of the deal's existing folder names on every folder input, so picking beats typing. If two
@@ -236,11 +247,20 @@ only, never per keystroke (a caret that jumps mid-figure is worse than an ungrou
 - **Folder rename.** Renaming one means updating every document carrying that string. It is a
   small route when someone wants it; until then the row control moves documents one at a time.
 - **Nested folders.** One level only. Nothing has asked for a tree.
-- **Deleting a DEAL.** Only documents can be deleted (owner asked for files, 2026-08-24).
-  A deal delete would cascade to every document row and leave every object behind, so it
-  needs the sweep below to exist first.
-- **Undo, and any sweep for orphaned objects.** Both deletes are hard: the row is gone and
-  the bytes follow. Nothing lists objects that no row points at.
+- ~~**Deleting a DEAL.**~~ **BUILT 2026-10-30** (owner: *"i need a way to delete a deal"*) —
+  `DELETE /api/deals/<id>`, armed from a card at the bottom of the deal screen. Its stated
+  blocker here was *"a deal delete would cascade to every document row and leave every object
+  behind, so it needs the sweep below to exist first"*, and that was **right about the naive
+  implementation and is not a property of the feature**: the route reads every document key
+  BEFORE deleting the deal, then deletes the objects. The cascade only orphans everything if
+  you let it run first. See GOTCHA 8e.
+- **Undo, and any sweep for orphaned objects. Still not built**, and the delete above did not
+  change that — but it narrowed what feeds it. Orphans used to be the *guaranteed* outcome of
+  any deal delete; now they are the failure case only: R2 unconfigured, or an individual
+  `DeleteObject` throwing. Both are counted and written to the server log
+  (`[deals] deleted deal <id>; N of M object(s) left in R2`), which is the trail a sweep would
+  otherwise have to discover by listing. Both deletes are still hard — the row is gone and the
+  bytes follow — and nothing lists objects that no row points at.
 - **Positions, marks, valuations.** Still blocked on a person — see `STATE.md`. `terms` and `fees` are the free-text stand-in and are not a schema for this.
 - **Any test runner.** The pure functions in `src/lib/r2.ts` were exercised by a throwaway
   harness, not by a suite that runs in CI. That gap is real and named here rather than

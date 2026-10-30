@@ -6,6 +6,42 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **A deal can be deleted, and the orphan-sweep was never actually a prerequisite
+  (owner, 2026-10-30).** *"i need a way to delete a deal."*
+  - **`PLAYBOOKS/deal-room.md` listed this as not-built pending an orphan sweep, and that
+    premise was wrong rather than the conclusion being overruled.** It read: "a deal delete
+    would cascade to every document row and leave every object behind, so it needs the sweep
+    below to exist first." True of the obvious implementation; not a property of the feature.
+    `DELETE /api/deals/<id>` reads every document key FIRST, deletes the deal, then deletes
+    the objects. The cascade only orphans everything if you let it run before the read.
+  - **That read-order is the whole correctness argument, and it is invisible.** Those rows are
+    the only record of which objects belong to the deal, so moving the read after the delete
+    leaks the deal's entire storage — silently, with every gate green, and with GOTCHA 8's
+    single-orphan recovery ("diff keys against rows") broken too, since the rows went with it.
+    Written up as GOTCHA 8e because nothing mechanical can catch it.
+  - **It deletes objects for EVERY audience, where the GET filters to `MANAGEMENT`.** The GET
+    filters because it builds a screen and an `investors/`-prefixed object has no route that
+    can serve it. A delete is the inverse case: an object nothing can read is exactly the one
+    that would never be noticed again.
+  - **One `DeleteObjectCommand` per key, each in its own try/catch**, not
+    `DeleteObjectsCommand`. The batch verb would be one round trip instead of N, but the
+    singular call is what this bucket is already proven to answer and a deal holds tens of
+    documents, not thousands. Deleting a deal is not where you discover whether R2 implements
+    a verb. A failing key is counted rather than thrown, so one bad key does not abandon the
+    rest, and the count goes to the server log — the trail a sweep would otherwise have to
+    find by listing.
+  - **Rows first, objects second, and R2 being unconfigured does not block it** — both
+    inherited from the document delete, same rule: never leave a row without its object.
+  - **Two clicks, reusing `DocumentRow`'s vocabulary** (2026-08-24) rather than a new modal:
+    neutral until armed, actions REPLACE the arm button so the card asks one question. **The
+    one departure is that the confirmation counts the documents**, because the folders below
+    are closed — the screen that asks is the screen that cannot show you what you are about to
+    lose. It sits last on the page, behind its own hairline: a delete sharing a row with Save
+    is a delete somebody eventually hits while editing figures.
+  - **The count is the management-filtered one and that is a live assumption**, recorded at the
+    call site. It matches what the route removes only because nothing can upload to the
+    investor prefix today. Investor uploads landing makes this undercount.
+
 - **The marks carry ONE date, on the fund, and the allocation card lost its as-of line
   (owner, 2026-10-11).** *"you can add an as of date...the entire table will be updated all at
   once, never one at a time...so it can be an as of date sitting above the table or below it."*
