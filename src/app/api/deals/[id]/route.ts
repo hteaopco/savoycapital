@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getDb } from "@/lib/db";
+import { getR2 } from "@/lib/r2";
 import { parseDollarsToCents, parseDateInput } from "@/lib/money";
 import { forbiddenMessage, getViewer, isManagement } from "@/lib/authz";
 
 /**
- * One deal and its documents.
+ * One deal and its documents: read it, edit it, or delete it.
  *
  * Management only, by being absent from `src/proxy.ts`'s public list. Investor
  * documents are excluded from the response rather than merely unlinked: nothing
@@ -290,4 +292,146 @@ export async function PATCH(request: Request, { params }: Params) {
     fees: saved.fees,
     whyWeLikeIt: saved.whyWeLikeIt,
   });
+}
+
+/**
+ * Delete one deal — the row, every document row under it, and every object
+ * those rows named (owner, 2026-10-30: "i need a way to delete a deal").
+ *
+ * ## The keys are read FIRST, and this is the whole correctness argument
+ *
+ * `DealDocument.deal` is `onDelete: Cascade`, so deleting the deal destroys
+ * every document row with it — and those rows are **the only record of which
+ * objects belong to this deal**. Delete the deal first and every one of its
+ * objects is orphaned with nothing left on this side naming it: the document
+ * route's recovery for a single orphan ("findable by diffing keys against
+ * rows") stops working, because the rows you would diff against are gone too.
+ *
+ * So: read the keys, delete the deal, then delete the objects. The order is not
+ * a preference, and a future refactor that moves the read after the delete
+ * silently leaks the whole deal's storage.
+ *
+ * ## Rows first, objects second — same rule as the document delete
+ *
+ * The two stores cannot be made atomic, so the only question is which
+ * half-failure survives, and the answer is the one that route already reached:
+ * **never leave a row without its object.** An orphaned object is invisible and
+ * costs a fraction of a cent; a row whose object is gone is a document on
+ * screen whose View button 404s.
+ *
+ * ## Every object gets its own attempt
+ *
+ * One `DeleteObjectCommand` per key, each in its own try/catch, so one failing
+ * key does not abandon the rest — the alternative leaves MORE orphans than
+ * necessary for no benefit. Deliberately not `DeleteObjectsCommand`: the batch
+ * API would be one round trip instead of N, but `DeleteObjectCommand` is the
+ * call this bucket is already proven to answer, and a deal holds tens of
+ * documents rather than thousands. This is not the place to find out whether
+ * R2 implements the batch verb.
+ *
+ * ## R2 being unconfigured does not block the delete
+ *
+ * Same as the document route: the rows still go. Refusing would leave a deal
+ * the owner has deleted on screen because of a variable that has nothing to do
+ * with it, and the leftover objects are the failure this route already accepts.
+ *
+ * **Management only**, and `fundId` is not consulted: management sees every
+ * fund in this product, which is the same scope the GET above already grants.
+ */
+export async function DELETE(_request: Request, { params }: Params) {
+  const { viewer } = await getViewer();
+  if (viewer.kind === "anonymous") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (viewer.kind === "unconfigured") {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 503 });
+  }
+  if (!isManagement(viewer)) {
+    return NextResponse.json({ error: forbiddenMessage(viewer) }, { status: 403 });
+  }
+
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json(
+      { error: "The database is not configured. Set DATABASE_URL." },
+      { status: 503 },
+    );
+  }
+
+  const { id } = await params;
+  const dealId = Number(id);
+  if (!Number.isInteger(dealId) || dealId < 1) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  /*
+    EVERY document, not just `audience: "MANAGEMENT"`.
+
+    The GET above filters to management because it is building a screen and an
+    investor-prefixed object has no route that can serve it. A delete is the
+    opposite case: an object nothing can read is exactly the one that would
+    never be noticed again. Filtering here would strand every `investors/`
+    object this deal ever had.
+  */
+  const deal = await db.deal.findUnique({
+    where: { id: dealId },
+    select: { id: true, documents: { select: { key: true } } },
+  });
+  if (!deal) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const keys = deal.documents.map((d) => d.key);
+
+  /*
+    Cascades to every `DealDocument` row. `Deal.fund` is `onDelete: Restrict`,
+    which constrains deleting a FUND and not a deal, so nothing blocks here.
+
+    `deleteMany` rather than `delete`, for the reason the PATCH on one document
+    gives for preferring `updateMany`: a miss is a 0-row result instead of a
+    thrown P2025. Here the miss is a second DELETE for a deal already gone —
+    a double-submit, or two tabs — and `delete` would answer that with an
+    unhandled 500 describing a deal that is, by then, correctly deleted.
+  */
+  const { count } = await db.deal.deleteMany({ where: { id: dealId } });
+
+  /*
+    Somebody else deleted it between the read above and here, which means they
+    are also deleting these objects. Returning 204 rather than 404: the caller
+    asked for this deal to be gone and it is gone, which is the whole contract
+    of a delete. Re-sending the object deletes would be harmless but is work
+    the other request already owns.
+  */
+  if (count === 0) return new NextResponse(null, { status: 204 });
+
+  const r2 = getR2();
+  let orphaned = 0;
+  if (r2) {
+    for (const key of keys) {
+      try {
+        await r2.client.send(
+          new DeleteObjectCommand({ Bucket: r2.bucket, Key: key }),
+        );
+      } catch {
+        // Counted, not thrown. The deal is gone as far as the product is
+        // concerned, so failing the request would report a delete that did not
+        // work when the visible half of it did.
+        orphaned += 1;
+      }
+    }
+  } else {
+    orphaned = keys.length;
+  }
+
+  /*
+    204 would match the document route, but this one has something to say that
+    that one does not: how many objects were left behind. With no body there is
+    nowhere to put it, and "the deal is deleted and 3 files could not be removed
+    from storage" is worth one line in a server log.
+  */
+  if (orphaned > 0) {
+    console.warn(
+      `[deals] deleted deal ${dealId}; ${orphaned} of ${keys.length} object(s) left in R2`,
+    );
+  }
+
+  return new NextResponse(null, { status: 204 });
 }

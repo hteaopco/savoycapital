@@ -518,6 +518,11 @@ function DealDetailView({
   onChanged,
 }: {
   deal: DealDetail;
+  /**
+   * Back to the list, reloading it. Used by the back button AND by a successful
+   * delete — a deleted deal has nowhere to return to but the list, and the list
+   * has to be re-read because the row it was opened from is gone.
+   */
   onBack: () => void;
   /**
    * Re-reads the open deal. Named for what it now covers: an upload, a document
@@ -554,6 +559,182 @@ function DealDetailView({
           exist — today every signed-in user sees everything, so a file uploaded here
           would be readable by nobody and appear to be readable by investors.
         </div>
+      </div>
+
+      {/*
+        Last, deliberately — see `DeleteDeal`. `onBack` is reused rather than a
+        new callback: it already clears the open deal and reloads the list,
+        which is exactly what a deal that no longer exists needs.
+      */}
+      <DeleteDeal deal={deal} onDeleted={onBack} />
+    </div>
+  );
+}
+
+/**
+ * Delete the whole deal (owner, 2026-10-30: "i need a way to delete a deal").
+ *
+ * ## Two clicks, not a browser confirm — the same vocabulary as a document row
+ *
+ * `DocumentRow` settled this on 2026-08-24: the design system has no words for
+ * a `confirm()` dialog, so a destructive control arms and then asks. This one
+ * reuses that pattern rather than inventing a modal, and reuses its colour
+ * logic too — **neutral until armed**, because a control that is already red
+ * before it has been asked for reads as a warning about the deal rather than
+ * about the action.
+ *
+ * ## Where it sits, and why that is not cosmetic
+ *
+ * Last on the screen, below the uploader, behind its own hairline. Everything
+ * above it is a thing you came here to edit; a delete sharing a row with Save
+ * is a delete somebody eventually hits while editing figures.
+ *
+ * ## The confirmation COUNTS the documents
+ *
+ * This is the one real departure from the document row's pattern, and the
+ * reason is blast radius. Deleting a document destroys one named file you are
+ * looking at. Deleting a deal destroys every file under it, and those are
+ * collapsed into closed folders — so the screen that asks is the screen that
+ * cannot show you what you are about to lose. The count is read from
+ * `deal.documents`, which is what the detail view already holds, so it is the
+ * same list the folders below were built from and not a second query that
+ * could disagree with them.
+ *
+ * **There is no undo.** Not phrased as a warning for its own sake: the route
+ * removes the R2 objects, and nothing in this product keeps a copy.
+ *
+ * ## The count is the MANAGEMENT-visible one, and that is a live assumption
+ *
+ * `deal.documents` arrives from the GET filtered to `audience: "MANAGEMENT"`,
+ * while the route deletes every document regardless of audience — correctly,
+ * since an object no route can read is the one that would never be noticed
+ * again. The two agree today only because **nothing can upload to the investor
+ * prefix**: the API refuses that audience (`PREFIX.investors` is reserved, no
+ * route reads it). The day investor uploads land, this number silently
+ * undercounts what the delete removes, so it needs an unfiltered count then —
+ * either a second field on the detail response or dropping the GET's filter.
+ */
+function DeleteDeal({ deal, onDeleted }: { deal: DealDetail; onDeleted: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const docCount = deal.documents.length;
+
+  const remove = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/deals/${deal.id}`, { method: "DELETE" });
+      // 204 carries no body, so the status is the whole answer — same as the
+      // document delete.
+      if (!res.ok) throw new Error();
+      onDeleted();
+    } catch {
+      setError("Could not delete that deal. Try again.");
+      setDeleting(false);
+    }
+    // `deleting` is deliberately not cleared on success: this view is about to
+    // be unmounted, and re-enabling the button first invites a second DELETE
+    // against an id that is already gone.
+  };
+
+  return (
+    <div style={{ ...card, borderColor: confirming ? C.redBorder : C.border }}>
+      <div style={{ ...cardHeader, color: confirming ? C.red : C.textMuted }}>
+        Delete this deal
+      </div>
+      <div className="flex flex-col" style={{ gap: 12, padding: 16 }}>
+        {error ? <Notice tone="error">{error}</Notice> : null}
+
+        {confirming ? (
+          <>
+            {/*
+              Names the deal and counts the files. "Delete this deal?" on a
+              screen whose folders are closed asks you to confirm something you
+              cannot see.
+            */}
+            <div style={{ fontSize: 13, color: C.text, lineHeight: 1.6 }}>
+              Delete <strong>{deal.name}</strong>
+              {docCount > 0 ? (
+                <>
+                  {" "}
+                  and{" "}
+                  <strong>
+                    {docCount === 1 ? "its one document" : `its ${docCount} documents`}
+                  </strong>
+                </>
+              ) : null}
+              ? This cannot be undone
+              {docCount > 0
+                ? docCount === 1
+                  ? ", and the file is removed from storage"
+                  : ", and the files are removed from storage"
+                : ""}
+              .
+            </div>
+            {/*
+              The actions REPLACE the arm button rather than sitting beside it,
+              so the card asks one question — `DocumentRow`'s reasoning: the
+              question "Delete?" must not be answerable by clicking something
+              else.
+            */}
+            <div className="flex flex-wrap items-center" style={{ gap: 8 }}>
+              <button
+                onClick={() => void remove()}
+                disabled={deleting}
+                className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+                style={{
+                  ...secondaryButton,
+                  border: `1px solid ${C.redBorder}`,
+                  background: C.redBg,
+                  color: C.red,
+                  opacity: deleting ? 0.5 : 1,
+                }}
+              >
+                {deleting ? "Deleting…" : "Yes, delete this deal"}
+              </button>
+              <button
+                onClick={() => {
+                  setConfirming(false);
+                  setError(null);
+                }}
+                disabled={deleting}
+                className="inline-flex items-center justify-center min-h-[44px] md:min-h-0"
+                style={{ ...secondaryButton }}
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/*
+              Written as whole sentences per count rather than assembled from
+              fragments. The fragment version read "Removes the deal, its
+              figures." with a dangling comma when a deal had no documents, and
+              "all 1 document" when it had one — both caught by rendering it.
+            */}
+            <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
+              {docCount === 0
+                ? "Removes the deal and its figures."
+                : docCount === 1
+                  ? "Removes the deal, its figures, and the one document under it."
+                  : `Removes the deal, its figures, and all ${docCount} documents under it.`}{" "}
+              It also disappears from the Portfolio chart and the investments
+              table. There is no undo.
+            </div>
+            <button
+              onClick={() => setConfirming(true)}
+              className="inline-flex items-center justify-center self-start min-h-[44px] md:min-h-0"
+              style={{ ...secondaryButton, color: C.textMuted }}
+            >
+              <Trash2 size={13} />
+              Delete deal
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

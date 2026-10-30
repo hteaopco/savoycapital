@@ -8,6 +8,20 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **A deal can be deleted** (owner, 2026-10-30: *"i need a way to delete a deal"*).
+  `DELETE /api/deals/<id>` removes the deal, every document row under it (cascade), and every
+  R2 object those rows named. Armed from a card at the bottom of the deal screen, two clicks,
+  reusing the document row's vocabulary; the confirmation names the deal and counts the files
+  because the folders below it are closed.
+  **The read-order is the feature.** `DealDocument` cascades, and those rows are the only
+  record of which objects belong to the deal — so the route reads the keys BEFORE deleting,
+  then deletes the objects. `PLAYBOOKS/deal-room.md` had listed a deal delete as blocked on an
+  orphan sweep for exactly the failure that ordering avoids; the premise was true of the naive
+  implementation, not of the feature. Recorded as GOTCHA 8e, because a refactor that moves the
+  read after the delete leaks the deal's whole storage with every gate green.
+  Two copy bugs were caught by rendering the card rather than reading it: "all 1 document",
+  and a dangling "Removes the deal, its figures." on a deal with none.
+
 - **The Portfolio grew an investments table, then a date for its marks** (owner,
   2026-10-11: *"lets add to this by including the investments here in a table sorted by oldest
   at top to newest at bottom ... consolidatated row under all investments"*, then *"you can add
