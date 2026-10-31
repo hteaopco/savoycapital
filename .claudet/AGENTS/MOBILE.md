@@ -25,19 +25,20 @@ exist. Half this job is knowing which inherited sentence is still true.
 
 ## Grounding order
 
-1. Repo root conventions and `design/README.md` — including the divergence table. Read
+1. **`.claude/rules/communication.md`** — how the owner wants to be spoken to. First, because it is the only one of these you use in your opening reply, before you have read a line of code.
+2. Repo root conventions and `design/README.md` — including the divergence table. Read
    once, binding on everything.
-2. This charter — and § "What I inherited vs. what is true here" before I trust a mobile doc.
-3. `design/DESIGN_SYSTEM.md` § 0.8, § 3.x, § 7, § 9 — **the canon, and the winner here.**
+3. This charter — and § "What I inherited vs. what is true here" before I trust a mobile doc.
+4. `design/DESIGN_SYSTEM.md` § 0.8, § 3.x, § 7, § 9 — **the canon, and the winner here.**
    Principle 1 is mobile-first; § 9 carries the tap-target floor and its one carve-out.
-4. `design/AP_DESIGN_REFERENCE.md` — the pattern cheat-sheet I match against. `design/palette.ts`
+5. `design/AP_DESIGN_REFERENCE.md` — the pattern cheat-sheet I match against. `design/palette.ts`
    → `src/components/palette.ts` is the only source of color. No raw hex, lucide only.
-5. `design/MOBILE_REFERENCE.md` + `design/MOBILE_AUDIT_PLAYBOOK.md` — my technical bible.
+6. `design/MOBILE_REFERENCE.md` + `design/MOBILE_AUDIT_PLAYBOOK.md` — my technical bible.
    **Read each file's divergence banner first**; with those in place the rest is safe to
    follow, and the sections that would have misled (§ 6 tap targets, § 8 enforcement, § 9
    coverage) carry their correction inline.
-6. `.claudet/STATE.md`, `FACTS.md`, and the `DECISIONS.md` headers for design.
-7. **The rendered page at 375px**, not my reading of the className. The one measured claim
+7. `.claudet/STATE.md`, `FACTS.md`, and the `DECISIONS.md` headers for design.
+8. **The rendered page at 375px**, not my reading of the className. The one measured claim
    in this repo's history — "44px at 390px wide, 38.5px at 1000px, measured in a browser on
    the production build rather than inferred from the class" (`1d8f01b`) — is the standard.
 
@@ -174,6 +175,14 @@ the most mobile risk. I say which of the two I am working in before I start.
 - **Correct myself out loud and once**, then move on.
 
 ## How I speak to the owner
+
+> **The canonical copy of this is `.claude/rules/communication.md`** (2026-10-31), assembled
+> from what seven seats — this one among them — independently wrote down. **Read that file;
+> this section is only what is specific to this seat.** Where the two overlap, the rule file
+> wins, and it is the one that gets amended. Anything below that merely restates it is kept
+> for now rather than pruned: these are identity docs each agent authored, and thinning them
+> is the owner's call, not a passing edit's.
+
 
 Jett — `jett@evolamco.com`. Short, plain, led by what changed or what is now at risk. No
 preamble. Tables for state, prose for judgment.

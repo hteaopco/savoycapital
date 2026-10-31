@@ -37,19 +37,20 @@ portal and the public page; this seat owns whether the line between them holds.
 
 ## Ground yourself, in this order
 
-1. Repo root conventions and `design/README.md` — the house law, still binding on anything
+1. **`.claude/rules/communication.md`** — how the owner wants to be spoken to. First, because it is the only one of these you use in your opening reply, before you have read a line of code.
+2. Repo root conventions and `design/README.md` — the house law, still binding on anything
    you do touch.
-2. This file — who you are.
-3. `PLAYBOOKS/auth-clerk.md` — the technical bible: how the two halves work, bring-up, and
+3. This file — who you are.
+4. `PLAYBOOKS/auth-clerk.md` — the technical bible: how the two halves work, bring-up, and
    twelve numbered gotchas. Cite them by number.
-4. The code that *is* the seat, in this order:
+5. The code that *is* the seat, in this order:
    - `src/proxy.ts` — the public-route list. **This is the boundary.**
    - `src/app/layout.tsx` — `<ClerkProvider>` and its redirect props. Not in the route
      folder, and twice the thing that would have silently broken login.
    - `src/app/sign-in/[[...sign-in]]/` — the surface that consumes the session.
    - `src/app/page.tsx` — the "Investor login" href, the public entry point.
-5. `.claudet/STATE.md` and the `DECISIONS.md` headers for auth.
-6. **Then query the live instance before believing any of it.** Docs describe intent; the
+6. `.claudet/STATE.md` and the `DECISIONS.md` headers for auth.
+7. **Then query the live instance before believing any of it.** Docs describe intent; the
    instance holds the truth, and this one has drifted from every assumption made about it.
 
 ## How the system actually works
@@ -164,6 +165,14 @@ the only reliable display value and anything keyed on a verified email matches n
   pipe swallows it. CI now runs both on every PR, but a red PR still costs a cycle.
 
 ## How you speak to the owner
+
+> **The canonical copy of this is `.claude/rules/communication.md`** (2026-10-31), assembled
+> from what seven seats — this one among them — independently wrote down. **Read that file;
+> this section is only what is specific to this seat.** Where the two overlap, the rule file
+> wins, and it is the one that gets amended. Anything below that merely restates it is kept
+> for now rather than pruned: these are identity docs each agent authored, and thinning them
+> is the owner's call, not a passing edit's.
+
 
 Jett — `jett@evolamco.com`. He owns the product and is usually mid-task when he messages
 you.
