@@ -17,12 +17,29 @@ A charter should carry:
 - the identity — who you are, in one paragraph
 - the grounding order — what to read, in what order, before working
 - the working habits the owner hired
-- how to speak to the owner
+- ~~how to speak to the owner~~ — **inherited, not authored, as of 2026-10-31.**
+  `.claude/rules/communication.md` is the one canonical copy; a charter adds only what is
+  specific to its seat (a report format, a boundary that is this seat's alone) and never a
+  second general version
 - the seat's instruments and access model
 - a standing instruction to keep the charter current
 
-Orientation order for any incoming agent: `CLAUDE.md` → your charter here → your playbook →
-`.claudet/STATE.md` and the `DECISIONS.md` headers for the area you're touching.
+Orientation order for any incoming agent: `CLAUDE.md` → **`.claude/rules/communication.md`**
+→ your charter here → your playbook → `.claudet/STATE.md` and the `DECISIONS.md` headers for
+the area you're touching.
+
+**The communication rule comes second on purpose.** It is the only one of these you will use
+in your very first reply, before you have read a line of code — and the cost of getting it
+wrong is paid immediately and by the owner. `CLAUDE.md` carries a compressed version inline
+because it is the only file loaded into your context automatically; the rule file is the whole
+of it, and nothing checks that you opened it.
+
+**How to speak to the owner is canonical and inherited (2026-10-31).** It used to be authored
+per seat, which produced four overlapping versions that agreed by luck — exactly the cross-file
+drift this repo keeps paying for elsewhere. `.claude/rules/communication.md` now holds it, and
+two rules that existed in a charter and not in that file are named at the bottom of it rather
+than folded in, because **amending it is an owner call**. A charter may add its seat's specifics
+and may not restate the general rules in its own words.
 
 **Every charter carries merge-on-green, and it is not optional boilerplate.** The owner
 granted it to every seat and should not have to grant it again — a green, mergeable PR of

@@ -8,6 +8,22 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **How the owner likes to be communicated with is now a canonical rule file** (owner,
+  2026-10-31: *"Incorporate this into repo so other agents see it and know on orientation"*).
+  His text, verbatim and diff-checked, at `.claude/rules/communication.md`, beside
+  `ui-governance.md` — behavioural law rather than working memory. `CLAUDE.md` carries a
+  compressed copy inline because it is the only file auto-loaded into an agent's context, and
+  points at the file for the rest; the rule is now second in every orientation order, in
+  `AGENTS/README.md` and in all four charters' grounding lists.
+  **The charters' own "how you speak" sections were banner-ed rather than deleted** — four
+  overlapping copies that agreed by luck, but they are identity docs and pruning them is the
+  owner's call. `AGENTS/README.md` now lists that section as inherited, so a fifth version does
+  not get authored.
+  Two rules that existed in a charter and not in the owner's text are named at the foot of the
+  file instead of being folded in: mid-turn redirection, and saying plainly when something
+  needs him specifically. Also caught: inserting one list item left duplicate numbers in all
+  four grounding lists, which Markdown renders correctly and a reader of the raw file does not.
+
 - **A deal can be deleted** (owner, 2026-10-30: *"i need a way to delete a deal"*).
   `DELETE /api/deals/<id>` removes the deal, every document row under it (cascade), and every
   R2 object those rows named. Armed from a card at the bottom of the deal screen, two clicks,

@@ -6,6 +6,43 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **How to speak to the owner is one canonical file, inherited by every seat, and reached from
+  `CLAUDE.md` (owner, 2026-10-31).** *"Incorporate this into repo so other agents see it and
+  know on orientation."* The owner supplied the text; it is in `.claude/rules/communication.md`
+  **verbatim**, diffed against what he sent rather than retyped.
+  - **It went to `.claude/rules/` and not `.claudet/`.** `.claudet/` is working memory — facts,
+    decisions, state, logs. This is behavioural law, which is what `.claude/rules/` already
+    holds (`ui-governance.md`), and `CLAUDE.md`'s Rules section sits at the top of the file
+    where orientation starts.
+  - **`CLAUDE.md` carries a compressed copy inline, not only a pointer**, because it is the
+    only file loaded into every agent's context automatically. `.claude/rules/**` and
+    `.claudet/**` are not, and `.claude/hooks/` holds nothing but a `.gitkeep` — verified, not
+    assumed, since `CLAUDE.md` claims "no session hooks" and that claim is the kind that goes
+    stale. The compressed list is the rules that get broken first; the file is the whole of it,
+    and **nothing checks that anyone opened it.** Said that way on purpose, per
+    `.claudet/README.md` rule 3.
+  - **It is second in every orientation order**, ahead of the charter and the playbooks, in
+    `AGENTS/README.md` and in all four charters' own grounding lists. It is the only one of
+    those documents used in an opening reply, before a line of code has been read, and the cost
+    of getting it wrong is paid immediately and by the owner.
+  - **The four charters' "how you speak" sections were banner-ed, not deleted.** They are
+    identity docs each agent authored, and four overlapping copies that agreed by luck is the
+    cross-file drift this repo pays for elsewhere — but thinning them is an owner call, not a
+    passing edit's. The banner says the rule file wins and is the one that gets amended.
+    `AGENTS/README.md` now lists "how to speak" as inherited rather than authored, so the next
+    charter does not write a fifth version.
+  - **Two rules existed in a charter and not in the owner's text, and are named at the bottom
+    of the rule file rather than folded into it** — amending his words is his call. Mid-turn
+    redirection (`CODER.md`: he sends new instructions while work is running) and saying
+    plainly when something needs him specifically (`CLERK.md`: a dashboard toggle, a DNS
+    record, a credential). Both are real, both would be got wrong, and both survived into the
+    charters the file was assembled from.
+  - **Inserting a list item renumbered four lists and broke them**, with duplicate numbers in
+    all four, because the first pass renumbered only the items it had named. Fixed by
+    renumbering each section programmatically and confirming nothing in the repo cites a
+    grounding item by number. Markdown would have rendered it correctly and an agent reading
+    the raw file would not have.
+
 - **A deal can be deleted, and the orphan-sweep was never actually a prerequisite
   (owner, 2026-10-30).** *"i need a way to delete a deal."*
   - **`PLAYBOOKS/deal-room.md` listed this as not-built pending an orphan sweep, and that

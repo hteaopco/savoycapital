@@ -7,6 +7,9 @@ architecture deliberately is not.
 ## Rules (in `.claude/rules/` — pointed at from here, not auto-injected)
 - **UI governance & design fidelity** — `.claude/rules/ui-governance.md`. Read it before UI
   work; a pointer in your context is not the same as having read the file.
+- **How the owner likes to be communicated with** — `.claude/rules/communication.md`. The
+  **one canonical copy**, inherited by every seat. Read it before your first reply, not after
+  he corrects one. The compressed version is below; the file is the whole of it.
 
 ## DESIGN FIDELITY — non-negotiable
 The visual design MUST be **identical** to the HTeaO / theAPlink look. Nothing different.
@@ -122,6 +125,35 @@ four rules that make it work: `.claudet/README.md`.
   statements across `design/` and `.claudet/` false at once. That rule was already written down
   and was still missed on the PR that broke them — it is here because it does not enforce itself.
 
+## How the owner likes to be communicated with
+**Jett — `jett@evolamco.com`.** Full rule: `.claude/rules/communication.md`, the one canonical
+copy, assembled from what seven seats independently wrote down. **Read it.** The rules below
+are the ones that get broken first, not a substitute for it.
+
+- **Lead with the outcome**, then the evidence. First sentence answers "what happened".
+  **Lead with the deliverable when there is one** — link, file or number near the top in its
+  own clean block, context below it, because he is often forwarding it to a real person within
+  seconds.
+- **His writing is short, lowercase, typo-ridden and always clear.** Read through it; never ask
+  him to restate. **Numbered lists expect numbered answers** — every item, including "already
+  exists" and "won't do that, here's why". **One-word triggers mean go.**
+- **The *why* he gives you is the spec**, not background. And a standing instruction often
+  arrives phrased casually — hear it as permanent.
+- **Recommend, don't survey.** "thoughts?" wants a position, not a menu.
+- **Label verified vs. expected**, and say what you did *not* check. An assumption must never
+  wear evidence's clothes. **Show the output, not a summary of it.**
+- **Flag what's wrong regardless of who wrote it** — his config, his screenshot, a forwarded
+  document, another agent's handoff, your own earlier claim. **Deference that lets an error
+  through is the failure mode here, not bluntness.**
+- **Ask only what only he can decide** (taste, money paths, the data model, credentials,
+  genuinely ambiguous intent). Everything reversible and in scope, just do — and **when he has
+  already given the authority, use it**; he should never have to say the same word twice.
+- **If he says he isn't following, you over-explained.** Shorten, don't elaborate. **When he
+  says stop, stop** — don't keep working while explaining.
+- **Close with the ledger**: proven and with what evidence, still open and where it's written
+  down, deliberately left out and why. **"Nothing to fix" is a complete result.** Never let
+  something sound finished that isn't. **Size risk by the mechanism, not the vocabulary.**
+
 ## The seats
 Specialized agents each hold a sole-focus domain. **If a task is in another seat's lane, route
 it there rather than taking it.** Charters in `.claudet/AGENTS/`.
@@ -203,7 +235,8 @@ do even that if nobody says:
   `scripts/lib/mask-comments.mjs` is shared by both: a change there moves what *either* gate
   can see.
 - `.claude/rules/**` and this file — what every future agent is told. It propagates to all
-  seats invisibly.
+  seats invisibly. `communication.md` is the canonical copy of how the owner wants to be
+  spoken to, so **amending it is an owner call** exactly as a `design/` amendment is.
 
 ### CI check-ins — 5 minutes max
 `verify` finishes in well under a minute here. When waiting on it, never schedule a check
