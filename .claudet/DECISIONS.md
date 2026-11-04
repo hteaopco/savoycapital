@@ -6,6 +6,42 @@ reopen. Read the headers before working in an area.
 
 Newest first.
 
+- **The PDF export is the browser's own print dialog, and the print rules live in
+  `globals.css` (owner, 2026-11-04).** *"give me a way to print this into PDF."*
+  - **`window.print()`, not a PDF library and not server-side rendering.** Every browser's
+    print dialog has "Save as PDF" as a destination, so this IS the export. The alternatives
+    each render the screen a second time, and a second rendering is a second thing that can
+    disagree with the first. It also keeps the figures off the wire: the PDF is made inside
+    the owner's browser. A server-side renderer would round-trip this fund's size and
+    position-level amounts through a route and into a temp file — a new place for them to be,
+    which `CLAUDE.md`'s disclosure framing says to avoid rather than secure.
+  - **An `sc-print-*` class contract, not tag selectors.** `sc-no-print`, `sc-print-only`,
+    `sc-print-block`, `sc-print-root`, `sc-print-page`, `sc-print-table-scroll`. A component
+    says for itself that it is furniture; a new screen gets print right by adding a class
+    rather than by the print block growing a selector for it.
+  - **No colour is written in the print block.** Everything printed is the colour the
+    component already rendered from `C`; the block only decides visibility, breaks, and that
+    the browser may not discard the palette. A hex there would be a literal colour in CSS —
+    the thing `--sc-sheet-bg` above it was written to avoid.
+  - **`print-color-adjust: exact` is load-bearing**, not polish. Browsers drop backgrounds
+    when printing. Without it the donut prints as an outline and the table loses its banding —
+    on this screen the colour IS the information.
+  - **The card is atomic and the table deliberately is not.** A donut split mid-arc is broken;
+    a table split between two rows is not, because `thead` repeats and `tr` stays whole.
+    Marking both atomic pushed the entire table to page two and left half of page one blank.
+  - **`tfoot` is forced to `table-row-group`, and this one is a CORRECTNESS rule.** A
+    `<tfoot>` is a footer *group*: browsers repeat it at the foot of every page the table
+    covers. The investments table's `<tfoot>` is the consolidated "All investments" row, so a
+    split table printed page one as three positions captioned **$9,360,000** — a total for
+    seven, where those three sum to $5,010,000. A wrong number stated confidently beside the
+    rows that contradict it. Found by printing the page and reading it; no gate sees print.
+  - **`design/` has no print vocabulary at all**, so this adds a surface the canon does not
+    cover rather than amending it. Nothing in `design/` was changed or contradicted.
+  - **WYSIWYG: the PDF is the screen.** Collapsed sleeves print collapsed. Expanding before
+    printing is the owner's control over what the document contains, and forcing them open
+    would make the PDF disagree with the page it was taken from. Open for him if he wants the
+    other behaviour; it needs code, not CSS, because the rows are not rendered when closed.
+
 - **How to speak to the owner is one canonical file, inherited by every seat, and reached from
   `CLAUDE.md` (owner, 2026-10-31).** *"Incorporate this into repo so other agents see it and
   know on orientation."* The owner supplied the text; it is in `.claude/rules/communication.md`

@@ -8,6 +8,20 @@ Reverse-chronological log of notable changes.
 > never true. This repo has no such script yet, so this file is hand-written for now. When
 > the generator lands, freeze this file rather than keeping both.
 
+- **Portfolio prints to PDF** (owner, 2026-11-04: *"give me a way to print this into PDF"*).
+  A "Print / Save PDF" button on the Portfolio header calls `window.print()`; an `@media print`
+  block in `globals.css` turns the result into a document — portal chrome hidden, palette
+  colours kept (`print-color-adjust: exact`, without which the donut prints as an outline),
+  the allocation card kept whole across page breaks, the table's horizontal scroller released
+  so the Gain / Loss column is not cut off, and the fund's name printed under the title because
+  a PDF carries no sidebar to say whose figures these are.
+  **Two defects were found by printing it and looking, neither visible to any gate.** A
+  repeating `<tfoot>` captioned page one's three rows with the seven-row total ($9,360,000
+  against $5,010,000 of visible rows) until `tfoot` was forced out of the footer-group role;
+  and marking the table atomic alongside the card pushed it wholly onto page two, wasting half
+  of page one. Verified by rendering the real components, printing with headless Chromium, and
+  reading the resulting PDF — collapsed and expanded, one page and two.
+
 - **How the owner likes to be communicated with is now a canonical rule file** (owner,
   2026-10-31: *"Incorporate this into repo so other agents see it and know on orientation"*).
   His text, verbatim and diff-checked, at `.claude/rules/communication.md`, beside

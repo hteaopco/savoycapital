@@ -488,9 +488,15 @@ export function PortalShell({ title, isManagement = true, children }: PortalShel
   }, [drawerOpen]);
 
   return (
-    <div className="flex" style={{ minHeight: "100vh", background: C.bg }}>
+    /*
+      `sc-print-root` / `sc-no-print` — the print contract, `globals.css`'s
+      `@media print` block. Marked by class rather than matched by tag there,
+      so the furniture says for itself that it is furniture: the sidebar, the
+      mobile bar and the drawer are chrome and none of them belongs in a PDF.
+    */
+    <div className="sc-print-root flex" style={{ minHeight: "100vh", background: C.bg }}>
       <aside
-        className="hidden md:flex md:flex-col"
+        className="sc-no-print hidden md:flex md:flex-col"
         style={{
           width: SIDEBAR_W,
           flexShrink: 0,
@@ -510,7 +516,7 @@ export function PortalShell({ title, isManagement = true, children }: PortalShel
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div
-          className="flex items-center md:hidden"
+          className="sc-no-print flex items-center md:hidden"
           style={{
             gap: 12,
             padding: "10px 12px",
@@ -542,7 +548,7 @@ export function PortalShell({ title, isManagement = true, children }: PortalShel
 
         {drawerOpen ? (
           <div
-            className="md:hidden"
+            className="sc-no-print md:hidden"
             style={{ position: "fixed", inset: 0, background: C.overlay, zIndex: 70 }}
             onClick={closeDrawer}
           >

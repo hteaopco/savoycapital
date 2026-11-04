@@ -102,3 +102,147 @@
     animation: none;
   }
 }
+
+/*
+ * Shown only on paper. The visible half is in the `@media print` block below;
+ * this is the default. Its own class rather than Tailwind's `print:` variant,
+ * so the whole print contract is one `sc-print-*` vocabulary in one file
+ * instead of two mechanisms that have to be checked separately.
+ */
+.sc-print-only {
+  display: none;
+}
+
+/*
+ * PRINT — the PDF export (owner, 2026-11-04: "give me a way to print this
+ * into PDF"). `PrintButton` calls `window.print()`; this is what makes the
+ * result a document rather than a screenshot of an app.
+ *
+ * It lives here and not at a call site for the same reason the sheet above
+ * does: an inline style cannot be gated to a media query at all.
+ *
+ * **No colours are written in this block**, deliberately. Every colour on the
+ * printed page is the one the component already rendered from the `C` palette;
+ * this only decides what is visible, how it breaks, and that the browser is
+ * not allowed to throw the palette away. A hex here would be a literal colour
+ * in CSS, which the palette rule exists to prevent and which would then drift
+ * from `C` silently — the argument `--sc-sheet-bg` above was written for.
+ *
+ * `design/` has no print vocabulary at all, so this is a surface the canon does
+ * not cover rather than an amendment to it.
+ */
+@media print {
+  /*
+    The app chrome. Opted in by class rather than matched by tag, so a
+    component says for itself that it is furniture — and a future screen gets
+    print right by adding one class instead of by this block growing a
+    selector for it.
+  */
+  .sc-no-print {
+    display: none !important;
+  }
+
+  /*
+    Browsers drop background colours and images when printing, to save ink.
+    That is the right default for a web page and the wrong one here: the
+    donut's arcs, the deployed badge and the table's zebra ARE the information.
+    Without this the chart prints as an outline and the rows lose their banding.
+  */
+  html,
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: none;
+  }
+
+  /*
+    A document's margin, not the app's padding. 14mm is close to a word
+    processor's default and leaves room for the browser's own header/footer if
+    the owner leaves those on.
+  */
+  @page {
+    margin: 14mm;
+  }
+
+  /*
+    The portal shell is a full-height flex row with a sticky sidebar. With the
+    sidebar gone, `100vh` and `sticky` have nothing to do but can still push a
+    blank first page, so both are unwound.
+  */
+  .sc-print-root {
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  /*
+    Screen padding is for a viewport; the @page margin is the paper's. Keeping
+    both wastes a centimetre on every edge.
+  */
+  .sc-print-page {
+    padding: 0 !important;
+  }
+
+  /*
+    Keep a CARD whole — a donut split across a page break is broken in a way
+    nothing downstream can repair.
+
+    Deliberately not applied to the investments table: a table splitting
+    between two rows is fine, because `thead` repeats and `tr` stays whole
+    below. Marking it atomic as well pushed it entirely onto page two and left
+    half of page one empty, and made the `thead` rule below unreachable.
+  */
+  .sc-print-block {
+    break-inside: avoid;
+  }
+
+  /* The other half of `.sc-print-only`, which is `display: none` on screen. */
+  .sc-print-only {
+    display: block !important;
+  }
+
+  /*
+    Tables: repeat the header on every page and never split a row. `thead`
+    repeating is a print-only behaviour with no screen equivalent, and it is
+    the difference between page two being readable and being a column of
+    unlabelled numbers.
+  */
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  /*
+    **`tfoot` must NOT repeat, and this is a correctness rule, not a cosmetic
+    one.**
+
+    A `<tfoot>` is a footer GROUP: browsers repeat it at the bottom of every
+    page the table covers, the mirror of `thead` above. The investments table's
+    `<tfoot>` is the consolidated "All investments" row — so on a table that
+    splits, page one ended with three positions and the caption
+    "ALL INVESTMENTS $9,360,000", a total for seven. Those three sum to
+    $5,010,000. That is a wrong number stated confidently next to the rows that
+    contradict it, which is the one failure this product's figures must not
+    produce.
+
+    `table-row-group` drops it out of the repeating-footer role and renders it
+    once, in document order — after the last row, where it belongs. Found by
+    printing the table and reading page one, not by reading the CSS.
+  */
+  tfoot {
+    display: table-row-group;
+    break-inside: avoid;
+  }
+
+  /*
+    The investments table scrolls horizontally on screen (`overflowX: auto`
+    with an explicit `minWidth`, per DESIGN_SYSTEM § 3.9). Paper does not
+    scroll: whatever sits outside the scroller is simply lost. Releasing the
+    overflow lets the table use the page's full width instead.
+  */
+  .sc-print-table-scroll {
+    overflow: visible !important;
+  }
+}

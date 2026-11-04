@@ -217,7 +217,16 @@ export function InvestmentsTable({
           PAGE never scrolls sideways — a page doing that because a table broke
           out is the bug `MOBILE_REFERENCE` § 3 puts first.
         */}
-        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        {/*
+          `sc-print-table-scroll` releases this overflow on paper. A sheet does
+          not scroll, so whatever sits outside the scroller would simply be cut
+          off the PDF — the Gain / Loss column first, since it is last. See
+          `globals.css`'s print block.
+        */}
+        <div
+          className="sc-print-table-scroll"
+          style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}
+        >
           {/*
             560 is the five columns at their un-squeezed widths. It is above the
             `fixed-width` rule's 300 ceiling on purpose and is the case that

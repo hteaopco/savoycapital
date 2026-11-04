@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { C } from "@/components/palette";
 import { FundAllocation } from "@/components/FundAllocation";
 import { InvestmentsTable } from "@/components/InvestmentsTable";
+import { PrintButton } from "@/components/PrintButton";
 import { PortalShell } from "@/components/PortalShell";
 import { loadPortfolio } from "@/lib/portfolio";
 import { canSeeFund, getViewer } from "@/lib/authz";
@@ -114,9 +115,40 @@ export default async function Portfolio() {
 
   return (
     <PortalShell title="Portfolio" isManagement={viewer.kind === "management"}>
-      <div className="px-5 py-8 md:px-8 md:py-10">
+      {/* `sc-print-page` drops the viewport padding on paper — the @page margin
+          is the document's own. See `globals.css`'s print block. */}
+      <div className="sc-print-page px-5 py-8 md:px-8 md:py-10">
         <div className="flex flex-col" style={{ gap: 14 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Portfolio</div>
+          {/*
+            Title left, action right — `AP_DESIGN_REFERENCE.md:103`'s screen
+            shell, verbatim. This page had the bare title div; the pattern it
+            was always meant to use is the one that has somewhere to put a
+            button.
+          */}
+          <div className="flex items-start justify-between flex-wrap" style={{ gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Portfolio</div>
+              {/*
+                WHICH fund, and only on paper.
+
+                On screen the answer is the sidebar and the fund picker, which
+                a PDF does not carry — so without this the printed page shows a
+                fund's size and every position in it and never says whose they
+                are. That is a real gap in a document people forward, and it is
+                one line.
+
+                Not a literal: the name is read from the database with the
+                figures beside it, so it cannot describe a different fund than
+                the one the chart is drawn from.
+              */}
+              {result?.kind === "ok" ? (
+                <div className="sc-print-only" style={{ fontSize: 13, color: C.textMuted }}>
+                  {result.data.fundName}
+                </div>
+              ) : null}
+            </div>
+            <PrintButton />
+          </div>
 
           {/*
             The bootstrap valve is showing. Surfaced rather than silent, so
@@ -187,12 +219,22 @@ export default async function Portfolio() {
               away and the row has a single child.
             */
             <div className="flex flex-wrap items-start" style={{ gap: 20 }}>
-              <div style={{ flex: "1 1 780px", maxWidth: 780 }}>
+              {/* `sc-print-block` — never split the donut or the table across
+                  a page break. `globals.css`'s print block. */}
+              <div className="sc-print-block" style={{ flex: "1 1 780px", maxWidth: 780 }}>
                 <FundAllocation
                   fundSizeCents={result.data.fundSizeCents}
                   buckets={result.data.buckets}
                 />
               </div>
+              {/*
+                NO `sc-print-block` here, and that asymmetry is the point. The
+                card above is atomic because a donut split mid-arc is broken;
+                a table split between two rows is not — `thead` repeats and
+                `tr` stays whole, both set in the print block. Making this
+                atomic too pushed the whole table to page two and left half of
+                page one blank, which is what the first print of this showed.
+              */}
               <div className="min-w-0" style={{ flex: "1 1 520px" }}>
                 <InvestmentsTable
                   rows={result.data.investments}
